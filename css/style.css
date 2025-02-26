@@ -92,6 +92,15 @@ body {
     transform: translateX(-50%);
     width: 80%;
     z-index: 1000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+#dialog-container.hidden {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0s linear 0.2s;
 }
 
 .dialog-box {
@@ -102,6 +111,12 @@ body {
     color: #9bbc0f;
     font-size: 16px;
     line-height: 1.4;
+    transform: translateY(0);
+    transition: transform 0.2s ease-out;
+}
+
+#dialog-container.hidden .dialog-box {
+    transform: translateY(20px);
 }
 
 .dialog-prompt {
