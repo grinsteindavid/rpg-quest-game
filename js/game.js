@@ -17,6 +17,12 @@ export class Game {
             hometown: new HomeTownMap(),
             forest: new ForestMap()
         };
+        
+        // Provide map references to each map
+        for (const map of Object.values(this.maps)) {
+            map.maps = this.maps;
+        }
+        
         this.currentMap = this.maps.hometown;
         
         // Initialize game components

@@ -35,7 +35,7 @@ export class BaseMap {
         return this.mapData[tileY][tileX];
     }
 
-    checkCollision(x, y, width, height) {
+    checkCollision(x, y) {
         const offset = this.getMapOffset();
         const mapX = x - offset.x;
         const mapY = y - offset.y;
@@ -104,7 +104,7 @@ export class BaseMap {
     }
 
     drawExit(ctx, mapName, transition, offset) {
-        const colors = this.getExitColors(mapName);
+        const colors = this.maps?.[mapName]?.getColors() || { primary: '#666', pattern: '#999' };
         
         for (const x of transition.x) {
             const screenX = x * this.tileSize + offset.x;
@@ -113,21 +113,6 @@ export class BaseMap {
             this.drawExitBase(ctx, screenX, screenY, colors.primary);
             this.drawExitArrow(ctx, screenX, screenY, transition.y, colors.pattern);
         }
-    }
-
-    getExitColors(mapName) {
-        const colorSchemes = {
-            forest: {
-                primary: '#1a472a',
-                pattern: '#2d5a27'
-            },
-            hometown: {
-                primary: '#8b4513',
-                pattern: '#a0522d'
-            }
-        };
-        
-        return colorSchemes[mapName] || { primary: '#666', pattern: '#999' };
     }
 
     drawExitBase(ctx, x, y, color) {

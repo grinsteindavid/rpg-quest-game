@@ -4,6 +4,11 @@ export class HomeTownMap extends BaseMap {
     constructor() {
         super('Home Town');
         
+        this.mapColors = {
+            primary: '#8b4513',    // Saddle brown
+            pattern: '#a0522d'     // Sienna
+        };
+        
         // Define transition points
         this.transitions = {
             forest: {
@@ -32,5 +37,9 @@ export class HomeTownMap extends BaseMap {
             x: 4 * this.tileSize,
             y: 4 * this.tileSize
         };
+    }
+
+    getColors() {
+        return this.mapColors;
     }
 }

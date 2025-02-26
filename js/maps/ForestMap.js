@@ -4,6 +4,11 @@ export class ForestMap extends BaseMap {
     constructor() {
         super('Dark Forest');
         
+        this.mapColors = {
+            primary: '#1a472a',    // Dark forest green
+            pattern: '#2d5a27'     // Lighter forest green
+        };
+        
         // Define transition points
         this.transitions = {
             hometown: {
@@ -33,5 +38,9 @@ export class ForestMap extends BaseMap {
             x: 2 * this.tileSize,
             y: 8 * this.tileSize
         };
+    }
+
+    getColors() {
+        return this.mapColors;
     }
 }
