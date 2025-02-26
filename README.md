@@ -1,6 +1,7 @@
 # arena-game
 
-<img width="779" alt="image" src="https://github.com/user-attachments/assets/1144934e-5903-492f-acc1-0537b4ae706d" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/864146f1-a6f3-429b-93b1-ffd4976c8ee0" />
+
 
 
 A simple 2D game built with JavaScript where you can move a character around a tile-based arena. Features include:
