@@ -9,6 +9,17 @@ export class BaseNPC {
         this.name = name;
         this.direction = 'down';
         this.debug = false;
+
+        // Marker properties
+        this.showMarker = true;
+        this.markerOffset = 0;
+        this.markerSpeed = 0.1;
+        this.markerTime = 0;
+
+        // Conversation properties
+        this.conversationIndex = 0;
+        this.isInConversation = false;
+        this.conversations = [["Hello!"]]; // Default conversation
     }
 
     setDebug(debug) {
@@ -16,9 +27,22 @@ export class BaseNPC {
     }
 
     interact(player) {
-        // Base interaction method - override in subclasses
-        console.log(`${this.name} was interacted with`);
+        if (!this.isInConversation) {
+            this.isInConversation = true;
+            const currentConversation = this.conversations[this.conversationIndex];
+            player.game.showDialog(currentConversation, () => {
+                this.isInConversation = false;
+                if (this.conversationIndex === 0) {
+                    this.showMarker = false;
+                }
+                this.conversationIndex = (this.conversationIndex + 1) % this.conversations.length;
+                this.onConversationComplete?.();
+            });
+        }
     }
+
+    // Optional callback for subclasses
+    onConversationComplete() {}
 
     isNearby(player) {
         const distance = Math.sqrt(
@@ -43,6 +67,21 @@ export class BaseNPC {
         ctx.fillText(this.name, screenX + 16, screenY - 5);
     }
 
+    _renderMarker(ctx, screenX, screenY) {
+        if (this.showMarker) {
+            this.markerTime += this.markerSpeed;
+            this.markerOffset = Math.sin(this.markerTime) * 4;
+            
+            ctx.fillStyle = 'yellow';
+            ctx.beginPath();
+            ctx.moveTo(screenX + 16, screenY - 8 + this.markerOffset);
+            ctx.lineTo(screenX + 21, screenY - 18 + this.markerOffset);
+            ctx.lineTo(screenX + 11, screenY - 18 + this.markerOffset);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+
     _renderDebug(ctx, screenX, screenY) {
         if (!this.debug) return;
 
@@ -62,6 +101,7 @@ export class BaseNPC {
         const screenY = this.y + mapOffset.y;
 
         this._renderNPC(ctx, screenX, screenY);
+        this._renderMarker(ctx, screenX, screenY);
         this._renderDebug(ctx, screenX, screenY);
     }
 }

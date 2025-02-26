@@ -3,9 +3,6 @@ import { BaseNPC } from './BaseNPC.js';
 export class GuideNPC extends BaseNPC {
     constructor(x, y) {
         super(x, y, "Guide");
-        this.conversationIndex = 0;
-        this.isInConversation = false;
-        this.showMarker = true;  // New flag to control marker visibility
         this.conversations = [
             [
                 "Hello there! Welcome to our little town!",
@@ -29,50 +26,5 @@ export class GuideNPC extends BaseNPC {
                 "Come back if you need more help!"
             ]
         ];
-        this.markerOffset = 0;
-        this.markerSpeed = 0.1;
-        this.markerTime = 0;
-    }
-
-    interact(player) {
-        // If we're not in a conversation, start a new one
-        if (!this.isInConversation) {
-            this.isInConversation = true;
-            const currentConversation = this.conversations[this.conversationIndex];
-            player.game.showDialog(currentConversation, () => {
-                // When conversation completes
-                this.isInConversation = false;
-                if (this.conversationIndex === 0) {
-                    this.showMarker = false;  // Hide marker after first conversation
-                }
-                this.conversationIndex = (this.conversationIndex + 1) % this.conversations.length;
-            });
-        }
-    }
-
-    render(ctx, mapOffset) {
-        const screenX = this.x + mapOffset.x;
-        const screenY = this.y + mapOffset.y;
-
-        // Custom appearance for guide
-        this._renderNPC(ctx, screenX, screenY);
-        
-        // Only render marker if showMarker is true
-        if (this.showMarker) {
-            // Animate marker
-            this.markerTime += this.markerSpeed;
-            this.markerOffset = Math.sin(this.markerTime) * 4;
-            
-            // Add animated marker for guide
-            ctx.fillStyle = 'yellow';
-            ctx.beginPath();
-            ctx.moveTo(screenX + 16, screenY - 8 + this.markerOffset);
-            ctx.lineTo(screenX + 21, screenY - 18 + this.markerOffset);
-            ctx.lineTo(screenX + 11, screenY - 18 + this.markerOffset);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        this._renderDebug(ctx, screenX, screenY);
     }
 }
