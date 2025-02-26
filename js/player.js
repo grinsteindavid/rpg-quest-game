@@ -1,34 +1,76 @@
 import { SPRITES } from './colors.js';
 
+/**
+ * Represents a player character in the game world.
+ * Handles movement, collision detection, and rendering of the player sprite.
+ */
 export class Player {
-    // Static class properties
+    /** @type {number} Width of the player sprite in pixels */
     width = 32;
+    
+    /** @type {number} Height of the player sprite in pixels */
     height = 32;
+    
+    /** @type {number} Size of a single tile in pixels */
     tileSize = 32;
+    
+    /** @type {number} Movement speed in pixels per frame */
     speed = 2;
+    
+    /** 
+     * @type {Object} Collision box dimensions
+     * @property {number} width Width of the collision box
+     * @property {number} height Height of the collision box
+     */
     collision = {
         width: 28,
         height: 28
     };
 
-    // Default state
+    /** @type {boolean} Whether debug visualization is enabled */
     debug = false;
+    
+    /** @type {boolean} Whether this is the first spawn of the player */
     initialSpawn = true;
+    
+    /** @type {boolean} Whether the player is currently moving between tiles */
     isMoving = false;
+    
+    /** @type {boolean} Legacy moving state flag */
     moving = false;
+    
+    /** @type {'up'|'down'|'left'|'right'} Current facing direction of the player */
     direction = 'down';
+    
+    /** 
+     * @type {Object} Offset for centering the map
+     * @property {number} x Horizontal map offset
+     * @property {number} y Vertical map offset
+     */
     mapOffset = { x: 0, y: 0 };
 
-    // Null-initialized references
+    /** @type {Map|null} Reference to the current game map */
     map = null;
+    
+    /** @type {InputHandler|null} Reference to the input handling system */
     input = null;
+    
+    /** @type {Game|null} Reference to the main game instance */
     game = null;
 
+    /**
+     * Creates a new Player instance.
+     * @param {number} x - Initial x coordinate in pixels
+     * @param {number} y - Initial y coordinate in pixels
+     */
     constructor(x, y) {
-        // Position state (changes frequently)
+        /** @type {number} Current x position in pixels */
         this.x = x;
+        /** @type {number} Current y position in pixels */
         this.y = y;
+        /** @type {number} Target x position for movement */
         this.targetX = x;
+        /** @type {number} Target y position for movement */
         this.targetY = y;
     }
 
@@ -88,6 +130,12 @@ export class Player {
         this.game = game;
     }
 
+    /**
+     * Updates the player's facing direction based on movement input.
+     * @param {number} dx - Horizontal movement direction (-1, 0, or 1)
+     * @param {number} dy - Vertical movement direction (-1, 0, or 1)
+     * @private
+     */
     _updateDirection(dx, dy) {
         if (dx < 0) this.direction = 'left';
         else if (dx > 0) this.direction = 'right';
@@ -95,6 +143,13 @@ export class Player {
         else if (dy > 0) this.direction = 'down';
     }
 
+    /**
+     * Checks if a move to the specified tile coordinates is valid.
+     * @param {number} tileX - Target tile X coordinate
+     * @param {number} tileY - Target tile Y coordinate
+     * @returns {boolean} Whether the move is valid
+     * @private
+     */
     _isValidMove(tileX, tileY) {
         return tileX >= 0 && 
                tileX < this.map.mapData[0].length &&
@@ -127,6 +182,10 @@ export class Player {
         }
     }
 
+    /**
+     * Handles the continuous movement animation between tiles.
+     * @private
+     */
     _handleMovementAnimation() {
         const dx = this.targetX - this.x;
         const dy = this.targetY - this.y;
@@ -140,12 +199,20 @@ export class Player {
         }
     }
 
+    /**
+     * Snaps the player to the target position when close enough.
+     * @private
+     */
     _snapToTarget() {
         this.x = this.targetX;
         this.y = this.targetY;
         this.isMoving = false;
     }
 
+    /**
+     * Checks if the player's current position triggers a map transition.
+     * @private
+     */
     _checkMapTransition() {
         const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
         const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
@@ -158,11 +225,22 @@ export class Player {
         }
     }
 
+    /**
+     * Moves the player towards their target position.
+     * @param {number} dx - Distance to target X
+     * @param {number} dy - Distance to target Y
+     * @param {number} distance - Total distance to target
+     * @private
+     */
     _moveTowardsTarget(dx, dy, distance) {
         this.x += (dx / distance) * this.speed;
         this.y += (dy / distance) * this.speed;
     }
 
+    /**
+     * Processes keyboard input for player movement.
+     * @private
+     */
     _handleInput() {
         if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
             this.move(-1, 0);
@@ -189,6 +267,13 @@ export class Player {
         }
     }
 
+    /**
+     * Renders the player sprite on the canvas.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     * @private
+     */
     _renderPlayer(ctx, screenX, screenY) {
         ctx.fillStyle = SPRITES.PLAYER.body;
         ctx.fillRect(screenX + 8, screenY + 8, 16, 20);
@@ -203,6 +288,14 @@ export class Player {
         ctx.fillRect(screenX + 12 + eyeOffset, screenY + 10, 2, 2);
     }
 
+    /**
+     * Renders debug visualization for the player.
+     * Shows collision box and direction indicator.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     * @private
+     */
     _renderDebug(ctx, screenX, screenY) {
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 2;
