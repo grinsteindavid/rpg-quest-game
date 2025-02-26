@@ -27,6 +27,9 @@ export class GuideNPC extends BaseNPC {
                 "Come back if you need more help!"
             ]
         ];
+        this.markerOffset = 0;
+        this.markerSpeed = 0.1;
+        this.markerTime = 0;
     }
 
     interact(player) {
@@ -44,12 +47,16 @@ export class GuideNPC extends BaseNPC {
         // Custom appearance for guide
         this._renderNPC(ctx, screenX, screenY);
         
-        // Add special marker for guide
+        // Animate marker
+        this.markerTime += this.markerSpeed;
+        this.markerOffset = Math.sin(this.markerTime) * 4;
+        
+        // Add animated marker for guide
         ctx.fillStyle = 'yellow';
         ctx.beginPath();
-        ctx.moveTo(screenX + 16, screenY - 8);
-        ctx.lineTo(screenX + 21, screenY - 18);
-        ctx.lineTo(screenX + 11, screenY - 18);
+        ctx.moveTo(screenX + 16, screenY - 8 + this.markerOffset);
+        ctx.lineTo(screenX + 21, screenY - 18 + this.markerOffset);
+        ctx.lineTo(screenX + 11, screenY - 18 + this.markerOffset);
         ctx.closePath();
         ctx.fill();
 
