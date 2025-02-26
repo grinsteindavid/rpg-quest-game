@@ -3,139 +3,103 @@ import { HomeTownMap } from './maps/HomeTownMap.js';
 import { ForestMap } from './maps/ForestMap.js';
 import { InputHandler } from './input.js';
 
-/**
- * Main game controller class that manages the game loop, maps, and player.
- */
 export class Game {
-    /**
-     * Creates a new Game instance.
-     * @param {HTMLCanvasElement} canvas - The canvas element where the game will be rendered
-     */
+    #canvas;
+    #ctx;
+    #maps;
+    #currentMap;
+    #player;
+    #input;
+    #debug = false;
+
     constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        
-        // Set fixed canvas size
-        this.canvas.width = 800;
-        this.canvas.height = 600;
-        
-        // Initialize maps
-        this.maps = {
+        this.#canvas = canvas;
+        this.#ctx = canvas.getContext('2d');
+        this.#initializeCanvas();
+        this.#initializeMaps();
+        this.#initializeGameComponents();
+        this.#setupDebugMode();
+        requestAnimationFrame(this.#gameLoop);
+    }
+
+    #initializeCanvas() {
+        this.#canvas.width = 800;
+        this.#canvas.height = 600;
+        this.#canvas.focus();
+    }
+
+    #initializeMaps() {
+        this.#maps = {
             hometown: new HomeTownMap(),
             forest: new ForestMap()
         };
-        
-        // Provide map references to each map
-        for (const map of Object.values(this.maps)) {
-            map.maps = this.maps;
-        }
-        
-        this.currentMap = this.maps.hometown;
-        
-        // Initialize game components
-        this.map = this.currentMap;
-        const startPos = this.map.getInitialPlayerPosition();
-        this.player = new Player(startPos.x, startPos.y);
-        this.input = new InputHandler();
-        
-        // Setup components
-        this.player.setGame(this); // Add this line
-        this.player.setMap(this.map);
-        this.player.setInput(this.input);
-        
-        // Make sure canvas has focus to receive input
-        canvas.focus();
-        
-        this.debug = false;
-        this.setupDebugMode();
-        
-        // Start game loop
-        requestAnimationFrame(this.gameLoop);
+
+        // Connect maps to each other
+        Object.values(this.#maps).forEach(map => {
+            map.maps = this.#maps;
+        });
+
+        this.#currentMap = this.#maps.hometown;
     }
 
-    /**
-     * Changes the current map and updates player position.
-     * @param {string} mapName - The name of the map to change to ('hometown' or 'forest')
-     * @param {Object} destination - The destination coordinates in the new map
-     * @param {number} destination.x - The x tile coordinate in the new map
-     * @param {number} destination.y - The y tile coordinate in the new map
-     */
+    #initializeGameComponents() {
+        const startPos = this.#currentMap.getInitialPlayerPosition();
+        this.#input = new InputHandler();
+        this.#player = new Player(startPos.x, startPos.y);
+        
+        this.#player.setGame(this);
+        this.#player.setMap(this.#currentMap);
+        this.#player.setInput(this.#input);
+    }
+
     changeMap(mapName, destination) {
-        this.currentMap = this.maps[mapName];
-        this.map = this.currentMap;
-        
-        if (destination) {
-            this.player.x = destination.x * this.map.tileSize;
-            this.player.y = destination.y * this.map.tileSize;
-        } else {
-            const startPos = this.map.getInitialPlayerPosition();
-            this.player.x = startPos.x;
-            this.player.y = startPos.y;
-        }
-        
-        this.player.setMap(this.map);
+        this.#currentMap = this.#maps[mapName];
+        const pos = destination ? {
+            x: destination.x * this.#currentMap.tileSize,
+            y: destination.y * this.#currentMap.tileSize
+        } : this.#currentMap.getInitialPlayerPosition();
+
+        this.#player.x = pos.x;
+        this.#player.y = pos.y;
+        this.#player.setMap(this.#currentMap);
     }
 
-    /**
-     * Sets up debug mode toggle functionality.
-     * Connects to a button with id 'debug-toggle' in the DOM.
-     * @private
-     */
-    setupDebugMode() {
+    #setupDebugMode() {
         const debugButton = document.getElementById('debug-toggle');
         debugButton.addEventListener('click', () => {
-            this.debug = !this.debug;
+            this.#debug = !this.#debug;
             debugButton.classList.toggle('active');
+            this.#updateDebugState();
         });
     }
 
-    /**
-     * Updates game state including player and map debug states.
-     * Called every frame by the game loop.
-     */
-    update() {
-        this.player.update();
-        this.player.setDebug(this.debug);
-        this.map.setDebug(this.debug);
+    #updateDebugState() {
+        this.#player.setDebug(this.#debug);
+        this.#currentMap.setDebug(this.#debug);
     }
 
-    /**
-     * Renders the current game state to the canvas.
-     * Called every frame by the game loop.
-     */
-    render() {
-        // Clear canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Save context state
-        this.ctx.save();
-        
-        // Render game objects
-        this.map.render(this.ctx);
-        this.player.render(this.ctx);
-        
-        // Restore context state
-        this.ctx.restore();
+    #update() {
+        this.#player.update();
+        this.#updateDebugState();
     }
 
-    /**
-     * Main game loop that drives updates and rendering.
-     * Uses requestAnimationFrame for smooth animation.
-     * @private
-     */
-    gameLoop = () => {
-        this.update();
-        this.render();
-        requestAnimationFrame(this.gameLoop);
+    #render() {
+        this.#ctx.clearRect(0, 0, this.#canvas.width, this.#canvas.height);
+        this.#ctx.save();
+        this.#currentMap.render(this.#ctx);
+        this.#player.render(this.#ctx);
+        this.#ctx.restore();
+    }
+
+    #gameLoop = () => {
+        this.#update();
+        this.#render();
+        requestAnimationFrame(this.#gameLoop);
     }
 }
 
-/**
- * Initialize game when window loads.
- * Creates canvas element and starts the game.
- */
 window.addEventListener('load', () => {
     const canvas = document.getElementById('gameCanvas');
-    canvas.tabIndex = 0; // Make canvas focusable
+    canvas.tabIndex = 0;
     new Game(canvas);
 });
