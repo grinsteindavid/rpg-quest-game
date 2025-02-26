@@ -1,40 +1,35 @@
 import { SPRITES } from './colors.js';
 
-/**
- * Represents a player character in the game world.
- * Handles movement, collision detection, and rendering of the player sprite.
- */
 export class Player {
-    /**
-     * Creates a new Player instance.
-     * @param {number} x - Initial x coordinate
-     * @param {number} y - Initial y coordinate
-     */
+    // Static class properties
+    width = 32;
+    height = 32;
+    tileSize = 32;
+    speed = 2;
+    collision = {
+        width: 28,
+        height: 28
+    };
+
+    // Default state
+    debug = false;
+    initialSpawn = true;
+    isMoving = false;
+    moving = false;
+    direction = 'down';
+    mapOffset = { x: 0, y: 0 };
+
+    // Null-initialized references
+    map = null;
+    input = null;
+    game = null;
+
     constructor(x, y) {
+        // Position state (changes frequently)
         this.x = x;
         this.y = y;
-        this.width = 32;
-        this.height = 32;
-        this.speed = 2;
-        this.direction = 'down';
-        this.moving = false;
-        this.collision = {
-            width: 28,
-            height: 28
-        };
-        this.map = null; // Will be set by game
-        this.input = null;
-        this.mapOffset = {
-            x: 0,
-            y: 0
-        };
-        this.initialSpawn = true; // New flag for initial spawn
-        this.debug = false;
-        this.tileSize = 32;
-        this.isMoving = false;
         this.targetX = x;
         this.targetY = y;
-        this.game = null; // Add game reference
     }
 
     /**
