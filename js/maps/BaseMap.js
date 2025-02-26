@@ -1,13 +1,29 @@
 import { COLORS, SPRITES } from '../colors.js';
 
+/**
+ * Base class for game maps providing common functionality for rendering and collision detection.
+ * Implements basic map operations like tile checks, collision detection, and rendering.
+ */
 export class BaseMap {
+    /**
+     * Creates a new map instance.
+     * @param {string} name - The display name of the map
+     */
     constructor(name) {
+        /** @type {string} The display name of the map */
         this.name = name;
+        /** @type {number} Size of each tile in pixels */
         this.tileSize = 32;
+        /** @type {number} Width of map borders */
         this.borderWidth = 4;
+        /** @type {boolean} Debug mode flag */
         this.debug = false;
     }
 
+    /**
+     * Calculates the offset needed to center the map on the canvas.
+     * @returns {{x: number, y: number}} The x and y offsets in pixels
+     */
     getMapOffset() {
         return {
             x: (800 - this.mapData[0].length * this.tileSize) / 2,
@@ -15,14 +31,30 @@ export class BaseMap {
         };
     }
 
+    /**
+     * Determines if a tile type represents a solid (non-walkable) tile.
+     * @param {number} type - The tile type to check
+     * @returns {boolean} True if the tile is solid
+     */
     isSolidTile(type) {
         return type === 1;
     }
 
+    /**
+     * Determines if a tile type represents a walkable tile.
+     * @param {number} type - The tile type to check
+     * @returns {boolean} True if the tile is walkable
+     */
     isWalkableTile(type) {
         return type === 0;
     }
 
+    /**
+     * Gets the tile type at the specified pixel coordinates.
+     * @param {number} x - The x coordinate in pixels
+     * @param {number} y - The y coordinate in pixels
+     * @returns {number} The tile type at the specified location
+     */
     getTileAt(x, y) {
         const tileX = Math.floor(x / this.tileSize);
         const tileY = Math.floor(y / this.tileSize);
@@ -35,6 +67,12 @@ export class BaseMap {
         return this.mapData[tileY][tileX];
     }
 
+    /**
+     * Checks if there is a collision at the specified pixel coordinates.
+     * @param {number} x - The x coordinate in pixels
+     * @param {number} y - The y coordinate in pixels
+     * @returns {boolean} True if there is a collision
+     */
     checkCollision(x, y) {
         const offset = this.getMapOffset();
         const mapX = x - offset.x;
@@ -51,10 +89,18 @@ export class BaseMap {
         return this.isSolidTile(this.mapData[tileY][tileX]);
     }
 
+    /**
+     * Sets the debug mode state.
+     * @param {boolean} debug - The debug state to set
+     */
     setDebug(debug) {
         this.debug = debug;
     }
 
+    /**
+     * Draws the map name at the top of the canvas.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
     drawMapName(ctx) {
         ctx.save();
         ctx.fillStyle = 'white';
@@ -64,6 +110,10 @@ export class BaseMap {
         ctx.restore();
     }
 
+    /**
+     * Renders the complete map including background, tiles, exits, and map name.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
     render(ctx) {
         this.drawBackground(ctx);
         this.drawAllTiles(ctx);
@@ -71,11 +121,19 @@ export class BaseMap {
         this.drawMapName(ctx);
     }
 
+    /**
+     * Fills the canvas with the background color.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
     drawBackground(ctx) {
         ctx.fillStyle = SPRITES.PATH;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
 
+    /**
+     * Draws all tiles in the map based on the mapData array.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
     drawAllTiles(ctx) {
         const offset = this.getMapOffset();
         
@@ -94,6 +152,10 @@ export class BaseMap {
         }
     }
 
+    /**
+     * Draws all map exits if transitions are defined.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
     drawAllExits(ctx) {
         if (!this.transitions) return;
 
@@ -103,6 +165,13 @@ export class BaseMap {
         }
     }
 
+    /**
+     * Draws a single map exit with appropriate coloring and arrow indicators.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {string} mapName - Name of the destination map
+     * @param {Object} transition - Transition data containing x and y coordinates
+     * @param {{x: number, y: number}} offset - Map offset for centered rendering
+     */
     drawExit(ctx, mapName, transition, offset) {
         const colors = this.maps?.[mapName]?.getColors() || { primary: '#666', pattern: '#999' };
         
@@ -115,11 +184,26 @@ export class BaseMap {
         }
     }
 
+    /**
+     * Draws the base rectangle for an exit tile.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} x - The x coordinate in pixels
+     * @param {number} y - The y coordinate in pixels
+     * @param {string} color - The fill color for the exit
+     */
     drawExitBase(ctx, x, y, color) {
         ctx.fillStyle = color;
         ctx.fillRect(x, y, this.tileSize, this.tileSize);
     }
 
+    /**
+     * Draws direction arrows on exit tiles.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} x - The x coordinate in pixels
+     * @param {number} y - The y coordinate in pixels
+     * @param {number} transitionY - The y position of the transition
+     * @param {string} color - The arrow color
+     */
     drawExitArrow(ctx, x, y, transitionY, color) {
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -137,18 +221,41 @@ export class BaseMap {
         ctx.fill();
     }
 
+    /**
+     * Draws an upward pointing arrow for top exits.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} x - The x coordinate in pixels
+     * @param {number} y - The y coordinate in pixels
+     * @param {number} mid - Middle point of the tile
+     * @param {number} arrowSize - Size of the arrow
+     */
     drawUpArrow(ctx, x, y, mid, arrowSize) {
         ctx.moveTo(x + mid, y + arrowSize);
         ctx.lineTo(x + mid + arrowSize, y + this.tileSize - arrowSize);
         ctx.lineTo(x + mid - arrowSize, y + this.tileSize - arrowSize);
     }
 
+    /**
+     * Draws a downward pointing arrow for bottom exits.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} x - The x coordinate in pixels
+     * @param {number} y - The y coordinate in pixels
+     * @param {number} mid - Middle point of the tile
+     * @param {number} arrowSize - Size of the arrow
+     */
     drawDownArrow(ctx, x, y, mid, arrowSize) {
         ctx.moveTo(x + mid, y + this.tileSize - arrowSize);
         ctx.lineTo(x + mid + arrowSize, y + arrowSize);
         ctx.lineTo(x + mid - arrowSize, y + arrowSize);
     }
 
+    /**
+     * Draws a single tile with appropriate styling based on its type.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} type - The tile type to draw
+     * @param {number} posX - The x coordinate in pixels
+     * @param {number} posY - The y coordinate in pixels
+     */
     drawTile(ctx, type, posX, posY) {
         ctx.fillStyle = SPRITES.PATH;
         ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
@@ -159,6 +266,13 @@ export class BaseMap {
         }
     }
 
+    /**
+     * Draws debug information for a tile when debug mode is enabled.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} type - The tile type
+     * @param {number} posX - The x coordinate in pixels
+     * @param {number} posY - The y coordinate in pixels
+     */
     drawDebugTile(ctx, type, posX, posY) {
         ctx.fillStyle = this.isSolidTile(type) ? 
             'rgba(255, 0, 0, 0.3)' : 

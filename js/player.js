@@ -7,16 +7,12 @@ import { SPRITES } from './colors.js';
 export class Player {
     /** @type {number} Width of the player sprite in pixels */
     width = 32;
-    
     /** @type {number} Height of the player sprite in pixels */
     height = 32;
-    
     /** @type {number} Size of a single tile in pixels */
     tileSize = 32;
-    
     /** @type {number} Movement speed in pixels per frame */
     speed = 2;
-    
     /** 
      * @type {Object} Collision box dimensions
      * @property {number} width Width of the collision box
@@ -26,35 +22,26 @@ export class Player {
         width: 28,
         height: 28
     };
-
     /** @type {boolean} Whether debug visualization is enabled */
     debug = false;
-    
     /** @type {boolean} Whether this is the first spawn of the player */
     initialSpawn = true;
-    
     /** @type {boolean} Whether the player is currently moving between tiles */
     isMoving = false;
-    
     /** @type {boolean} Legacy moving state flag */
     moving = false;
-    
     /** @type {'up'|'down'|'left'|'right'} Current facing direction of the player */
     direction = 'down';
-    
     /** 
      * @type {Object} Offset for centering the map
      * @property {number} x Horizontal map offset
      * @property {number} y Vertical map offset
      */
     mapOffset = { x: 0, y: 0 };
-
     /** @type {Map|null} Reference to the current game map */
     map = null;
-    
     /** @type {InputHandler|null} Reference to the input handling system */
     input = null;
-    
     /** @type {Game|null} Reference to the main game instance */
     game = null;
 
