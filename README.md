@@ -10,18 +10,59 @@ https://grinsteindavid.github.io/arena-game/
 
 
 
-
 A simple 2D game built with JavaScript where you can move a character around a tile-based arena. Features include:
 
 - Grid-based movement system
 - Collision detection
+- Map transitions
 - Debug visualization mode
-- Tile-based map system
-- Retro Game Boy-inspired graphics
 
-## Controls
-- Arrow keys or WASD to move
-- Click the Debug button to see collision boundaries and tile types
+### Controls
+- **WASD** or **Arrow Keys**: Move character
+- **E** or **Space**: Interact with NPCs / Continue dialogue
+- **Debug Toggle**: Top-right button shows collision boxes and tile info
+
+### Characters
+- **Player Character**: Customizable sprite with directional movement
+- **Guide NPC**: Helpful character that explains game controls
+- **Merchant NPC**: Shopkeeper with future trading possibilities
+
+### Dialogue System
+- Multi-message conversations
+- Smooth transitions between messages
+- Visual indicator for continuation
+- Different conversation sets per NPC
+
+### Maps
+- **Home Town**: Starting area with NPCs
+- **Forest**: Connected area through north path
+
+### Visual Style
+- Game Boy-inspired color palette
+- Pixel art aesthetics
+- Smooth animations
+- Character markers and indicators
+
+## Technical Features
+- Modular JavaScript architecture
+- Class-based component system
+- Extensible NPC framework
+- Clean separation of concerns
 
 ## Development
-Built using vanilla JavaScript and HTML5 Canvas.
+
+### Prerequisites
+- Modern web browser
+- Local web server (for development)
+
+### Running the Game
+1. Start a local web server in the project directory
+2. Open `index.html` in your browser
+3. Use WASD/Arrows to move, E to interact
+
+### Debug Mode
+Click the "Debug Mode" button to see:
+- Collision boundaries
+- NPC interaction zones
+- Map tile types
+- Player direction indicator
