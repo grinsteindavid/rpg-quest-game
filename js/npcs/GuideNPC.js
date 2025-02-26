@@ -4,6 +4,7 @@ export class GuideNPC extends BaseNPC {
     constructor(x, y) {
         super(x, y, "Guide");
         this.conversationIndex = 0;
+        this.isInConversation = false;
         this.conversations = [
             [
                 "Hello there! Welcome to our little town!",
@@ -33,11 +34,16 @@ export class GuideNPC extends BaseNPC {
     }
 
     interact(player) {
-        const currentConversation = this.conversations[this.conversationIndex];
-        player.game.showDialog(currentConversation, () => {
-            // Move to next conversation set when current one completes
-            this.conversationIndex = (this.conversationIndex + 1) % this.conversations.length;
-        });
+        // If we're not in a conversation, start a new one
+        if (!this.isInConversation) {
+            this.isInConversation = true;
+            const currentConversation = this.conversations[this.conversationIndex];
+            player.game.showDialog(currentConversation, () => {
+                // When conversation completes
+                this.isInConversation = false;
+                this.conversationIndex = (this.conversationIndex + 1) % this.conversations.length;
+            });
+        }
     }
 
     render(ctx, mapOffset) {

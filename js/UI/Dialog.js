@@ -11,6 +11,8 @@ export class Dialog {
     startConversation(messages, onComplete = null) {
         this.messageQueue = Array.isArray(messages) ? [...messages] : [messages];
         this.onComplete = onComplete;
+        this.isVisible = false;
+        this.isTransitioning = false;
         this.showNext();
     }
 
@@ -50,6 +52,9 @@ export class Dialog {
             this.isTransitioning = false;
             if (this.messageQueue.length > 0) {
                 this.showNext();
+            } else if (this.onComplete) {
+                this.onComplete();
+                this.onComplete = null;
             }
         }, 200); // Match CSS transition duration
     }
