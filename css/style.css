@@ -84,3 +84,33 @@ body {
 .debug-button.active + .debug-info {
     display: block;
 }
+
+#dialog-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    z-index: 1000;
+}
+
+.dialog-box {
+    background-color: #0f380f;
+    border: 4px solid #8bac0f;
+    border-radius: 4px;
+    padding: 15px;
+    color: #9bbc0f;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.dialog-prompt {
+    text-align: right;
+    margin-top: 5px;
+    animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-5px); }
+}

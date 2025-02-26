@@ -2,6 +2,7 @@ import { Player } from './player.js';
 import { HomeTownMap } from './maps/HomeTownMap.js';
 import { ForestMap } from './maps/ForestMap.js';
 import { InputHandler } from './input.js';
+import { Dialog } from './UI/Dialog.js';
 
 /**
  * Main game controller class that manages the game loop, maps, and player interactions.
@@ -21,6 +22,8 @@ export class Game {
     _input;
     /** @private @type {boolean} Debug mode state */
     _debug = false;
+    /** @private @type {Dialog} Dialog instance */
+    _dialog;
 
     /**
      * Creates a new Game instance.
@@ -33,6 +36,7 @@ export class Game {
         this._initializeMaps();
         this._initializeGameComponents();
         this._setupDebugMode();
+        this._dialog = new Dialog();
         requestAnimationFrame(this._gameLoop);
     }
 
@@ -124,6 +128,12 @@ export class Game {
      * @private
      */
     _update() {
+        if (this._dialog.isActive()) {
+            if (this._input.isPressed('e') || this._input.isPressed(' ')) {
+                this._dialog.hide();
+            }
+            return; // Pause game updates while dialog is showing
+        }
         this._player.update();
         this._updateDebugState();
     }
@@ -148,6 +158,14 @@ export class Game {
         this._update();
         this._render();
         requestAnimationFrame(this._gameLoop);
+    }
+
+    /**
+     * Shows a dialog with the given message.
+     * @param {string} message - The message to display in the dialog
+     */
+    showDialog(message) {
+        this._dialog.show(message);
     }
 }
 

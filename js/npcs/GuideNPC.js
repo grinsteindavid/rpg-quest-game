@@ -7,6 +7,8 @@ export class GuideNPC extends BaseNPC {
         this.dialogues = [
             "Welcome to our little town!",
             "Use WASD or arrow keys to move around.",
+            "Press E near NPCs to talk to them.",
+            "Press E or SPACE to continue dialog.",
             "You can exit to the forest through the north path.",
             "Come talk to me again if you need more help!"
         ];
@@ -14,9 +16,7 @@ export class GuideNPC extends BaseNPC {
 
     interact(player) {
         const message = this.dialogues[this.dialogIndex];
-        console.log(`Guide: ${message}`);
-        
-        // Cycle through dialogues
+        player.game.showDialog(message);
         this.dialogIndex = (this.dialogIndex + 1) % this.dialogues.length;
     }
 

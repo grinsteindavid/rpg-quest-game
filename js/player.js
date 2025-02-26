@@ -239,6 +239,9 @@ export class Player {
      * @private
      */
     _handleInput() {
+        // Don't process movement input if dialog is active
+        if (this.game._dialog.isActive()) return;
+        
         if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
             this.move(-1, 0);
         } else if (this.input.isPressed('ArrowRight') || this.input.isPressed('d')) {
