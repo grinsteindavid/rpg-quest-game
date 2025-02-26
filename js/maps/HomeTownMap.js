@@ -1,5 +1,6 @@
 import { BaseMap } from './BaseMap.js';
 import { GuideNPC } from '../npcs/GuideNPC.js';
+import { MerchantNPC } from '../npcs/MerchantNPC.js';
 import { COLORS } from '../colors.js';
 
 export class HomeTownMap extends BaseMap {
@@ -32,7 +33,8 @@ export class HomeTownMap extends BaseMap {
         ];
 
         this.npcs = [
-            new GuideNPC(2, 4)
+            new GuideNPC(2, 4),
+            new MerchantNPC(8, 5)  // Add Merchant NPC here (adjust position as needed)
         ];
     }
 
