@@ -16,7 +16,7 @@ export class HomeTownMap extends BaseMap {
             forest: {
                 x: [4, 5], // Valid x coordinates for transition
                 y: 0,      // Y coordinate for transition
-                destination: { x: 4, y: 7 }  // Updated: Move to forest's north exit
+                destination: { x: 2, y: 2 }  // Updated: Move to forest's north exit
             }
         };
         

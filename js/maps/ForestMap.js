@@ -15,7 +15,7 @@ export class ForestMap extends BaseMap {
                 x: [2, 4], // Valid x coordinates for transition
                 y: 1,         // Y coordinate for transition
                 type: 'exit',
-                destination: { x: 5, y: 7 }  // Updated: Move to hometown's south exit
+                destination: { x: 4, y: 1 }  // Updated: Move to hometown's south exit
             }
         };
         
