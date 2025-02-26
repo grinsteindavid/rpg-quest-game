@@ -12,7 +12,7 @@ export class ForestMap extends BaseMap {
         // Define transition points
         this.transitions = {
             hometown: {
-                x: [2, 3, 4], // Valid x coordinates for transition
+                x: [2, 4], // Valid x coordinates for transition
                 y: 1,         // Y coordinate for transition
                 type: 'exit',
                 destination: { x: 5, y: 7 }  // Updated: Move to hometown's south exit
@@ -21,7 +21,7 @@ export class ForestMap extends BaseMap {
         
         this.mapData = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],
+            [1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],
             [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1],
             [1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],

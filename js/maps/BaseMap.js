@@ -68,28 +68,6 @@ export class BaseMap {
     }
 
     /**
-     * Checks if there is a collision at the specified pixel coordinates.
-     * @param {number} x - The x coordinate in pixels
-     * @param {number} y - The y coordinate in pixels
-     * @returns {boolean} True if there is a collision
-     */
-    checkCollision(x, y) {
-        const offset = this.getMapOffset();
-        const mapX = x - offset.x;
-        const mapY = y - offset.y;
-        const tileX = Math.floor(mapX / this.tileSize);
-        const tileY = Math.floor(mapY / this.tileSize);
-
-        if (tileX < 0 || tileY < 0 || 
-            tileX >= this.mapData[0].length || 
-            tileY >= this.mapData.length) {
-            return true;
-        }
-
-        return this.isSolidTile(this.mapData[tileY][tileX]);
-    }
-
-    /**
      * Sets the debug mode state.
      * @param {boolean} debug - The debug state to set
      */
