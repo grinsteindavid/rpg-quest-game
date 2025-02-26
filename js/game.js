@@ -161,11 +161,12 @@ export class Game {
     }
 
     /**
-     * Shows a dialog with the given message.
-     * @param {string} message - The message to display in the dialog
+     * Shows a dialog with the given message or conversation.
+     * @param {string|string[]} messages - The message(s) to display
+     * @param {Function} [onComplete] - Optional callback when conversation ends
      */
-    showDialog(message) {
-        this._dialog.show(message);
+    showDialog(messages, onComplete = null) {
+        this._dialog.startConversation(messages, onComplete);
     }
 }
 

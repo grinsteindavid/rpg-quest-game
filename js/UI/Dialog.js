@@ -4,6 +4,24 @@ export class Dialog {
         this.text = document.getElementById('dialog-text');
         this.isVisible = false;
         this.isTransitioning = false;
+        this.messageQueue = [];
+        this.onComplete = null;
+    }
+
+    startConversation(messages, onComplete = null) {
+        this.messageQueue = Array.isArray(messages) ? [...messages] : [messages];
+        this.onComplete = onComplete;
+        this.showNext();
+    }
+
+    showNext() {
+        if (this.messageQueue.length > 0) {
+            const message = this.messageQueue.shift();
+            this.show(message);
+        } else if (this.onComplete) {
+            this.onComplete();
+            this.onComplete = null;
+        }
     }
 
     show(message) {
@@ -13,7 +31,6 @@ export class Dialog {
         this.isVisible = true;
         this.isTransitioning = true;
         
-        // Remove hidden class after a brief delay to ensure proper transition
         requestAnimationFrame(() => {
             this.container.classList.remove('hidden');
             setTimeout(() => {
@@ -29,13 +46,15 @@ export class Dialog {
         this.isTransitioning = true;
         this.container.classList.add('hidden');
         
-        // Reset transitioning state after animation completes
         setTimeout(() => {
             this.isTransitioning = false;
+            if (this.messageQueue.length > 0) {
+                this.showNext();
+            }
         }, 200); // Match CSS transition duration
     }
 
     isActive() {
-        return this.isVisible || this.isTransitioning;
+        return this.isVisible || this.isTransitioning || this.messageQueue.length > 0;
     }
 }

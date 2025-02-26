@@ -3,21 +3,38 @@ import { BaseNPC } from './BaseNPC.js';
 export class GuideNPC extends BaseNPC {
     constructor(x, y) {
         super(x, y, "Guide");
-        this.dialogIndex = 0;
-        this.dialogues = [
-            "Welcome to our little town!",
-            "Use WASD or arrow keys to move around.",
-            "Press E near NPCs to talk to them.",
-            "Press E or SPACE to continue dialog.",
-            "You can exit to the forest through the north path.",
-            "Come talk to me again if you need more help!"
+        this.conversationIndex = 0;
+        this.conversations = [
+            [
+                "Hello there! Welcome to our little town!",
+                "I'll be your guide here.",
+                "First, let me explain the controls...",
+                "Use WASD or arrow keys to move around.",
+                "Press E near NPCs like me to talk.",
+                "You're doing great! Keep pressing E or Space to continue..."
+            ],
+            [
+                "Ah, you're back!",
+                "Looking for directions?",
+                "You can exit to the forest through the north path.",
+                "But be careful, it can be dangerous out there!"
+            ],
+            [
+                "Need a refresher on the controls?",
+                "WASD or Arrows to move",
+                "E to interact with NPCs and objects",
+                "Space or E to continue dialogues",
+                "Come back if you need more help!"
+            ]
         ];
     }
 
     interact(player) {
-        const message = this.dialogues[this.dialogIndex];
-        player.game.showDialog(message);
-        this.dialogIndex = (this.dialogIndex + 1) % this.dialogues.length;
+        const currentConversation = this.conversations[this.conversationIndex];
+        player.game.showDialog(currentConversation, () => {
+            // Move to next conversation set when current one completes
+            this.conversationIndex = (this.conversationIndex + 1) % this.conversations.length;
+        });
     }
 
     render(ctx, mapOffset) {
