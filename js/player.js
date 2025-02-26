@@ -45,21 +45,26 @@ export class Player {
     setMap(map) {
         this.map = map;
         if (this.initialSpawn) {
-            // Place player in first empty path (tile type 0)
-            for (let y = 0; y < map.mapData.length; y++) {
-                for (let x = 0; x < map.mapData[y].length; x++) {
-                    if (map.mapData[y][x] === 0) {
-                        this.x = x * map.tileSize;
-                        this.y = y * map.tileSize;
-                        this.initialSpawn = false;
-                        break;
-                    }
-                }
-                if (!this.initialSpawn) break;
-            }
+            this._handleInitialSpawn();
         }
+        this._calculateMapOffset();
+    }
 
-        // Calculate map offset
+    _handleInitialSpawn() {
+        for (let y = 0; y < this.map.mapData.length; y++) {
+            for (let x = 0; x < this.map.mapData[y].length; x++) {
+                if (this.map.mapData[y][x] === 0) {
+                    this.x = x * this.map.tileSize;
+                    this.y = y * this.map.tileSize;
+                    this.initialSpawn = false;
+                    break;
+                }
+            }
+            if (!this.initialSpawn) break;
+        }
+    }
+
+    _calculateMapOffset() {
         this.mapOffset.x = (800 - this.map.mapData[0].length * this.map.tileSize) / 2;
         this.mapOffset.y = (600 - this.map.mapData.length * this.map.tileSize) / 2;
     }
@@ -88,6 +93,21 @@ export class Player {
         this.game = game;
     }
 
+    _updateDirection(dx, dy) {
+        if (dx < 0) this.direction = 'left';
+        else if (dx > 0) this.direction = 'right';
+        else if (dy < 0) this.direction = 'up';
+        else if (dy > 0) this.direction = 'down';
+    }
+
+    _isValidMove(tileX, tileY) {
+        return tileX >= 0 && 
+               tileX < this.map.mapData[0].length &&
+               tileY >= 0 && 
+               tileY < this.map.mapData.length &&
+               this.map.isWalkableTile(this.map.mapData[tileY][tileX]);
+    }
+
     /**
      * Handles player movement in the specified direction.
      * Checks for collisions and updates player position accordingly.
@@ -96,33 +116,67 @@ export class Player {
      */
     move(dx, dy) {
         if (!this.map || this.isMoving) return;
-        
-        // Only allow one direction at a time
         if (dx !== 0 && dy !== 0) return;
 
-        // Update direction regardless of movement possibility
-        if (dx < 0) this.direction = 'left';
-        else if (dx > 0) this.direction = 'right';
-        else if (dy < 0) this.direction = 'up';
-        else if (dy > 0) this.direction = 'down';
+        this._updateDirection(dx, dy);
 
-        // Calculate target position
         const newX = this.x + (dx * this.tileSize);
         const newY = this.y + (dy * this.tileSize);
-
-        // Convert to tile coordinates
         const tileX = Math.floor(newX / this.tileSize);
         const tileY = Math.floor(newY / this.tileSize);
 
-        // Check if target tile is walkable
-        if (tileX >= 0 && tileX < this.map.mapData[0].length &&
-            tileY >= 0 && tileY < this.map.mapData.length &&
-            this.map.isWalkableTile(this.map.mapData[tileY][tileX])) {
-            
-            // Set target position
+        if (this._isValidMove(tileX, tileY)) {
             this.targetX = tileX * this.tileSize;
             this.targetY = tileY * this.tileSize;
             this.isMoving = true;
+        }
+    }
+
+    _handleMovementAnimation() {
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < this.speed) {
+            this._snapToTarget();
+            this._checkMapTransition();
+        } else {
+            this._moveTowardsTarget(dx, dy, distance);
+        }
+    }
+
+    _snapToTarget() {
+        this.x = this.targetX;
+        this.y = this.targetY;
+        this.isMoving = false;
+    }
+
+    _checkMapTransition() {
+        const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
+        const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
+        
+        for (const [mapName, transition] of Object.entries(this.map.transitions)) {
+            if (transition.x.includes(tileX) && tileY === transition.y) {
+                this.game.changeMap(mapName, transition.destination);
+                break;
+            }
+        }
+    }
+
+    _moveTowardsTarget(dx, dy, distance) {
+        this.x += (dx / distance) * this.speed;
+        this.y += (dy / distance) * this.speed;
+    }
+
+    _handleInput() {
+        if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
+            this.move(-1, 0);
+        } else if (this.input.isPressed('ArrowRight') || this.input.isPressed('d')) {
+            this.move(1, 0);
+        } else if (this.input.isPressed('ArrowUp') || this.input.isPressed('w')) {
+            this.move(0, -1);
+        } else if (this.input.isPressed('ArrowDown') || this.input.isPressed('s')) {
+            this.move(0, 1);
         }
     }
 
@@ -133,47 +187,45 @@ export class Player {
     update() {
         if (!this.input) return;
 
-        // Handle movement animation
         if (this.isMoving) {
-            const dx = this.targetX - this.x;
-            const dy = this.targetY - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < this.speed) {
-                // Snap to target position when close enough
-                this.x = this.targetX;
-                this.y = this.targetY;
-                this.isMoving = false;
-
-                // Check for transitions only when reaching target position
-                const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
-                const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
-                
-                for (const [mapName, transition] of Object.entries(this.map.transitions)) {
-                    if (transition.x.includes(tileX) && tileY === transition.y) {
-                        this.game.changeMap(mapName, transition.destination);
-                        break;
-                    }
-                }
-            } else {
-                // Move towards target
-                this.x += (dx / distance) * this.speed;
-                this.y += (dy / distance) * this.speed;
-            }
+            this._handleMovementAnimation();
+        } else {
+            this._handleInput();
         }
+    }
 
-        // Handle input only when not moving
-        if (!this.isMoving) {
-            if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
-                this.move(-1, 0);
-            } else if (this.input.isPressed('ArrowRight') || this.input.isPressed('d')) {
-                this.move(1, 0);
-            } else if (this.input.isPressed('ArrowUp') || this.input.isPressed('w')) {
-                this.move(0, -1);
-            } else if (this.input.isPressed('ArrowDown') || this.input.isPressed('s')) {
-                this.move(0, 1);
-            }
+    _renderPlayer(ctx, screenX, screenY) {
+        ctx.fillStyle = SPRITES.PLAYER.body;
+        ctx.fillRect(screenX + 8, screenY + 8, 16, 20);
+
+        ctx.fillStyle = SPRITES.PLAYER.skin;
+        ctx.fillRect(screenX + 8, screenY + 4, 16, 16);
+
+        ctx.fillStyle = SPRITES.PLAYER.hair;
+        ctx.fillRect(screenX + 6, screenY + 4, 20, 4);
+
+        const eyeOffset = this.direction === 'left' ? -2 : 2;
+        ctx.fillRect(screenX + 12 + eyeOffset, screenY + 10, 2, 2);
+    }
+
+    _renderDebug(ctx, screenX, screenY) {
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(screenX, screenY, this.width, this.height);
+
+        ctx.strokeStyle = 'yellow';
+        ctx.beginPath();
+        ctx.moveTo(screenX + this.width / 2, screenY + this.height / 2);
+        const length = 20;
+        let dirX = 0, dirY = 0;
+        switch (this.direction) {
+            case 'up': dirY = -length; break;
+            case 'down': dirY = length; break;
+            case 'left': dirX = -length; break;
+            case 'right': dirX = length; break;
         }
+        ctx.lineTo(screenX + this.width / 2 + dirX, screenY + this.height / 2 + dirY);
+        ctx.stroke();
     }
 
     /**
@@ -186,41 +238,9 @@ export class Player {
         const screenX = this.x + mapOffset.x;
         const screenY = this.y + mapOffset.y;
 
-        // Draw player
-        ctx.fillStyle = SPRITES.PLAYER.body;
-        ctx.fillRect(screenX + 8, screenY + 8, 16, 20);
-
-        ctx.fillStyle = SPRITES.PLAYER.skin;
-        ctx.fillRect(screenX + 8, screenY + 4, 16, 16);
-
-        ctx.fillStyle = SPRITES.PLAYER.hair;
-        ctx.fillRect(screenX + 6, screenY + 4, 20, 4);
-
-        // Draw face
-        const eyeOffset = this.direction === 'left' ? -2 : 2;
-        ctx.fillRect(screenX + 12 + eyeOffset, screenY + 10, 2, 2);
-
-        // Debug visualization
+        this._renderPlayer(ctx, screenX, screenY);
         if (this.debug) {
-            // Only show blue boundary box
-            ctx.strokeStyle = 'blue';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(screenX, screenY, this.width, this.height);
-
-            // Direction indicator
-            ctx.strokeStyle = 'yellow';
-            ctx.beginPath();
-            ctx.moveTo(screenX + this.width / 2, screenY + this.height / 2);
-            const length = 20;
-            let dirX = 0, dirY = 0;
-            switch (this.direction) {
-                case 'up': dirY = -length; break;
-                case 'down': dirY = length; break;
-                case 'left': dirX = -length; break;
-                case 'right': dirX = length; break;
-            }
-            ctx.lineTo(screenX + this.width / 2 + dirX, screenY + this.height / 2 + dirY);
-            ctx.stroke();
+            this._renderDebug(ctx, screenX, screenY);
         }
     }
 }
