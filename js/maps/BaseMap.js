@@ -65,21 +65,72 @@ export class BaseMap {
     }
 
     render(ctx) {
+        // Draw base map
         ctx.fillStyle = SPRITES.PATH;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         const offset = this.getMapOffset();
 
+        // Draw regular tiles and debug info together
         for (let y = 0; y < this.mapData.length; y++) {
             for (let x = 0; x < this.mapData[y].length; x++) {
                 const posX = x * this.tileSize + offset.x;
                 const posY = y * this.tileSize + offset.y;
                 const type = this.mapData[y][x];
-
+                
+                // Draw base tile
                 this.drawTile(ctx, type, posX, posY);
-
+                
+                // Draw debug info if enabled
                 if (this.debug) {
                     this.drawDebugTile(ctx, type, posX, posY);
+                }
+            }
+        }
+
+        // Draw exits with special styling
+        if (this.transitions) {
+            for (const [mapName, transition] of Object.entries(this.transitions)) {
+                // Different colors for different destinations
+                const colors = {
+                    forest: {
+                        primary: '#1a472a',    // Dark forest green
+                        pattern: '#2d5a27'     // Lighter forest green
+                    },
+                    hometown: {
+                        primary: '#8b4513',    // Saddle brown
+                        pattern: '#a0522d'      // Sienna
+                    }
+                };
+
+                const exitColor = colors[mapName] || { primary: '#666', pattern: '#999' };
+                
+                for (const x of transition.x) {
+                    const screenX = x * this.tileSize + offset.x;
+                    const screenY = transition.y * this.tileSize + offset.y;
+                    
+                    // Draw base exit tile
+                    ctx.fillStyle = exitColor.primary;
+                    ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                    
+                    // Draw arrow pattern
+                    ctx.fillStyle = exitColor.pattern;
+                    ctx.beginPath();
+                    const mid = this.tileSize / 2;
+                    const arrowSize = this.tileSize / 3;
+                    
+                    // Draw directional arrow based on exit position
+                    if (transition.y === 0) { // Top exit
+                        ctx.moveTo(screenX + mid, screenY + arrowSize);
+                        ctx.lineTo(screenX + mid + arrowSize, screenY + this.tileSize - arrowSize);
+                        ctx.lineTo(screenX + mid - arrowSize, screenY + this.tileSize - arrowSize);
+                    } else if (transition.y === this.mapData.length - 1) { // Bottom exit
+                        ctx.moveTo(screenX + mid, screenY + this.tileSize - arrowSize);
+                        ctx.lineTo(screenX + mid + arrowSize, screenY + arrowSize);
+                        ctx.lineTo(screenX + mid - arrowSize, screenY + arrowSize);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
                 }
             }
         }

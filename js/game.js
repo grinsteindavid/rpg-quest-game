@@ -1,5 +1,6 @@
 import { Player } from './player.js';
 import { HomeTownMap } from './maps/HomeTownMap.js';
+import { ForestMap } from './maps/ForestMap.js';
 import { InputHandler } from './input.js';
 
 export class Game {
@@ -11,13 +12,21 @@ export class Game {
         this.canvas.width = 800;
         this.canvas.height = 600;
         
+        // Initialize maps
+        this.maps = {
+            hometown: new HomeTownMap(),
+            forest: new ForestMap()
+        };
+        this.currentMap = this.maps.hometown;
+        
         // Initialize game components
-        this.map = new HomeTownMap();
+        this.map = this.currentMap;
         const startPos = this.map.getInitialPlayerPosition();
         this.player = new Player(startPos.x, startPos.y);
         this.input = new InputHandler();
         
         // Setup components
+        this.player.setGame(this); // Add this line
         this.player.setMap(this.map);
         this.player.setInput(this.input);
         
@@ -29,6 +38,22 @@ export class Game {
         
         // Start game loop
         requestAnimationFrame(this.gameLoop);
+    }
+
+    changeMap(mapName, destination) {
+        this.currentMap = this.maps[mapName];
+        this.map = this.currentMap;
+        
+        if (destination) {
+            this.player.x = destination.x * this.map.tileSize;
+            this.player.y = destination.y * this.map.tileSize;
+        } else {
+            const startPos = this.map.getInitialPlayerPosition();
+            this.player.x = startPos.x;
+            this.player.y = startPos.y;
+        }
+        
+        this.player.setMap(this.map);
     }
 
     setupDebugMode() {
@@ -47,7 +72,7 @@ export class Game {
 
     render() {
         // Clear canvas
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, 0, this.canvas.width, this.canvas.height);
         
         // Save context state
         this.ctx.save();

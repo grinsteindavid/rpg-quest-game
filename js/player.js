@@ -25,6 +25,7 @@ export class Player {
         this.isMoving = false;
         this.targetX = x;
         this.targetY = y;
+        this.game = null; // Add game reference
     }
 
     setMap(map) {
@@ -55,6 +56,10 @@ export class Player {
 
     setDebug(debug) {
         this.debug = debug;
+    }
+
+    setGame(game) {
+        this.game = game;
     }
 
     move(dx, dy) {
@@ -92,19 +97,6 @@ export class Player {
     update() {
         if (!this.input) return;
 
-        // Handle input only when not moving
-        if (!this.isMoving) {
-            if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
-                this.move(-1, 0);
-            } else if (this.input.isPressed('ArrowRight') || this.input.isPressed('d')) {
-                this.move(1, 0);
-            } else if (this.input.isPressed('ArrowUp') || this.input.isPressed('w')) {
-                this.move(0, -1);
-            } else if (this.input.isPressed('ArrowDown') || this.input.isPressed('s')) {
-                this.move(0, 1);
-            }
-        }
-
         // Handle movement animation
         if (this.isMoving) {
             const dx = this.targetX - this.x;
@@ -116,10 +108,34 @@ export class Player {
                 this.x = this.targetX;
                 this.y = this.targetY;
                 this.isMoving = false;
+
+                // Check for transitions only when reaching target position
+                const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
+                const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
+                
+                for (const [mapName, transition] of Object.entries(this.map.transitions)) {
+                    if (transition.x.includes(tileX) && tileY === transition.y) {
+                        this.game.changeMap(mapName, transition.destination);
+                        break;
+                    }
+                }
             } else {
                 // Move towards target
                 this.x += (dx / distance) * this.speed;
                 this.y += (dy / distance) * this.speed;
+            }
+        }
+
+        // Handle input only when not moving
+        if (!this.isMoving) {
+            if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
+                this.move(-1, 0);
+            } else if (this.input.isPressed('ArrowRight') || this.input.isPressed('d')) {
+                this.move(1, 0);
+            } else if (this.input.isPressed('ArrowUp') || this.input.isPressed('w')) {
+                this.move(0, -1);
+            } else if (this.input.isPressed('ArrowDown') || this.input.isPressed('s')) {
+                this.move(0, 1);
             }
         }
     }
