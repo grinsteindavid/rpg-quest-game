@@ -63,6 +63,12 @@ export class Player {
         // Only allow one direction at a time
         if (dx !== 0 && dy !== 0) return;
 
+        // Update direction regardless of movement possibility
+        if (dx < 0) this.direction = 'left';
+        else if (dx > 0) this.direction = 'right';
+        else if (dy < 0) this.direction = 'up';
+        else if (dy > 0) this.direction = 'down';
+
         // Calculate target position
         const newX = this.x + (dx * this.tileSize);
         const newY = this.y + (dy * this.tileSize);
@@ -80,12 +86,6 @@ export class Player {
             this.targetX = tileX * this.tileSize;
             this.targetY = tileY * this.tileSize;
             this.isMoving = true;
-
-            // Update direction
-            if (dx < 0) this.direction = 'left';
-            else if (dx > 0) this.direction = 'right';
-            else if (dy < 0) this.direction = 'up';
-            else if (dy > 0) this.direction = 'down';
         }
     }
 
