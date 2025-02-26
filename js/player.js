@@ -1,6 +1,15 @@
 import { SPRITES } from './colors.js';
 
+/**
+ * Represents a player character in the game world.
+ * Handles movement, collision detection, and rendering of the player sprite.
+ */
 export class Player {
+    /**
+     * Creates a new Player instance.
+     * @param {number} x - Initial x coordinate
+     * @param {number} y - Initial y coordinate
+     */
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -28,6 +37,11 @@ export class Player {
         this.game = null; // Add game reference
     }
 
+    /**
+     * Sets the current map for the player and handles initial spawn positioning.
+     * Also calculates map offset for centered rendering.
+     * @param {Map} map - The map instance to set
+     */
     setMap(map) {
         this.map = map;
         if (this.initialSpawn) {
@@ -50,18 +64,36 @@ export class Player {
         this.mapOffset.y = (600 - this.map.mapData.length * this.map.tileSize) / 2;
     }
 
+    /**
+     * Sets the input handler for player controls.
+     * @param {InputHandler} input - The input handler instance
+     */
     setInput(input) {
         this.input = input;
     }
 
+    /**
+     * Toggles debug visualization mode.
+     * @param {boolean} debug - Whether debug mode should be enabled
+     */
     setDebug(debug) {
         this.debug = debug;
     }
 
+    /**
+     * Sets the game instance reference.
+     * @param {Game} game - The main game instance
+     */
     setGame(game) {
         this.game = game;
     }
 
+    /**
+     * Handles player movement in the specified direction.
+     * Checks for collisions and updates player position accordingly.
+     * @param {number} dx - Horizontal movement direction (-1, 0, or 1)
+     * @param {number} dy - Vertical movement direction (-1, 0, or 1)
+     */
     move(dx, dy) {
         if (!this.map || this.isMoving) return;
         
@@ -94,6 +126,10 @@ export class Player {
         }
     }
 
+    /**
+     * Updates the player's state each frame.
+     * Handles movement animation and input processing.
+     */
     update() {
         if (!this.input) return;
 
@@ -140,6 +176,11 @@ export class Player {
         }
     }
 
+    /**
+     * Renders the player character to the canvas.
+     * Includes debug visualization when enabled.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
     render(ctx) {
         const mapOffset = this.map.getMapOffset();
         const screenX = this.x + mapOffset.x;
