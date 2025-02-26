@@ -1,4 +1,6 @@
 import { BaseMap } from './BaseMap.js';
+import { GuideNPC } from '../npcs/GuideNPC.js';
+import { COLORS } from '../colors.js';
 
 export class HomeTownMap extends BaseMap {
     constructor() {
@@ -12,23 +14,25 @@ export class HomeTownMap extends BaseMap {
         // Define transition points
         this.transitions = {
             forest: {
-                x: [5, 6], // Valid x coordinates for transition
-                y: 8,      // Y coordinate for transition
-                type: 'exit',
-                destination: { x: 2, y: 2 }  // Updated: Move to forest's north exit
+                x: [4, 5], // Valid x coordinates for transition
+                y: 0,      // Y coordinate for transition
+                destination: { x: 4, y: 7 }  // Updated: Move to forest's north exit
             }
         };
         
         this.mapData = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1]  // Added exit at the bottom
+            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        this.npcs = [
+            new GuideNPC(2, 4)
         ];
     }
 
@@ -40,6 +44,26 @@ export class HomeTownMap extends BaseMap {
     }
 
     getColors() {
-        return this.mapColors;
+        return {
+            primary: COLORS.LIGHT,
+            pattern: COLORS.WHITE
+        };
+    }
+
+    // Add NPC rendering to the map's render method
+    render(ctx) {
+        super.render(ctx);
+        const mapOffset = this.getMapOffset();
+        
+        // Render all NPCs
+        this.npcs.forEach(npc => {
+            npc.setDebug(this.debug);
+            npc.render(ctx, mapOffset);
+        });
+    }
+
+    // Helper method to find nearby NPCs
+    getNearbyNPC(player) {
+        return this.npcs.find(npc => npc.isNearby(player));
     }
 }

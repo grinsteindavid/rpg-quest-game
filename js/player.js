@@ -247,6 +247,17 @@ export class Player {
             this.move(0, -1);
         } else if (this.input.isPressed('ArrowDown') || this.input.isPressed('s')) {
             this.move(0, 1);
+        } else if (this.input.isPressed('e')) {
+            this._interact();
+        }
+    }
+
+    _interact() {
+        if (!this.map.getNearbyNPC) return;
+        
+        const nearbyNPC = this.map.getNearbyNPC(this);
+        if (nearbyNPC) {
+            nearbyNPC.interact(this);
         }
     }
 
