@@ -87,6 +87,12 @@ export class Player {
         this._calculateMapOffset();
     }
 
+    /**
+     * Handles the initial spawn of the player on the map.
+     * Searches for the first walkable tile (type 0) and places the player there.
+     * Sets initialSpawn to false after successful placement.
+     * @private
+     */
     _handleInitialSpawn() {
         for (let y = 0; y < this.map.mapData.length; y++) {
             for (let x = 0; x < this.map.mapData[y].length; x++) {
@@ -101,6 +107,12 @@ export class Player {
         }
     }
 
+    /**
+     * Calculates the offset required to center the map on screen.
+     * Uses the map dimensions and canvas size (800x600) to determine offset.
+     * Updates mapOffset.x and mapOffset.y with the calculated values.
+     * @private
+     */
     _calculateMapOffset() {
         this.mapOffset.x = (800 - this.map.mapData[0].length * this.map.tileSize) / 2;
         this.mapOffset.y = (600 - this.map.mapData.length * this.map.tileSize) / 2;
