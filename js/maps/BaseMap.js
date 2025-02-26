@@ -14,8 +14,6 @@ export class BaseMap {
         this.name = name;
         /** @type {number} Size of each tile in pixels */
         this.tileSize = 32;
-        /** @type {number} Width of map borders */
-        this.borderWidth = 4;
         /** @type {boolean} Debug mode flag */
         this.debug = false;
     }

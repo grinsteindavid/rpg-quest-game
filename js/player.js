@@ -28,8 +28,6 @@ export class Player {
     initialSpawn = true;
     /** @type {boolean} Whether the player is currently moving between tiles */
     isMoving = false;
-    /** @type {boolean} Legacy moving state flag */
-    moving = false;
     /** @type {'up'|'down'|'left'|'right'} Current facing direction of the player */
     direction = 'down';
     /** 
