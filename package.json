@@ -1,0 +1,15 @@
+{
+  "name": "minigame-002",
+  "version": "1.0.0",
+  "description": "A simple minigame project",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve",
+    "generate-tileset": "node scripts/generateTileset.js",
+    "generate-player": "node scripts/generatePlayerSprite.js"
+  },
+  "dependencies": {
+    "serve": "^14.2.1",
+    "canvas": "^2.11.2"
+  }
+}
