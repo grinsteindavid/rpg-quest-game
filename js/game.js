@@ -1,5 +1,5 @@
 import { Player } from './player.js';
-import { Map } from './map.js';
+import { HomeTownMap } from './maps/HomeTownMap.js';
 import { InputHandler } from './input.js';
 
 export class Game {
@@ -12,7 +12,7 @@ export class Game {
         this.canvas.height = 600;
         
         // Initialize game components
-        this.map = new Map();
+        this.map = new HomeTownMap();
         const startPos = this.map.getInitialPlayerPosition();
         this.player = new Player(startPos.x, startPos.y);
         this.input = new InputHandler();
