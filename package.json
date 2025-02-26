@@ -4,9 +4,7 @@
   "description": "A simple minigame project",
   "main": "index.html",
   "scripts": {
-    "start": "serve",
-    "generate-tileset": "node scripts/generateTileset.js",
-    "generate-player": "node scripts/generatePlayerSprite.js"
+    "start": "serve"
   },
   "dependencies": {
     "serve": "^14.2.1",
