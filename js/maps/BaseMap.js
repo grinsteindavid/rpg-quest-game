@@ -20,9 +20,12 @@ export class BaseMap {
         this.npcs = [];
         /** @type {Object} Map colors */
         this.mapColors = {
-            primary: '#666666',    // Default gray
-            pattern: '#999999'     // Default light gray
+            primary: COLORS.LIGHT,    // Default gray
+            pattern: COLORS.WHITE     // Default light gray
         };
+
+        /** @type {Array} Array representing the map data */
+        this.mapData = [];
     }
 
     /**
