@@ -16,6 +16,32 @@ export class BaseMap {
         this.tileSize = 32;
         /** @type {boolean} Debug mode flag */
         this.debug = false;
+        /** @type {Array} Array of NPCs on this map */
+        this.npcs = [];
+        /** @type {Object} Map colors */
+        this.mapColors = {
+            primary: '#666666',    // Default gray
+            pattern: '#999999'     // Default light gray
+        };
+    }
+
+    /**
+     * Gets the initial player position for this map.
+     * @returns {{x: number, y: number}} The initial position in pixels
+     */
+    getInitialPlayerPosition() {
+        return {
+            x: 4 * this.tileSize,
+            y: 4 * this.tileSize
+        };
+    }
+
+    /**
+     * Gets the map's color scheme.
+     * @returns {{primary: string, pattern: string}} The color scheme
+     */
+    getColors() {
+        return this.mapColors;
     }
 
     /**
@@ -95,6 +121,15 @@ export class BaseMap {
         this.drawAllTiles(ctx);
         this.drawAllExits(ctx);
         this.drawMapName(ctx);
+
+        // Render all NPCs if they exist
+        if (this.npcs.length > 0) {
+            const mapOffset = this.getMapOffset();
+            this.npcs.forEach(npc => {
+                npc.setDebug(this.debug);
+                npc.render(ctx, mapOffset);
+            });
+        }
     }
 
     /**
@@ -262,5 +297,14 @@ export class BaseMap {
         ctx.fillStyle = 'white';
         ctx.font = '10px monospace';
         ctx.fillText(type.toString(), posX + 4, posY + 12);
+    }
+
+    /**
+     * Finds the nearest NPC within interaction range of the player
+     * @param {Player} player - The player to check against
+     * @returns {BaseNPC|undefined} The nearby NPC or undefined if none found
+     */
+    getNearbyNPC(player) {
+        return this.npcs.find(npc => npc.isNearby(player));
     }
 }

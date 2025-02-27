@@ -8,8 +8,8 @@ export class HomeTownMap extends BaseMap {
         super('Home Town');
         
         this.mapColors = {
-            primary: '#8b4513',    // Saddle brown
-            pattern: '#a0522d'     // Sienna
+            primary: COLORS.LIGHT,
+            pattern: COLORS.WHITE
         };
         
         // Define transition points
@@ -34,38 +34,7 @@ export class HomeTownMap extends BaseMap {
 
         this.npcs = [
             new GuideNPC(2, 4),
-            new MerchantNPC(8, 5)  // Add Merchant NPC here (adjust position as needed)
+            new MerchantNPC(8, 5)
         ];
-    }
-
-    getInitialPlayerPosition() {
-        return {
-            x: 4 * this.tileSize,
-            y: 4 * this.tileSize
-        };
-    }
-
-    getColors() {
-        return {
-            primary: COLORS.LIGHT,
-            pattern: COLORS.WHITE
-        };
-    }
-
-    // Add NPC rendering to the map's render method
-    render(ctx) {
-        super.render(ctx);
-        const mapOffset = this.getMapOffset();
-        
-        // Render all NPCs
-        this.npcs.forEach(npc => {
-            npc.setDebug(this.debug);
-            npc.render(ctx, mapOffset);
-        });
-    }
-
-    // Helper method to find nearby NPCs
-    getNearbyNPC(player) {
-        return this.npcs.find(npc => npc.isNearby(player));
     }
 }
