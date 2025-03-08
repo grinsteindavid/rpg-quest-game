@@ -41,13 +41,11 @@ export class ForestMap extends BaseMap {
         ];
     }
     
+
     update(player, deltaTime) {
-        // Update all NPCs
-        for (const npc of this.npcs) {
-            if (typeof npc.update === 'function') {
-                // Pass this map instance to the NPC for collision detection
-                npc.update(player, deltaTime, this);
-            }
-        }
+        // First call the parent class update method to handle NPCs
+        super.update(player, deltaTime);
+        
+        // Then add custom forest map update logic here
     }
 }

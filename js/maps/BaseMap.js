@@ -310,4 +310,19 @@ export class BaseMap {
     getNearbyNPC(player) {
         return this.npcs.find(npc => npc.isNearby(player));
     }
+    
+    /**
+     * Updates all NPCs and other active entities on the map
+     * @param {Player} player - The player entity for NPC interactions
+     * @param {number} deltaTime - Time passed since last update in ms
+     */
+    update(player, deltaTime) {
+        // Update all NPCs
+        for (const npc of this.npcs) {
+            if (typeof npc.update === 'function') {
+                // Pass this map instance to the NPC for collision detection
+                npc.update(player, deltaTime, this);
+            }
+        }
+    }
 }

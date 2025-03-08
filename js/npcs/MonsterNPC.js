@@ -122,13 +122,8 @@ export class MonsterNPC extends BaseNPC {
     }
     
     interact(player) {
-        // Flip between aggressive and normal when interacted with
-        if (this.isAggressive) {
-            // When aggressive, toggle it off and show dialog
-            this.isAggressive = false;
-            super.interact(player);
-        } else {
-            // If not aggressive, show dialog normally
+        // When aggressive is off, show dialog
+        if (this.isAggressive === false) {
             super.interact(player);
         }
     }

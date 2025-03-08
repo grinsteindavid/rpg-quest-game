@@ -37,4 +37,12 @@ export class HomeTownMap extends BaseMap {
             new MerchantNPC({ x: 8, y: 5, name: "Town Merchant" }),
         ];
     }
+    
+  
+    update(player, deltaTime) {
+        // First call the parent class update method to handle NPCs
+        super.update(player, deltaTime);
+        
+        // Then add custom hometown map update logic here
+    }
 }

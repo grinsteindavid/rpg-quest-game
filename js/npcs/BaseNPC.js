@@ -108,10 +108,6 @@ export class BaseNPC {
         // Handle NPC movement based on current state
         if (this.followPlayer) {
             // Always follow player when followPlayer is true, regardless of range
-            // Debug log to confirm follow behavior is triggered
-            if (this.debug) {
-                console.log(`${this.name} is following player at distance ${Math.floor(distanceToPlayer)}`);
-            }
             this._followTarget(player, map);
             return; // Skip random movement when following player
         } else if (this.isAggressive && distanceToPlayer <= this.aggroRange) {
