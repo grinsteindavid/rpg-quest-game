@@ -259,9 +259,9 @@ export class BaseNPC {
             ctx.beginPath();
             ctx.moveTo(screenX + this.width / 2, screenY + this.height / 2);
             
-            // Calculate target position on screen
-            const targetScreenX = screenX + (this.targetX - this.x);
-            const targetScreenY = screenY + (this.targetY - this.y);
+            // Calculate target position on screen, pointing to center of the tile
+            const targetScreenX = screenX + (this.targetX - this.x) + 16; // +16 to point to center
+            const targetScreenY = screenY + (this.targetY - this.y) + 16; // +16 to point to center
             
             ctx.lineTo(targetScreenX, targetScreenY);
             ctx.stroke();
