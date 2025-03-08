@@ -6,7 +6,7 @@ export class MonsterNPC extends BaseNPC {
         super({ x, y, name, canMove: true, canMoveThruWalls: false });
         
         // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
-        this.isAggressive = false; // Start aggressive by default
+        this.canBeAggressive = true; // Start aggressive by default
         
         // Visual effect properties
         this.glowIntensity = 0;

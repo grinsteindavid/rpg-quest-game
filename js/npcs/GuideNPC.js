@@ -2,7 +2,8 @@ import { BaseNPC } from './BaseNPC.js';
 
 export class GuideNPC extends BaseNPC {
     constructor({ x, y, name = "Guide" }) {
-        super({ x, y, name });
+        super({ x, y, name, canMove: true, canMoveThruWalls: false });
+        this.followPlayer = true;
         this.conversations = [
             [
                 "Hello there! Welcome to our little town!",

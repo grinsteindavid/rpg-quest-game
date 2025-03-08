@@ -35,7 +35,6 @@ export class HomeTownMap extends BaseMap {
         this.npcs = [
             new GuideNPC({ x: 2, y: 4, name: "Town Guide" }),
             new MerchantNPC({ x: 8, y: 5, name: "Town Merchant" }),
-            new GuideNPC({ x: 3, y: 2, name: "North Guide" }),
         ];
     }
 }

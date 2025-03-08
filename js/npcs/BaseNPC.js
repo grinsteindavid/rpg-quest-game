@@ -33,7 +33,9 @@ export class BaseNPC {
         this.targetY = this.y;
         
         // Aggro and targeting properties
-        this.isAggressive = false;
+        this.isAggressive = false; // Whether the NPC is currently aggressive (can change dynamically)
+        this.canBeAggressive = false; // Whether the NPC can become aggressive when player is in range
+        this.followPlayer = false; // Whether the NPC should always follow the player when in range (friendly or not)
         this.aggroRange = 64; // 2 tiles detection range (can be overridden by subclasses)
         this.followDistance = 32; // How close the NPC tries to get to target (1 tile)
         
@@ -84,10 +86,41 @@ export class BaseNPC {
             // Continue ongoing movement
             this._handleMovementAnimation();
         } else {
+            // Calculate distance to player for all NPCs
+            const distanceToPlayer = this._getDistanceToPlayer(player);
+            const distanceFromSpawn = this._getDistanceFromSpawn();
+            
+            // Dynamically update aggressive state based on player proximity - only for aggressive NPCs
+            if (this.canBeAggressive) {
+                // Check if player is in aggro range
+                if (distanceToPlayer <= this.aggroRange) {
+                    // Set NPC to aggressive when player is in range
+                    this.isAggressive = true;
+                } else {
+                    // Set NPC back to non-aggressive when player is out of range
+                    this.isAggressive = false;
+                }
+            }
+            
+            // Handle NPC movement based on current state
+            if (this.followPlayer) {
+                // Always follow player when followPlayer is true, regardless of range
+                this._followTarget(player, map);
+                return; // Skip random movement when following player
+            } else if (this.isAggressive && distanceToPlayer <= this.aggroRange) {
+                // Aggressive NPC follows player only when in aggro range
+                this._followTarget(player, map);
+                return; // Skip random movement when following player
+            } else if (this.canBeAggressive && distanceFromSpawn > 10) { // If aggressive NPC is out of spawn area, return home
+                // Return to spawn position (only for aggressive NPCs)
+                this._returnToSpawn(map);
+                return; // Skip random movement when returning to spawn
+            }
+            
             // Increment move timer for random movement
             this.moveTimer += 1;
             
-            // Random movement if no target is set
+            // Random movement if no aggro behavior is triggered
             if (this.moveTimer >= this.moveInterval) {
                 this.moveTimer = 0;
                 
@@ -186,6 +219,140 @@ export class BaseNPC {
         
         // Consider nearby if within 48 pixels (1.5 tiles)
         return distance < 48;
+    }
+
+    // Calculate distance to player for aggro detection
+    _getDistanceToPlayer(player) {
+        const dx = this.x - player.x;
+        const dy = this.y - player.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Calculate distance from spawn point
+    _getDistanceFromSpawn() {
+        const dx = this.x - (this.spawnTileX * 32);
+        const dy = this.y - (this.spawnTileY * 32);
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    // Make NPC follow a target (player)
+    _followTarget(player, map) {
+        // Calculate direction to move towards player
+        const playerTileX = Math.floor(player.x / 32);
+        const playerTileY = Math.floor(player.y / 32);
+        const npcTileX = Math.floor(this.x / 32);
+        const npcTileY = Math.floor(this.y / 32);
+        
+        // Already at same tile as player
+        if (playerTileX === npcTileX && playerTileY === npcTileY) {
+            return;
+        }
+        
+        // Determine which direction to move (simple pathfinding)
+        let dirX = 0;
+        let dirY = 0;
+        
+        // Move horizontally or vertically based on largest distance
+        if (Math.abs(playerTileX - npcTileX) > Math.abs(playerTileY - npcTileY)) {
+            // Move horizontally
+            dirX = playerTileX > npcTileX ? 1 : -1;
+        } else {
+            // Move vertically
+            dirY = playerTileY > npcTileY ? 1 : -1;
+        }
+        
+        // Try to move in the chosen direction
+        const newTileX = npcTileX + dirX;
+        const newTileY = npcTileY + dirY;
+        
+        if (this._isValidTileMove(newTileX, newTileY, player, map)) {
+            this.targetX = newTileX * 32;
+            this.targetY = newTileY * 32;
+            this.directionX = dirX;
+            this.directionY = dirY;
+            this.isMoving = true;
+            this._updateDirection();
+        } else {
+            // If primary direction is blocked, try the other direction
+            if (dirX !== 0) {
+                dirX = 0;
+                dirY = playerTileY > npcTileY ? 1 : -1;
+            } else {
+                dirY = 0;
+                dirX = playerTileX > npcTileX ? 1 : -1;
+            }
+            
+            const altTileX = npcTileX + dirX;
+            const altTileY = npcTileY + dirY;
+            
+            if (this._isValidTileMove(altTileX, altTileY, player, map)) {
+                this.targetX = altTileX * 32;
+                this.targetY = altTileY * 32;
+                this.directionX = dirX;
+                this.directionY = dirY;
+                this.isMoving = true;
+                this._updateDirection();
+            }
+        }
+    }
+    
+    // Make NPC return to spawn position
+    _returnToSpawn(map) {
+        const currentTileX = Math.floor(this.x / 32);
+        const currentTileY = Math.floor(this.y / 32);
+        
+        // Already at spawn position
+        if (currentTileX === this.spawnTileX && currentTileY === this.spawnTileY) {
+            return;
+        }
+        
+        // Determine direction to move towards spawn
+        let dirX = 0;
+        let dirY = 0;
+        
+        // Move horizontally or vertically based on largest distance
+        if (Math.abs(this.spawnTileX - currentTileX) > Math.abs(this.spawnTileY - currentTileY)) {
+            // Move horizontally
+            dirX = this.spawnTileX > currentTileX ? 1 : -1;
+        } else {
+            // Move vertically
+            dirY = this.spawnTileY > currentTileY ? 1 : -1;
+        }
+        
+        // Try to move in the chosen direction
+        const newTileX = currentTileX + dirX;
+        const newTileY = currentTileY + dirY;
+        
+        // Use null as player since we don't need to check player collision
+        if (this._isValidTileMove(newTileX, newTileY, null, map)) {
+            this.targetX = newTileX * 32;
+            this.targetY = newTileY * 32;
+            this.directionX = dirX;
+            this.directionY = dirY;
+            this.isMoving = true;
+            this._updateDirection();
+        } else {
+            // If primary direction is blocked, try the other direction
+            if (dirX !== 0) {
+                dirX = 0;
+                dirY = this.spawnTileY > currentTileY ? 1 : -1;
+            } else {
+                dirY = 0;
+                dirX = this.spawnTileX > currentTileX ? 1 : -1;
+            }
+            
+            const altTileX = currentTileX + dirX;
+            const altTileY = currentTileY + dirY;
+            
+            if (this._isValidTileMove(altTileX, altTileY, null, map)) {
+                this.targetX = altTileX * 32;
+                this.targetY = altTileY * 32;
+                this.directionX = dirX;
+                this.directionY = dirY;
+                this.isMoving = true;
+                this._updateDirection();
+            }
+        }
     }
 
     _renderNPC(ctx, screenX, screenY) {
