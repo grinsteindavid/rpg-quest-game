@@ -1,23 +1,12 @@
 import { BaseNPC } from './BaseNPC.js';
-import { SPRITES } from '../colors.js';
 
 export class MonsterNPC extends BaseNPC {
     constructor({ x, y, name = "Forest Monster" }) {
-        super({ x, y, name });
+        // Initialize with movement capabilities
+        super({ x, y, name, canMove: true, canMoveThruWalls: false });
         
         // Monster-specific properties
-        this.speed = 0.5;
-        this.moveTimer = 0;
-        this.moveInterval = 120; // Time between movement in frames
-        this.moveRange = 2; // How many tiles it can move from spawn
-        this.initialX = this.x; // Store initial position (already converted to pixels)
-        this.initialY = this.y;
-        this.isAggressive = false;
-        this.aggroRange = 96; // 3 tiles detection range
-        
-        // Movement direction tracking
-        this.directionX = 0;
-        this.directionY = 0;
+        this.speed = 0.5; // Base speed when not aggressive
         
         // Visual effect properties
         this.glowIntensity = 0;
@@ -46,57 +35,15 @@ export class MonsterNPC extends BaseNPC {
         ];
     }
     
-    update(player, deltaTime) {
-        // Detect if player is in aggro range
-        const distanceToPlayer = Math.sqrt(
-            Math.pow((player.x - this.x), 2) + 
-            Math.pow((player.y - this.y), 2)
-        );
+    update(player, deltaTime, map) {
+        // Call the BaseNPC update method first to handle aggro detection and movement
+        super.update(player, deltaTime, map);
         
-        this.isAggressive = distanceToPlayer <= this.aggroRange;
-        
-        // Handle monster movement
-        this.moveTimer++;
-        
-        if (this.moveTimer >= this.moveInterval) {
-            this.moveTimer = 0;
-            
-            // Decide on a new direction if not aggressive
-            if (!this.isAggressive) {
-                this.directionX = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-                this.directionY = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-            } else {
-                // Move toward player when aggressive
-                this.directionX = player.x > this.x ? 1 : (player.x < this.x ? -1 : 0);
-                this.directionY = player.y > this.y ? 1 : (player.y < this.y ? -1 : 0);
-            }
-            
-            // Set direction for rendering
-            if (Math.abs(this.directionX) > Math.abs(this.directionY)) {
-                this.direction = this.directionX > 0 ? 'right' : 'left';
-            } else if (this.directionY !== 0) {
-                this.direction = this.directionY > 0 ? 'down' : 'up';
-            }
-        }
-        
-        // Apply movement
-        const moveSpeed = this.isAggressive ? this.speed * 1.5 : this.speed;
-        this.x += this.directionX * moveSpeed;
-        this.y += this.directionY * moveSpeed;
-        
-        // Constrain to move range if not aggressive
-        if (!this.isAggressive) {
-            const distanceFromSpawn = Math.sqrt(
-                Math.pow((this.initialX - this.x), 2) + 
-                Math.pow((this.initialY - this.y), 2)
-            );
-            
-            if (distanceFromSpawn > this.moveRange * 32) {
-                // Move back toward spawn point
-                const angle = Math.atan2(this.initialY - this.y, this.initialX - this.x);
-                this.x += Math.cos(angle) * moveSpeed;
-                this.y += Math.sin(angle) * moveSpeed;
-            }
+        // Monster-specific behavior: increase speed when aggressive
+        if (this.isAggressive) {
+            this.speed = 0.75; // 1.5x normal speed when aggressive
+        } else {
+            this.speed = 0.5; // Normal speed when passive
         }
         
         // Update visual effects
@@ -181,8 +128,7 @@ export class MonsterNPC extends BaseNPC {
     interact(player) {
         // Flip between aggressive and normal when interacted with
         if (this.isAggressive) {
-            // If aggressive, still show dialog but remain aggressive
-            super.interact(player);
+
         } else {
             // If not aggressive, show dialog normally
             super.interact(player);

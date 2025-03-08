@@ -36,7 +36,7 @@ export class ForestMap extends BaseMap {
         // Add monster NPCs to the forest
         this.npcs = [
             new MonsterNPC({ x: 5, y: 4, name: "Forest Monster" }),  // Center monster
-            new MonsterNPC({ x: 10, y: 7, name: "Dark Lurker" }), // Right side monster
+            new MonsterNPC({ x: 10, y: 8, name: "Dark Lurker" }), // Right side monster
             new MonsterNPC({ x: 2, y: 8, name: "Shadow Beast" })   // Bottom left monster
         ];
     }
@@ -45,7 +45,8 @@ export class ForestMap extends BaseMap {
         // Update all NPCs
         for (const npc of this.npcs) {
             if (typeof npc.update === 'function') {
-                npc.update(player, deltaTime);
+                // Pass this map instance to the NPC for collision detection
+                npc.update(player, deltaTime, this);
             }
         }
     }
