@@ -293,7 +293,7 @@ export class BaseNPC {
         }
     }
 
-        // Attempt a random movement in L-shape manner
+        // Attempt a random movement in cardinal directions (up, down, left, right)
     _moveRandomly(player, map) {
         // Already moving or can't move
         if (this.isMoving || !this.canMove) return;
@@ -302,46 +302,27 @@ export class BaseNPC {
         const currentTileX = Math.floor(this.x / 32);
         const currentTileY = Math.floor(this.y / 32);
         
-        // First, decide if we'll make an L-shape move or just a regular move
-        const makeLShapeMove = Math.random() > 0.7; // 30% chance for L-shape move
+        // Choose a random cardinal direction (up, down, left, right)
+        const direction = Math.floor(Math.random() * 4);
+        let targetTileX = currentTileX;
+        let targetTileY = currentTileY;
         
-        if (makeLShapeMove) {
-            // For L-shape, first we need to move horizontally or vertically
-            // Randomly choose direction (horizontal first or vertical first)
-            const horizontalFirst = Math.random() > 0.5;
-            
-            if (horizontalFirst) {
-                // Try horizontal move first
-                const dx = Math.random() > 0.5 ? 1 : -1; // randomly go left or right
-                this._attemptMove(currentTileX + dx, currentTileY, player, map);
-            } else {
-                // Try vertical move first
-                const dy = Math.random() > 0.5 ? 1 : -1; // randomly go up or down
-                this._attemptMove(currentTileX, currentTileY + dy, player, map);
-            }
-        } else {
-            // Regular move - choose a random direction (up, down, left, right)
-            const direction = Math.floor(Math.random() * 4);
-            let targetTileX = currentTileX;
-            let targetTileY = currentTileY;
-            
-            switch (direction) {
-                case 0: // Up
-                    targetTileY -= 1;
-                    break;
-                case 1: // Right
-                    targetTileX += 1;
-                    break;
-                case 2: // Down
-                    targetTileY += 1;
-                    break;
-                case 3: // Left
-                    targetTileX -= 1;
-                    break;
-            }
-            
-            this._attemptMove(targetTileX, targetTileY, player, map);
+        switch (direction) {
+            case 0: // Up
+                targetTileY -= 1;
+                break;
+            case 1: // Right
+                targetTileX += 1;
+                break;
+            case 2: // Down
+                targetTileY += 1;
+                break;
+            case 3: // Left
+                targetTileX -= 1;
+                break;
         }
+        
+        this._attemptMove(targetTileX, targetTileY, player, map);
     }
     
     // Helper method to attempt movement to a specific tile
