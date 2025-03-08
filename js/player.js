@@ -329,11 +329,29 @@ export class Player {
         ctx.fillStyle = SPRITES.PLAYER.skin;
         ctx.fillRect(screenX + 8, screenY + 4, 16, 16);
 
+        // Enhanced hair styling
         ctx.fillStyle = SPRITES.PLAYER.hair;
-        ctx.fillRect(screenX + 6, screenY + 4, 20, 4);
+        ctx.fillRect(screenX + 6, screenY + 4, 20, 4); // Top hair
+        
+        // Side hair based on direction
+        if (this.direction !== 'right') {
+            ctx.fillRect(screenX + 6, screenY + 8, 3, 6); // Left side hair
+        }
+        if (this.direction !== 'left') {
+            ctx.fillRect(screenX + 23, screenY + 8, 3, 6); // Right side hair
+        }
 
-        const eyeOffset = this.direction === 'left' ? -2 : 2;
-        ctx.fillRect(screenX + 12 + eyeOffset, screenY + 10, 2, 2);
+        // Only draw eyes if not facing up
+        if (this.direction !== 'up') {
+            // Left eye with direction offset
+            const leftEyeOffset = this.direction === 'left' ? -2 : 0;
+            ctx.fillStyle = '#000000'; // Black for eyes
+            ctx.fillRect(screenX + 12 + leftEyeOffset, screenY + 10, 2, 2);
+            
+            // Right eye with direction offset
+            const rightEyeOffset = this.direction === 'right' ? 2 : 0;
+            ctx.fillRect(screenX + 18 + rightEyeOffset, screenY + 10, 2, 2);
+        }
     }
 
     /**
