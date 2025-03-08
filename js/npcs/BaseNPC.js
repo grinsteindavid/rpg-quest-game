@@ -80,54 +80,60 @@ export class BaseNPC {
     onConversationComplete() {}
     
     update(player, deltaTime, map) {
+        // Don't update if NPC can't move or is in conversation
         if (!this.canMove || this.isInConversation) return;
         
         if (this.isMoving) {
             // Continue ongoing movement
             this._handleMovementAnimation();
-        } else {
-            // Calculate distance to player for all NPCs
-            const distanceToPlayer = this._getDistanceToPlayer(player);
-            const distanceFromSpawn = this._getDistanceFromSpawn();
-            
-            // Dynamically update aggressive state based on player proximity - only for aggressive NPCs
-            if (this.canBeAggressive) {
-                // Check if player is in aggro range
-                if (distanceToPlayer <= this.aggroRange) {
-                    // Set NPC to aggressive when player is in range
-                    this.isAggressive = true;
-                } else {
-                    // Set NPC back to non-aggressive when player is out of range
-                    this.isAggressive = false;
-                }
+            return; // Exit early to avoid starting new movements while already moving
+        }
+
+        // Calculate distance to player for all NPCs
+        const distanceToPlayer = this._getDistanceToPlayer(player);
+        const distanceFromSpawn = this._getDistanceFromSpawn();
+        
+        // Dynamically update aggressive state based on player proximity - only for aggressive NPCs
+        if (this.canBeAggressive) {
+            // Check if player is in aggro range
+            if (distanceToPlayer <= this.aggroRange) {
+                // Set NPC to aggressive when player is in range
+                this.isAggressive = true;
+            } else {
+                // Set NPC back to non-aggressive when player is out of range
+                this.isAggressive = false;
             }
-            
-            // Handle NPC movement based on current state
-            if (this.followPlayer) {
-                // Always follow player when followPlayer is true, regardless of range
-                this._followTarget(player, map);
-                return; // Skip random movement when following player
-            } else if (this.isAggressive && distanceToPlayer <= this.aggroRange) {
-                // Aggressive NPC follows player only when in aggro range
-                this._followTarget(player, map);
-                return; // Skip random movement when following player
-            } else if (this.canBeAggressive && distanceFromSpawn > 10) { // If aggressive NPC is out of spawn area, return home
-                // Return to spawn position (only for aggressive NPCs)
-                this._returnToSpawn(map);
-                return; // Skip random movement when returning to spawn
+        }
+        
+        // Handle NPC movement based on current state
+        if (this.followPlayer) {
+            // Always follow player when followPlayer is true, regardless of range
+            // Debug log to confirm follow behavior is triggered
+            if (this.debug) {
+                console.log(`${this.name} is following player at distance ${Math.floor(distanceToPlayer)}`);
             }
+            this._followTarget(player, map);
+            return; // Skip random movement when following player
+        } else if (this.isAggressive && distanceToPlayer <= this.aggroRange) {
+            // Aggressive NPC follows player only when in aggro range
+            this._followTarget(player, map);
+            return; // Skip random movement when following player
+        } else if (this.canBeAggressive && distanceFromSpawn > 10) { // If aggressive NPC is out of spawn area, return home
+            // Return to spawn position (only for aggressive NPCs)
+            this._returnToSpawn(map);
+            return; // Skip random movement when returning to spawn
+        }
+        
+        // Increment move timer for random movement
+        this.moveTimer += 1;
+        
+        // Random movement if no aggro behavior is triggered
+        if (this.moveTimer >= this.moveInterval) {
+            this.moveTimer = 0;
             
-            // Increment move timer for random movement
-            this.moveTimer += 1;
-            
-            // Random movement if no aggro behavior is triggered
-            if (this.moveTimer >= this.moveInterval) {
-                this.moveTimer = 0;
-                
-                // 50% chance to move randomly
-                if (Math.random() > 0.5) {
-                    this._moveRandomly(player, map);
-                }
+            // 50% chance to move randomly
+            if (Math.random() > 0.5) {
+                this._moveRandomly(player, map);
             }
         }
     }
@@ -191,8 +197,8 @@ export class BaseNPC {
             return false;
         }
         
-        // Check distance from spawn (if moveRange is set)
-        if (this.moveRange > 0) {
+        // Check distance from spawn (if moveRange is set and NPC isn't set to follow player)
+        if (this.moveRange > 0 && !this.followPlayer) {
             const dx = Math.abs(tileX - this.spawnTileX);
             const dy = Math.abs(tileY - this.spawnTileY);
             if (dx > this.moveRange || dy > this.moveRange) {
@@ -237,6 +243,19 @@ export class BaseNPC {
     
     // Make NPC follow a target (player)
     _followTarget(player, map) {
+        // Don't try to follow if already moving between tiles
+        if (this.isMoving) return;
+        
+        // Calculate distance to player in pixels
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+        
+        // Only move if player is beyond the follow distance
+        if (distanceToPlayer <= this.followDistance) {
+            return;
+        }
+        
         // Calculate direction to move towards player
         const playerTileX = Math.floor(player.x / 32);
         const playerTileY = Math.floor(player.y / 32);
@@ -247,6 +266,13 @@ export class BaseNPC {
         if (playerTileX === npcTileX && playerTileY === npcTileY) {
             return;
         }
+        
+        // Update path change timer to avoid constant recalculation
+        this.pathChangeTimer += 1;
+        if (this.pathChangeTimer < this.pathChangeInterval / 4) {
+            return;
+        }
+        this.pathChangeTimer = 0;
         
         // Determine which direction to move (simple pathfinding)
         let dirX = 0;
