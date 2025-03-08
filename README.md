@@ -93,3 +93,20 @@ Click the "Debug Mode" button to see:
 - Debug mode reveals exact health values
 
 To test: Use `player.takeDamage(20)` or `player.heal(10)` in appropriate game code sections.
+
+
+
+1. Monster Behavior Fixes:
+Made monsters aggressive by default so they'll immediately chase the player when in range
+Added proper toggling of aggression when interacting with a monster
+Created a smooth transition between aggressive and conversational states
+2. Movement Speed Improvements:
+Reduced the movement interval from 60 to 20 frames, making NPCs move 3× more frequently
+Added a speed multiplier to increase movement distance per step
+Applied the speed boost to all movement calculations for consistency
+These changes should make your monsters:
+
+Move randomly when no player is in range
+Aggressively follow the player when they get close
+Return to their spawn area if they wander too far
+Toggle between aggressive and conversational states when interacted with

@@ -2,7 +2,12 @@ import { SPRITES } from '../colors.js';
 
 export class BaseNPC {
     constructor({ x, y, name, canMove = false, canMoveThruWalls = false }) {
-        this.x = x * 32; // Convert tile position to pixels
+        // Store original tile coordinates for spawn position
+        this.spawnTileX = x;
+        this.spawnTileY = y;
+        
+        // Convert tile position to pixels for current position
+        this.x = x * 32;
         this.y = y * 32;
         this.width = 32;
         this.height = 32;
@@ -13,29 +18,30 @@ export class BaseNPC {
         // Movement properties
         this.canMove = canMove;
         this.canMoveThruWalls = canMoveThruWalls;
-        this.speed = 1;
+        this.speed = 0.5;
         this.moveTimer = 0;
-        this.moveInterval = 60; // Time between movement in frames
-        this.moveRange = 2; // How many tiles it can move from spawn
-        this.initialX = this.x; // Store initial position (already converted to pixels)
+        this.moveInterval = 60; // Time between movement decisions in frames
+        this.moveRange = 1; // How many tiles it can move from spawn
+        this.initialX = this.x; // Store initial pixel position
         this.initialY = this.y;
         
-        // Movement direction tracking
+        // Tile-by-tile movement properties
+        this.isMoving = false; // Flag for when NPC is moving between tiles
         this.directionX = 0;
         this.directionY = 0;
-        this.targetX = null;
-        this.targetY = null;
+        this.targetX = this.x; // Target position for movement
+        this.targetY = this.y;
         
         // Aggro and targeting properties
         this.isAggressive = false;
-        this.aggroRange = 96; // 3 tiles detection range (can be overridden by subclasses)
+        this.aggroRange = 64; // 2 tiles detection range (can be overridden by subclasses)
         this.followDistance = 32; // How close the NPC tries to get to target (1 tile)
         
         // Path tracking properties
         this.lastTargetX = null;
         this.lastTargetY = null;
         this.pathChangeTimer = 0;
-        this.pathChangeInterval = 30; // How often to update path when following target
+        this.pathChangeInterval = 60; // How often to update path when following target
 
         // Marker properties
         this.showMarker = true;
@@ -72,192 +78,114 @@ export class BaseNPC {
     onConversationComplete() {}
     
     update(player, deltaTime, map) {
-        if (!this.canMove) return;
+        if (!this.canMove || this.isInConversation) return;
         
-        // Check for player aggro first
-        if (player) {
-            const distanceToPlayer = Math.sqrt(
-                Math.pow((player.x - this.x), 2) + 
-                Math.pow((player.y - this.y), 2)
-            );
+        if (this.isMoving) {
+            // Continue ongoing movement
+            this._handleMovementAnimation();
+        } else {
+            // Increment move timer for random movement
+            this.moveTimer += 1;
             
-            // Set aggro based on distance to player
-            this.isAggressive = distanceToPlayer <= this.aggroRange;
-            
-            // If aggressive, set player as movement target
-            if (this.isAggressive) {
-                // Only update target if we're not already close enough
-                if (distanceToPlayer > this.followDistance) {
-                    this.setMoveTarget(player.x, player.y);
-                } else {
-                    // If close enough, stop moving toward player
-                    this.clearMoveTarget();
-                }
-            } else {
-                // If not aggressive, clear target to allow random movement
-                this.clearMoveTarget();
-            }
-        }
-        
-        // Handle NPC movement - tile by tile, L-shaped pattern
-        this.moveTimer++;
-        
-        if (this.moveTimer >= this.moveInterval) {
-            this.moveTimer = 0;
-            
-            // Get current tile position
-            const currentTileX = Math.floor(this.x / 32);
-            const currentTileY = Math.floor(this.y / 32);
-            
-            // Decide on a new direction
-            if (!this.targetX && !this.targetY) {
-                // Random movement when no target - one direction at a time (tile by tile)
-                if (Math.random() > 0.5) {
-                    // Move horizontally only
-                    this.directionX = Math.random() > 0.5 ? 1 : -1;
-                    this.directionY = 0;
-                } else {
-                    // Move vertically only
-                    this.directionX = 0;
-                    this.directionY = Math.random() > 0.5 ? 1 : -1;
-                }
-            } else {
-                // Move toward target using strict L-shaped movement
-                // Calculate target tile position
-                const targetTileX = Math.floor(this.targetX / 32);
-                const targetTileY = Math.floor(this.targetY / 32);
+            // Random movement if no target is set
+            if (this.moveTimer >= this.moveInterval) {
+                this.moveTimer = 0;
                 
-                // Determine if we need to move on X axis first (L-shaped movement)
-                if (currentTileX !== targetTileX) {
-                    // Move horizontally first - exactly one tile at a time
-                    this.directionX = targetTileX > currentTileX ? 1 : -1;
-                    this.directionY = 0;
-                } else if (currentTileY !== targetTileY) {
-                    // Once X is aligned, move vertically - exactly one tile at a time
-                    this.directionX = 0;
-                    this.directionY = targetTileY > currentTileY ? 1 : -1;
-                } else {
-                    // If we're at the target position, clear it
-                    this.clearMoveTarget();
-                    this.directionX = 0;
-                    this.directionY = 0;
+                // 50% chance to move randomly
+                if (Math.random() > 0.5) {
+                    this._moveRandomly(player, map);
                 }
-            }
-            
-            // Set direction for rendering
-            if (this.directionX > 0) {
-                this.direction = 'right';
-            } else if (this.directionX < 0) {
-                this.direction = 'left';
-            } else if (this.directionY > 0) {
-                this.direction = 'down';
-            } else if (this.directionY < 0) {
-                this.direction = 'up';
-            }
-            
-            // Calculate next position - move full tile width in the direction
-            const nextX = this.x + (this.directionX * this.speed);
-            const nextY = this.y + (this.directionY * this.speed);
-            
-            // Check if move is valid (checking walls and player collision)
-            const canMove = this.canMoveThruWalls || this.isValidMove(nextX, nextY, player, map);
-            
-            if (canMove) {
-                // Apply movement
-                this.x = nextX;
-                this.y = nextY;
-            } else {
-                // If we can't move, reset direction
-                this.directionX = 0;
-                this.directionY = 0;
-            }
-        }
-        
-        // Constrain to move range if not targeting something specific
-        if (!this.targetX && !this.targetY) {
-            const distanceFromSpawn = Math.sqrt(
-                Math.pow((this.initialX - this.x), 2) + 
-                Math.pow((this.initialY - this.y), 2)
-            );
-            
-            if (distanceFromSpawn > this.moveRange * 32) {
-                // Move back toward spawn point
-                const angle = Math.atan2(this.initialY - this.y, this.initialX - this.x);
-                this.x += Math.cos(angle) * this.speed;
-                this.y += Math.sin(angle) * this.speed;
             }
         }
     }
     
     // Set a target position for the NPC to move toward
     setMoveTarget(x, y) {
-        this.targetX = x;
-        this.targetY = y;
+        const tileX = Math.floor(x / 32);
+        const tileY = Math.floor(y / 32);
+        
+        // Store the target for pathfinding
+        this.lastTargetX = tileX;
+        this.lastTargetY = tileY;
     }
     
     // Clear the target position so NPC will roam randomly again
     clearMoveTarget() {
-        this.targetX = null;
-        this.targetY = null;
+        this.lastTargetX = null;
+        this.lastTargetY = null;
+    }
+    
+    // Updates direction property based on movement direction
+    _updateDirection() {
+        if (this.directionX > 0) {
+            this.direction = 'right';
+        } else if (this.directionX < 0) {
+            this.direction = 'left';
+        } else if (this.directionY > 0) {
+            this.direction = 'down';
+        } else if (this.directionY < 0) {
+            this.direction = 'up';
+        }
+    }
+    
+    // Handles the movement animation between tiles
+    _handleMovementAnimation() {
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < this.speed) {
+            // Reached the target - snap to it
+            this.x = this.targetX;
+            this.y = this.targetY;
+            this.isMoving = false;
+        } else {
+            // Continue moving towards target
+            this.x += (dx / distance) * this.speed;
+            this.y += (dy / distance) * this.speed;
+        }
+    }
+    
+    // Internal method to check if a tile move is valid
+    _isValidTileMove(tileX, tileY, player, map) {
+        // Check map boundaries
+        if (tileX < 0 || tileY < 0 || tileX >= map.mapData[0].length || tileY >= map.mapData.length) {
+            return false;
+        }
+        
+        // Check if the tile is walkable
+        if (!this.canMoveThruWalls && !map.isWalkableTile(map.mapData[tileY][tileX])) {
+            return false;
+        }
+        
+        // Check distance from spawn (if moveRange is set)
+        if (this.moveRange > 0) {
+            const dx = Math.abs(tileX - this.spawnTileX);
+            const dy = Math.abs(tileY - this.spawnTileY);
+            if (dx > this.moveRange || dy > this.moveRange) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     // Check if the new position is valid (no collisions)
+    // This is used during movement animation
     isValidMove(x, y, player, map) {
-        if (!map) return true; // If no map is provided, we can't check wall collisions
-        
-        // Check for player collision
-        const npcRect = {
-            x: x,
-            y: y,
-            width: this.width,
-            height: this.height
-        };
-        
-        const playerRect = {
-            x: player.x,
-            y: player.y,
-            width: player.width,
-            height: player.height
-        };
-        
-        // Simple rectangle collision detection with player
-        if (npcRect.x < playerRect.x + playerRect.width &&
-            npcRect.x + npcRect.width > playerRect.x &&
-            npcRect.y < playerRect.y + playerRect.height &&
-            npcRect.y + npcRect.height > playerRect.y) {
-            return false; // Collision with player detected
-        }
-        
-        // Check for wall collisions - check the four corners of the NPC
-        // Check top-left corner
-        if (map.isSolidTile(map.getTileAt(x, y))) {
-            return false;
-        }
-        
-        // Check top-right corner
-        if (map.isSolidTile(map.getTileAt(x + this.width - 1, y))) {
-            return false;
-        }
-        
-        // Check bottom-left corner
-        if (map.isSolidTile(map.getTileAt(x, y + this.height - 1))) {
-            return false;
-        }
-        
-        // Check bottom-right corner
-        if (map.isSolidTile(map.getTileAt(x + this.width - 1, y + this.height - 1))) {
-            return false;
-        }
-        
-        return true; // No collision detected
+        const tileX = Math.floor(x / 32);
+        const tileY = Math.floor(y / 32);
+        return this._isValidTileMove(tileX, tileY, player, map);
     }
 
     isNearby(player) {
-        const distance = Math.sqrt(
-            Math.pow((player.x - this.x), 2) + 
-            Math.pow((player.y - this.y), 2)
-        );
-        return distance <= 48; // Within 1.5 tiles
+        // Calculate distance to player
+        const dx = this.x - player.x;
+        const dy = this.y - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Consider nearby if within 48 pixels (1.5 tiles)
+        return distance < 48;
     }
 
     _renderNPC(ctx, screenX, screenY) {
@@ -344,8 +272,97 @@ export class BaseNPC {
             ctx.arc(targetScreenX, targetScreenY, 3, 0, Math.PI * 2);
             ctx.fill();
         }
+        
+        // Show movement range from spawn
+        if (this.moveRange > 0) {
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+            ctx.beginPath();
+            
+            // Convert spawn coordinates to screen coordinates
+            const spawnScreenX = screenX + ((this.spawnTileX * 32) - this.x);
+            const spawnScreenY = screenY + ((this.spawnTileY * 32) - this.y);
+            
+            // Draw rectangle showing movement range
+            const rangeSize = this.moveRange * 32 * 2;
+            ctx.strokeRect(
+                spawnScreenX - (this.moveRange * 32), 
+                spawnScreenY - (this.moveRange * 32),
+                rangeSize,
+                rangeSize
+            );
+        }
     }
 
+        // Attempt a random movement in L-shape manner
+    _moveRandomly(player, map) {
+        // Already moving or can't move
+        if (this.isMoving || !this.canMove) return;
+        
+        // Get current tile position
+        const currentTileX = Math.floor(this.x / 32);
+        const currentTileY = Math.floor(this.y / 32);
+        
+        // First, decide if we'll make an L-shape move or just a regular move
+        const makeLShapeMove = Math.random() > 0.7; // 30% chance for L-shape move
+        
+        if (makeLShapeMove) {
+            // For L-shape, first we need to move horizontally or vertically
+            // Randomly choose direction (horizontal first or vertical first)
+            const horizontalFirst = Math.random() > 0.5;
+            
+            if (horizontalFirst) {
+                // Try horizontal move first
+                const dx = Math.random() > 0.5 ? 1 : -1; // randomly go left or right
+                this._attemptMove(currentTileX + dx, currentTileY, player, map);
+            } else {
+                // Try vertical move first
+                const dy = Math.random() > 0.5 ? 1 : -1; // randomly go up or down
+                this._attemptMove(currentTileX, currentTileY + dy, player, map);
+            }
+        } else {
+            // Regular move - choose a random direction (up, down, left, right)
+            const direction = Math.floor(Math.random() * 4);
+            let targetTileX = currentTileX;
+            let targetTileY = currentTileY;
+            
+            switch (direction) {
+                case 0: // Up
+                    targetTileY -= 1;
+                    break;
+                case 1: // Right
+                    targetTileX += 1;
+                    break;
+                case 2: // Down
+                    targetTileY += 1;
+                    break;
+                case 3: // Left
+                    targetTileX -= 1;
+                    break;
+            }
+            
+            this._attemptMove(targetTileX, targetTileY, player, map);
+        }
+    }
+    
+    // Helper method to attempt movement to a specific tile
+    _attemptMove(tileX, tileY, player, map) {
+        if (this._isValidTileMove(tileX, tileY, player, map)) {
+            // Set target position in pixels
+            this.targetX = tileX * 32;
+            this.targetY = tileY * 32;
+            
+            // Set movement direction for animation
+            this.directionX = tileX - Math.floor(this.x / 32);
+            this.directionY = tileY - Math.floor(this.y / 32);
+            
+            // Update character direction based on movement
+            this._updateDirection();
+            
+            // Start moving
+            this.isMoving = true;
+        }
+    }
+    
     render(ctx, mapOffset) {
         const screenX = this.x + mapOffset.x;
         const screenY = this.y + mapOffset.y;

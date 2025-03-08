@@ -5,8 +5,8 @@ export class MonsterNPC extends BaseNPC {
         // Initialize with movement capabilities
         super({ x, y, name, canMove: true, canMoveThruWalls: false });
         
-        // Monster-specific properties
-        this.speed = 0.5; // Base speed when not aggressive
+        // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
+        this.isAggressive = false; // Start aggressive by default
         
         // Visual effect properties
         this.glowIntensity = 0;
@@ -39,12 +39,8 @@ export class MonsterNPC extends BaseNPC {
         // Call the BaseNPC update method first to handle aggro detection and movement
         super.update(player, deltaTime, map);
         
-        // Monster-specific behavior: increase speed when aggressive
-        if (this.isAggressive) {
-            this.speed = 0.75; // 1.5x normal speed when aggressive
-        } else {
-            this.speed = 0.5; // Normal speed when passive
-        }
+        // We've removed the speed adjustment here since we're using tile-by-tile movement
+        // This ensures the monster moves exactly like the player now
         
         // Update visual effects
         this.glowIntensity += 0.05 * this.glowDirection;
@@ -128,7 +124,9 @@ export class MonsterNPC extends BaseNPC {
     interact(player) {
         // Flip between aggressive and normal when interacted with
         if (this.isAggressive) {
-
+            // When aggressive, toggle it off and show dialog
+            this.isAggressive = false;
+            super.interact(player);
         } else {
             // If not aggressive, show dialog normally
             super.interact(player);
