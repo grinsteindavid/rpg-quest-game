@@ -2,8 +2,8 @@ import { BaseNPC } from './BaseNPC.js';
 import { SPRITES } from '../colors.js';
 
 export class MerchantNPC extends BaseNPC {
-    constructor(x, y) {
-        super(x, y, "Merchant");
+    constructor({ x, y, name = "Merchant" }) {
+        super({ x, y, name });
         this.conversations = [
             [
                 "Welcome to my shop, traveler!",

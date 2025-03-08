@@ -1,8 +1,8 @@
 import { BaseNPC } from './BaseNPC.js';
 
 export class GuideNPC extends BaseNPC {
-    constructor(x, y) {
-        super(x, y, "Guide");
+    constructor({ x, y, name = "Guide" }) {
+        super({ x, y, name });
         this.conversations = [
             [
                 "Hello there! Welcome to our little town!",

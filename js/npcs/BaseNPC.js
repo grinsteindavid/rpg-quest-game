@@ -1,7 +1,7 @@
 import { SPRITES } from '../colors.js';
 
 export class BaseNPC {
-    constructor(x, y, name) {
+    constructor({ x, y, name }) {
         this.x = x * 32; // Convert tile position to pixels
         this.y = y * 32;
         this.width = 32;

@@ -1,5 +1,14 @@
 import { SPRITES } from './colors.js';
 
+// Health bar colors
+const HEALTH_BAR = {
+    BACKGROUND: '#333333',
+    BORDER: '#000000',
+    FILL: '#44cc44',
+    LOW: '#cc4444',
+    CRITICAL: '#ff0000'
+};
+
 /**
  * Represents a player character in the game world.
  * Handles movement, collision detection, and rendering of the player sprite.
@@ -42,6 +51,22 @@ export class Player {
     input = null;
     /** @type {Game|null} Reference to the main game instance */
     game = null;
+    /** @type {number} Maximum health points of the player */
+    maxHealth = 100;
+    /** @type {number} Current health points of the player */
+    currentHealth = 100;
+    /** @type {boolean} Whether the player is currently invulnerable */
+    isInvulnerable = false;
+    /** @type {number} Duration of invulnerability in milliseconds after taking damage */
+    invulnerabilityDuration = 1000;
+    /** @type {number} Timestamp when invulnerability will end */
+    invulnerabilityEndTime = 0;
+    /** @type {boolean} Whether to show the health bar */
+    showHealthBar = true;
+    /** @type {number} Time in milliseconds to show health bar after taking damage */
+    healthBarDisplayTime = 3000;
+    /** @type {number} Timestamp when health bar should hide */
+    healthBarHideTime = 0;
 
     /**
      * Creates a new Player instance.
@@ -57,6 +82,10 @@ export class Player {
         this.targetX = x;
         /** @type {number} Target y position for movement */
         this.targetY = y;
+        /** @type {number} Initialize health values */
+        this.currentHealth = this.maxHealth;
+        /** @type {number} Initialize health bar display */
+        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
     }
 
     /**
@@ -276,6 +305,14 @@ export class Player {
         } else {
             this._handleInput();
         }
+        
+        // Update invulnerability status
+        if (this.isInvulnerable && Date.now() > this.invulnerabilityEndTime) {
+            this.isInvulnerable = false;
+        }
+        
+        // Update health bar visibility
+        this.showHealthBar = this.currentHealth < this.maxHealth || Date.now() < this.healthBarHideTime;
     }
 
     /**
@@ -325,6 +362,11 @@ export class Player {
         }
         ctx.lineTo(screenX + this.width / 2 + dirX, screenY + this.height / 2 + dirY);
         ctx.stroke();
+        
+        // Debug health info
+        ctx.font = '10px Arial';
+        ctx.fillStyle = 'white';
+        ctx.fillText(`HP: ${this.currentHealth}/${this.maxHealth}`, screenX, screenY - 5);
     }
 
     /**
@@ -337,9 +379,107 @@ export class Player {
         const screenX = this.x + mapOffset.x;
         const screenY = this.y + mapOffset.y;
 
-        this._renderPlayer(ctx, screenX, screenY);
+        // Flash player when invulnerable
+        if (!this.isInvulnerable || Math.floor(Date.now() / 100) % 2 === 0) {
+            this._renderPlayer(ctx, screenX, screenY);
+        }
+        
+        // Render health bar if needed
+        if (this.showHealthBar) {
+            this._renderHealthBar(ctx, screenX, screenY);
+        }
+        
         if (this.debug) {
             this._renderDebug(ctx, screenX, screenY);
+        }
+    }
+
+    /**
+     * Renders the health bar above the player
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     * @private
+     */
+    _renderHealthBar(ctx, screenX, screenY) {
+        const barWidth = this.width;
+        const barHeight = 5;
+        const barX = screenX;
+        const barY = screenY - 10;
+        const healthPercentage = this.currentHealth / this.maxHealth;
+        
+        // Health bar background
+        ctx.fillStyle = HEALTH_BAR.BACKGROUND;
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Health bar fill color based on health percentage
+        if (healthPercentage <= 0.25) {
+            ctx.fillStyle = HEALTH_BAR.CRITICAL;
+        } else if (healthPercentage <= 0.5) {
+            ctx.fillStyle = HEALTH_BAR.LOW;
+        } else {
+            ctx.fillStyle = HEALTH_BAR.FILL;
+        }
+        
+        // Health bar fill
+        ctx.fillRect(barX, barY, barWidth * healthPercentage, barHeight);
+        
+        // Health bar border
+        ctx.strokeStyle = HEALTH_BAR.BORDER;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+    }
+    
+    /**
+     * Takes damage and reduces the player's health
+     * @param {number} amount - Amount of damage to take
+     */
+    takeDamage(amount) {
+        if (this.isInvulnerable) return;
+        
+        this.currentHealth = Math.max(0, this.currentHealth - amount);
+        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        
+        // Make player invulnerable for a short time
+        this.isInvulnerable = true;
+        this.invulnerabilityEndTime = Date.now() + this.invulnerabilityDuration;
+        
+        // Game over if health reaches zero
+        if (this.currentHealth <= 0) {
+            this._handleGameOver();
+        }
+    }
+    
+    /**
+     * Heals the player by increasing health
+     * @param {number} amount - Amount of health to restore
+     */
+    heal(amount) {
+        this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
+        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+    }
+    
+    /**
+     * Resets the player's health to maximum
+     */
+    resetHealth() {
+        this.currentHealth = this.maxHealth;
+        this.isInvulnerable = false;
+    }
+    
+    /**
+     * Handles game over when player health reaches zero
+     * @private
+     */
+    _handleGameOver() {
+        // For now, just reset health - in a real game, you would
+        // trigger game over screen or respawn logic here
+        console.log('Game Over!');
+        this.resetHealth();
+        
+        // If the game has a game over handler, call it
+        if (this.game && typeof this.game.handleGameOver === 'function') {
+            this.game.handleGameOver();
         }
     }
 }

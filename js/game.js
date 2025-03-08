@@ -134,6 +134,18 @@ export class Game {
             }
             return; // Pause game updates while dialog is showing
         }
+        
+        // Get current timestamp for delta time calculation
+        const now = performance.now();
+        const deltaTime = now - (this._lastUpdateTime || now);
+        this._lastUpdateTime = now;
+        
+        // Update map first (including NPCs)
+        if (this._currentMap && typeof this._currentMap.update === 'function') {
+            this._currentMap.update(this._player, deltaTime);
+        }
+        
+        // Then update player
         this._player.update();
         this._updateDebugState();
     }

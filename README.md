@@ -66,3 +66,30 @@ Click the "Debug Mode" button to see:
 - NPC interaction zones
 - Map tile types
 - Player direction indicator
+
+
+## Health System Features
+
+### Health Properties
+- Added `maxHealth` (100) and `currentHealth` properties to track player health
+- Health bar appears above the player, color-coded based on health level:
+  - Green: > 50%
+  - Yellow/orange: 25-50%
+  - Red: < 25% (critical)
+
+### Damage & Invulnerability System
+- Implemented `takeDamage(amount)` method to reduce player health
+- Player becomes temporarily invulnerable after taking damage (visual flashing effect)
+- Health bar automatically displays when damaged, hides after 3 seconds at full health
+
+### Health Management
+- Added `heal(amount)` method for health recovery
+- Implemented `resetHealth()` method to restore full health
+- Game over handling triggered when health reaches zero
+
+### Visual Feedback
+- Color-coded health bar displays current and max health
+- Player sprite flashes during invulnerability period
+- Debug mode reveals exact health values
+
+To test: Use `player.takeDamage(20)` or `player.heal(10)` in appropriate game code sections.
