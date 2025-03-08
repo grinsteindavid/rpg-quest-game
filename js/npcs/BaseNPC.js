@@ -21,7 +21,7 @@ export class BaseNPC {
         this.speed = 0.5;
         this.moveTimer = 0;
         this.moveInterval = 60; // Time between movement decisions in frames
-        this.moveRange = 1; // How many tiles it can move from spawn
+        this.moveRange = 4; // How many tiles it can move from spawn
         this.initialX = this.x; // Store initial pixel position
         this.initialY = this.y;
         
@@ -36,7 +36,7 @@ export class BaseNPC {
         this.isAggressive = false; // Whether the NPC is currently aggressive (can change dynamically)
         this.canBeAggressive = false; // Whether the NPC can become aggressive when player is in range
         this.followPlayer = false; // Whether the NPC should always follow the player when in range (friendly or not)
-        this.aggroRange = 64; // 2 tiles detection range (can be overridden by subclasses)
+        this.aggroRange = 96; // 3 tiles detection range (can be overridden by subclasses)
         this.followDistance = 32; // How close the NPC tries to get to target (1 tile)
         
         // Path tracking properties
