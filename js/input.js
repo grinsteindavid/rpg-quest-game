@@ -2,7 +2,7 @@
  * Handles keyboard and touch input for the game.
  * Maintains a set of currently pressed keys and provides methods to query key/touch states.
  * Prevents default browser behavior for game-related keys (arrows and space).
- * Provides a touch D-pad interface for mobile devices.
+ * Provides a touch D-pad interface and joystick control for mobile devices.
  * 
  * @example
  * const input = new InputHandler();
@@ -36,6 +36,23 @@ export class InputHandler {
             left: null,
             right: null,
             interact: null
+        };
+        
+        /** @type {HTMLElement|null} Joystick container element */
+        this.joystick = null;
+        
+        /** @type {HTMLElement|null} Joystick knob element */
+        this.joystickKnob = null;
+        
+        /** @type {Object} Joystick state */
+        this.joystickState = {
+            active: false,
+            centerX: 0,
+            centerY: 0,
+            knobX: 0,
+            knobY: 0,
+            angle: 0,
+            distance: 0
         };
         
         // Set up keyboard event listeners
@@ -106,19 +123,22 @@ export class InputHandler {
         setTimeout(() => {
             console.log('Touch controls initialized after delay');
         
-        // Create D-pad buttons
-        const directions = ['up', 'down', 'left', 'right'];
-        directions.forEach(direction => {
-            this.dpadButtons[direction] = this._createDpadButton(direction);
-            this.dpad.appendChild(this.dpadButtons[direction]);
-        });
-        
-        // Create interact button
-        this.dpadButtons.interact = this._createDpadButton('interact');
-        this.dpad.appendChild(this.dpadButtons.interact);
-        
+            // Create D-pad buttons
+            const directions = ['up', 'down', 'left', 'right'];
+            directions.forEach(direction => {
+                this.dpadButtons[direction] = this._createDpadButton(direction);
+                this.dpad.appendChild(this.dpadButtons[direction]);
+            });
+            
+            // Create interact button
+            this.dpadButtons.interact = this._createDpadButton('interact');
+            this.dpad.appendChild(this.dpadButtons.interact);
+            
             // Add D-pad to document
             document.body.appendChild(this.dpad);
+            
+            // Create and add joystick
+            this._createJoystick();
             
             // Add touch styles
             this._addTouchStyles();
@@ -185,6 +205,173 @@ export class InputHandler {
      * Adds CSS styles for the D-pad to the document.
      * @private
      */
+    /**
+     * Creates and initializes the virtual joystick for touch controls.
+     * @private
+     */
+    _createJoystick() {
+        // Create joystick container
+        this.joystick = document.createElement('div');
+        this.joystick.className = 'joystick-container';
+        
+        // Create joystick knob (the movable part)
+        this.joystickKnob = document.createElement('div');
+        this.joystickKnob.className = 'joystick-knob';
+        
+        // Add knob to joystick container
+        this.joystick.appendChild(this.joystickKnob);
+        
+        // Add joystick to document
+        document.body.appendChild(this.joystick);
+        
+        // Initialize joystick center position
+        const joystickRect = this.joystick.getBoundingClientRect();
+        this.joystickState.centerX = joystickRect.left + joystickRect.width / 2;
+        this.joystickState.centerY = joystickRect.top + joystickRect.height / 2;
+        
+        // Add touch event listeners
+        this.joystick.addEventListener('touchstart', this._handleJoystickStart.bind(this), { passive: false });
+        this.joystick.addEventListener('touchmove', this._handleJoystickMove.bind(this), { passive: false });
+        this.joystick.addEventListener('touchend', this._handleJoystickEnd.bind(this), { passive: false });
+        this.joystick.addEventListener('touchcancel', this._handleJoystickEnd.bind(this), { passive: false });
+    }
+    
+    /**
+     * Handles the touchstart event for the joystick.
+     * @param {TouchEvent} e - The touch event
+     * @private
+     */
+    _handleJoystickStart(e) {
+        e.preventDefault();
+        
+        // Get joystick container position
+        const joystickRect = this.joystick.getBoundingClientRect();
+        this.joystickState.centerX = joystickRect.left + joystickRect.width / 2;
+        this.joystickState.centerY = joystickRect.top + joystickRect.height / 2;
+        
+        // Mark joystick as active
+        this.joystickState.active = true;
+        
+        // Update joystick position
+        this._updateJoystickPosition(e.touches[0].clientX, e.touches[0].clientY);
+    }
+    
+    /**
+     * Handles the touchmove event for the joystick.
+     * @param {TouchEvent} e - The touch event
+     * @private
+     */
+    _handleJoystickMove(e) {
+        e.preventDefault();
+        
+        if (this.joystickState.active) {
+            this._updateJoystickPosition(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }
+    
+    /**
+     * Handles the touchend and touchcancel events for the joystick.
+     * @param {TouchEvent} e - The touch event
+     * @private
+     */
+    _handleJoystickEnd(e) {
+        e.preventDefault();
+        
+        // Reset joystick state
+        this.joystickState.active = false;
+        this.joystickState.distance = 0;
+        this.joystickState.angle = 0;
+        
+        // Reset joystick position
+        this.joystickKnob.style.transform = `translate(-50%, -50%)`;
+        
+        // Clear any direction keys that were set by the joystick
+        this.keys.delete('ArrowUp');
+        this.keys.delete('ArrowDown');
+        this.keys.delete('ArrowLeft');
+        this.keys.delete('ArrowRight');
+    }
+    
+    /**
+     * Updates the joystick position and state based on touch position.
+     * @param {number} touchX - The x-coordinate of the touch
+     * @param {number} touchY - The y-coordinate of the touch
+     * @private
+     */
+    _updateJoystickPosition(touchX, touchY) {
+        // Calculate the distance from center
+        const deltaX = touchX - this.joystickState.centerX;
+        const deltaY = touchY - this.joystickState.centerY;
+        
+        // Calculate the distance and angle
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const angle = Math.atan2(deltaY, deltaX);
+        
+        // Get the joystick container radius
+        const joystickRect = this.joystick.getBoundingClientRect();
+        const maxRadius = joystickRect.width / 2;
+        
+        // Limit the knob position to stay within the joystick container
+        let knobDistance = distance;
+        if (knobDistance > maxRadius) {
+            knobDistance = maxRadius;
+        }
+        
+        // Calculate the normalized distance (0 to 1)
+        const normalizedDistance = Math.min(1, distance / maxRadius);
+        
+        // Update joystick state
+        this.joystickState.distance = normalizedDistance;
+        this.joystickState.angle = angle;
+        
+        // Calculate new knob position
+        const knobX = Math.cos(angle) * knobDistance;
+        const knobY = Math.sin(angle) * knobDistance;
+        
+        // Update knob position
+        this.joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
+        
+        // Update input keys based on joystick position
+        this._updateJoystickInput();
+    }
+    
+    /**
+     * Updates the input keys based on the joystick position.
+     * @private
+     */
+    _updateJoystickInput() {
+        // Clear any direction keys that were set by the joystick
+        this.keys.delete('ArrowUp');
+        this.keys.delete('ArrowDown');
+        this.keys.delete('ArrowLeft');
+        this.keys.delete('ArrowRight');
+        
+        // Only update keys if the joystick is active and has moved enough
+        if (this.joystickState.active && this.joystickState.distance > 0.2) {
+            const angle = this.joystickState.angle;
+            
+            // Convert angle to direction inputs
+            // Right: -π/4 to π/4
+            // Down: π/4 to 3π/4
+            // Left: 3π/4 to 5π/4 (or -3π/4 to -π/4)
+            // Up: 5π/4 to 7π/4 (or -3π/4 to -π)
+            
+            // Horizontal direction
+            if (Math.cos(angle) > 0.4) {
+                this.keys.add('ArrowRight');
+            } else if (Math.cos(angle) < -0.4) {
+                this.keys.add('ArrowLeft');
+            }
+            
+            // Vertical direction
+            if (Math.sin(angle) > 0.4) {
+                this.keys.add('ArrowDown');
+            } else if (Math.sin(angle) < -0.4) {
+                this.keys.add('ArrowUp');
+            }
+        }
+    }
+    
     _addTouchStyles() {
         const style = document.createElement('style');
         style.textContent = `
@@ -250,9 +437,40 @@ export class InputHandler {
             
             /* Hide D-pad on non-touch devices using hover capability detection */
             @media (hover: hover) and (pointer: fine) {
-                .dpad-container {
+                .dpad-container,
+                .joystick-container {
                     display: none !important;
                 }
+            }
+            
+            /* Joystick styles */
+            .joystick-container {
+                position: fixed;
+                bottom: 30px;
+                left: 30px;
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.4);
+                z-index: 9999;
+                user-select: none;
+                touch-action: none;
+                display: block;
+                pointer-events: auto !important;
+                opacity: 0.9;
+            }
+            
+            .joystick-knob {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.6);
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             }
         `;
         document.head.appendChild(style);
