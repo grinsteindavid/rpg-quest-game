@@ -51,16 +51,19 @@ export class InputHandler {
             this.keys.delete(e.key);
         });
         
-        // Always initialize touch controls for testing
-        // We'll force it to be visible on all devices including iPad
+        // Only initialize touch controls on mobile devices
         console.log('User agent:', navigator.userAgent);
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        if (isMobile) {
-            console.log('Mobile device detected');
-        }
         
-        // Force enable for all devices during testing
-        this._initializeTouchControls();
+        // More comprehensive mobile detection
+        // Check for mobile/tablet user agents regardless of screen size
+        const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|CriOS/i.test(navigator.userAgent);
+        
+        if (isMobileOrTablet) {
+            console.log('Mobile/tablet device detected, initializing touch controls');
+            this._initializeTouchControls();
+        } else {
+            console.log('Desktop browser detected, skipping touch controls');
+        }
     }
 
     /**
@@ -194,7 +197,7 @@ export class InputHandler {
                 z-index: 9999; /* Highest possible z-index */
                 user-select: none;
                 touch-action: none;
-                display: block !important; /* Force visibility */
+                display: block; /* Visible by default on mobile */
                 pointer-events: auto !important;
                 opacity: 0.9; /* Make slightly transparent */
             }
@@ -245,10 +248,10 @@ export class InputHandler {
                 background-color: rgba(0, 200, 100, 0.4);
             }
             
-            /* Only hide on non-touch devices */
-            @media (min-width: 1024px) and (hover: hover) {
+            /* Hide D-pad on non-touch devices using hover capability detection */
+            @media (hover: hover) and (pointer: fine) {
                 .dpad-container {
-                    display: none;
+                    display: none !important;
                 }
             }
         `;
