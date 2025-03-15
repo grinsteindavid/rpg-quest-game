@@ -11,12 +11,43 @@
         <button id="debug-toggle" class="debug-button">Debug Mode</button>
         <div class="debug-info">
             <h3>Debug Visualization:</h3>
+            
+            <h4>Map Elements:</h4>
             <ul>
                 <li><span style="color: red">Red Overlay</span>: Solid/Blocking tiles (walls)</li>
                 <li><span style="color: green">Green Overlay</span>: Walkable tiles (paths)</li>
+                <li><span style="color: white">Numbers</span>: Tile type (0=walkable, 1=solid)</li>
+                <li><span style="color: cyan">Cyan Lines</span>: Map transition zones</li>
+            </ul>
+            
+            <h4>Player:</h4>
+            <ul>
                 <li><span style="color: rgb(22, 127, 220)">Blue Box</span>: Player sprite bounds</li>
                 <li><span style="color: yellow">Yellow Arrow</span>: Player facing direction</li>
-                <li><span style="color: white">Numbers</span>: Tile type (0=walkable, 1=solid)</li>
+                <li><span style="color: white">HP Text</span>: Current/Maximum health points</li>
+                <li><span style="color: #44cc44">Green Bar</span>: High health (>50%)</li>
+                <li><span style="color: #cc4444">Yellow Bar</span>: Medium health (25-50%)</li>
+                <li><span style="color: #ff0000">Red Bar</span>: Critical health (<25%)</li>
+                <li><span style="color: white">Flashing</span>: Temporary invulnerability</li>
+            </ul>
+            
+            <h4>NPCs:</h4>
+            <ul>
+                <li><span style="color: purple">Purple Box</span>: NPC sprite bounds</li>
+                <li><span style="color: rgba(255, 0, 255, 0.3)">Pink Circle</span>: Interaction radius</li>
+                <li><span style="color: rgba(0, 255, 0, 0.3)">Green Box</span>: Movement range from spawn</li>
+                <li><span style="color: white">HP Text</span>: Current/Maximum health points</li>
+                <li><span style="color: rgba(0, 200, 0, 0.8)">Green Bar</span>: High health (>60%)</li>
+                <li><span style="color: rgba(200, 200, 0, 0.8)">Yellow Bar</span>: Medium health (30-60%)</li>
+                <li><span style="color: rgba(200, 0, 0, 0.8)">Red Bar</span>: Low health (<30%)</li>
+                <li><span style="color: #ff3333">Red Flash</span>: NPC taking damage</li>
+            </ul>
+            
+            <h4>Monster NPCs:</h4>
+            <ul>
+                <li><span style="color: rgba(255, 0, 0, 0.3)">Red Circle</span>: Aggro/detection range</li>
+                <li><span style="color: red">Red Text</span>: AGGRO indicator when actively chasing player</li>
+                <li><span style="color: blue">Blue Line & Dot</span>: Path and target when following player</li>
             </ul>
         </div>
         <div id="dialog-container" class="hidden">
