@@ -19,6 +19,16 @@ export class MonsterNPC extends BaseNPC {
         this.hitFistSize = 12;
         this.hitFistColor = 'rgba(255, 255, 255, 0.8)';
         
+        // Custom health bar appearance for monsters
+        this.healthBarHeight = 5; // Slightly taller for better visibility
+        this.healthBarYOffset = -12; // Position a bit higher above the monster
+        this.healthBarColors = {
+            background: 'rgba(40, 40, 40, 0.8)',
+            border: 'rgba(0, 0, 0, 0.8)',
+            fill: 'rgba(200, 0, 0, 0.9)', // Red for monsters
+            critical: 'rgba(255, 50, 50, 1.0)' // Bright red when critical
+        };
+        
         // Monster conversation options
         this.conversations = [
             [
@@ -71,6 +81,55 @@ export class MonsterNPC extends BaseNPC {
     showHitAnimation() {
         this.showingHitAnimation = true;
         this.hitAnimationEndTime = Date.now() + this.hitAnimationDuration;
+    }
+    
+    // Override the render method to show health bar only when health < maxHealth
+    render(ctx, mapOffset) {
+        const screenX = this.x + mapOffset.x;
+        const screenY = this.y + mapOffset.y;
+
+        // Render the basic NPC components
+        this._renderNPC(ctx, screenX, screenY);
+        this._renderMarker(ctx, screenX, screenY);
+        this._renderDebug(ctx, screenX, screenY);
+        
+        // Only show health bar when health is below max
+        if (this.health < this.maxHealth) {
+            this._renderHealthBar(ctx, screenX, screenY);
+        }
+    }
+    
+    // Override the _renderHealthBar method for monsters with custom styling
+    _renderHealthBar(ctx, screenX, screenY) {
+        const barX = screenX;
+        const barY = screenY + this.healthBarYOffset;
+        
+        // Draw border first (slightly larger than the health bar)
+        ctx.fillStyle = this.healthBarColors.border;
+        ctx.fillRect(
+            barX - 1, 
+            barY - 1, 
+            this.healthBarWidth + 2, 
+            this.healthBarHeight + 2
+        );
+        
+        // Background (empty health)
+        ctx.fillStyle = this.healthBarColors.background;
+        ctx.fillRect(barX, barY, this.healthBarWidth, this.healthBarHeight);
+        
+        // Calculate health percentage
+        const healthPercentage = this.health / this.maxHealth;
+        const currentHealthWidth = this.healthBarWidth * healthPercentage;
+        
+        // Determine color based on health percentage
+        let healthColor = this.healthBarColors.fill;
+        if (healthPercentage <= 0.3) {
+            healthColor = this.healthBarColors.critical; // Critical health
+        }
+        
+        // Draw filled health
+        ctx.fillStyle = healthColor;
+        ctx.fillRect(barX, barY, currentHealthWidth, this.healthBarHeight);
     }
     
     _renderNPC(ctx, screenX, screenY) {
@@ -158,6 +217,21 @@ export class MonsterNPC extends BaseNPC {
         if (this.conversationIndex >= 1) {
             this.isAggressive = true;
         }
+    }
+    
+    /**
+     * Override takeDamage to add additional visual effects
+     * @param {number} amount - Amount of damage to take
+     * @returns {boolean} - Whether the monster was defeated
+     */
+    takeDamage(amount) {
+        // Call the parent takeDamage method
+        const isDefeated = super.takeDamage(amount);
+        
+        // Always trigger the hit animation when taking damage
+        this.showHitAnimation();
+        
+        return isDefeated;
     }
     
     /**
