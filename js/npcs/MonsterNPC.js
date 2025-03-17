@@ -12,6 +12,13 @@ export class MonsterNPC extends BaseNPC {
         this.glowIntensity = 0;
         this.glowDirection = 1;
         
+        // Hit animation properties
+        this.showingHitAnimation = false;
+        this.hitAnimationDuration = 500; // milliseconds
+        this.hitAnimationEndTime = 0;
+        this.hitFistSize = 12;
+        this.hitFistColor = 'rgba(255, 255, 255, 0.8)';
+        
         // Monster conversation options
         this.conversations = [
             [
@@ -51,9 +58,27 @@ export class MonsterNPC extends BaseNPC {
             this.glowIntensity = 0.4;
             this.glowDirection = 1;
         }
+        
+        // Check if hit animation should end
+        if (this.showingHitAnimation && Date.now() > this.hitAnimationEndTime) {
+            this.showingHitAnimation = false;
+        }
+    }
+    
+    /**
+     * Trigger the hit animation on the monster
+     */
+    showHitAnimation() {
+        this.showingHitAnimation = true;
+        this.hitAnimationEndTime = Date.now() + this.hitAnimationDuration;
     }
     
     _renderNPC(ctx, screenX, screenY) {
+        // Render the hit animation if active
+        if (this.showingHitAnimation) {
+            this._renderHitAnimation(ctx, screenX, screenY);
+        }
+        
         // Monster body
         ctx.fillStyle = 'rgba(40, 40, 40, 0.9)';
         ctx.fillRect(screenX + 6, screenY + 8, 20, 22);
@@ -143,5 +168,60 @@ export class MonsterNPC extends BaseNPC {
         // Monster death animation or effects can be added here
         console.log(`${this.name} has been defeated!`);
         // Monster will be removed in the map's update method
+    }
+    
+    /**
+     * Renders a fist hit animation on the monster
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     * @private
+     */
+    _renderHitAnimation(ctx, screenX, screenY) {
+        // Calculate animation progress (0 to 1)
+        const currentTime = Date.now();
+        const animationProgress = Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration);
+        
+        // Calculate fist position - it should come from the side the player is facing
+        // We'll calculate center position for the monster
+        const centerX = screenX + 16;
+        const centerY = screenY + 16;
+        
+        // Draw fist
+        ctx.save();
+        
+        // Make the fist appear from a random direction each hit for variety
+        const angle = Math.random() * Math.PI * 2;
+        const distance = this.width / 2 * (1 - animationProgress);
+        const fistX = centerX + Math.cos(angle) * distance;
+        const fistY = centerY + Math.sin(angle) * distance;
+        
+        // Draw the fist (simple circle)
+        ctx.fillStyle = this.hitFistColor;
+        ctx.beginPath();
+        ctx.arc(fistX, fistY, this.hitFistSize * animationProgress, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw impact lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, ' + animationProgress + ')';
+        ctx.lineWidth = 2;
+        
+        const impactLineLength = this.hitFistSize * 1.5 * animationProgress;
+        for (let i = 0; i < 5; i++) {
+            const lineAngle = angle + (Math.PI / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(fistX, fistY);
+            ctx.lineTo(
+                fistX + Math.cos(lineAngle) * impactLineLength,
+                fistY + Math.sin(lineAngle) * impactLineLength
+            );
+            ctx.stroke();
+        }
+        
+        // Flash the monster red when hit
+        ctx.fillStyle = `rgba(255, 0, 0, ${0.3 * animationProgress})`;
+        ctx.fillRect(screenX, screenY, this.width, this.height);
+        
+        ctx.restore();
     }
 }

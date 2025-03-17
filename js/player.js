@@ -67,6 +67,10 @@ export class Player {
     healthBarDisplayTime = 3000;
     /** @type {number} Timestamp when health bar should hide */
     healthBarHideTime = 0;
+    /** @type {number} Cooldown duration between attacks in milliseconds */
+    attackCooldown = 1000;
+    /** @type {number} Timestamp when player can attack again */
+    nextAttackTime = 0;
 
     /**
      * Creates a new Player instance.
@@ -163,6 +167,12 @@ export class Player {
      * @returns {boolean} - Whether any monsters were attacked
      */
     attack(damage = 5, range = 32) {
+        // Check if attack is on cooldown
+        const currentTime = Date.now();
+        if (currentTime < this.nextAttackTime) {
+            return false; // Still on cooldown
+        }
+        
         if (!this.map || !this.map.npcs) return false;
         
         let attackedAny = false;
@@ -190,12 +200,22 @@ export class Player {
                 const isDefeated = npc.takeDamage(damage);
                 attackedAny = true;
                 
+                // Trigger hit animation on the monster
+                if (typeof npc.showHitAnimation === 'function') {
+                    npc.showHitAnimation();
+                }
+                
                 // If the NPC is defeated, mark it for removal
                 if (isDefeated) {
                     npc.isDefeated = true;
                 }
             }
         });
+        
+        // Set cooldown if attack was successful
+        if (attackedAny) {
+            this.nextAttackTime = currentTime + this.attackCooldown;
+        }
         
         return attackedAny;
     }
