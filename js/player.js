@@ -196,6 +196,9 @@ export class Player {
             
             // Attack if in range
             if (distance <= range) {
+                // Update player's direction to face the monster
+                this._faceTowardsTarget(dx, dy);
+                
                 // Deal damage to the NPC
                 const isDefeated = npc.takeDamage(damage);
                 attackedAny = true;
@@ -231,6 +234,23 @@ export class Player {
         else if (dx > 0) this.direction = 'right';
         else if (dy < 0) this.direction = 'up';
         else if (dy > 0) this.direction = 'down';
+    }
+
+    /**
+     * Faces the player towards a target based on relative position
+     * @param {number} dx - X distance to target (target.x - player.x)
+     * @param {number} dy - Y distance to target (target.y - player.y)
+     * @private
+     */
+    _faceTowardsTarget(dx, dy) {
+        // Determine predominant direction (horizontal or vertical)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal direction is predominant
+            this.direction = dx > 0 ? 'right' : 'left';
+        } else {
+            // Vertical direction is predominant
+            this.direction = dy > 0 ? 'down' : 'up';
+        }
     }
 
     /**
