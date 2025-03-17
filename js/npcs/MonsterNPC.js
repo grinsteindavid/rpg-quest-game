@@ -70,8 +70,11 @@ export class MonsterNPC extends BaseNPC {
         }
         
         // Check if hit animation should end
-        if (this.showingHitAnimation && Date.now() > this.hitAnimationEndTime) {
-            this.showingHitAnimation = false;
+        const currentTime = Date.now();
+        if (this.showingHitAnimation) {
+            if (currentTime >= this.hitAnimationEndTime) {
+                this.showingHitAnimation = false;
+            }
         }
     }
     
@@ -79,8 +82,10 @@ export class MonsterNPC extends BaseNPC {
      * Trigger the hit animation on the monster
      */
     showHitAnimation() {
+        const currentTime = Date.now();
         this.showingHitAnimation = true;
-        this.hitAnimationEndTime = Date.now() + this.hitAnimationDuration;
+        // Always set a new end time, even if an animation is already in progress
+        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
     }
     
     // Override the render method to show health bar only when health < maxHealth
@@ -254,7 +259,8 @@ export class MonsterNPC extends BaseNPC {
     _renderHitAnimation(ctx, screenX, screenY) {
         // Calculate animation progress (0 to 1)
         const currentTime = Date.now();
-        const animationProgress = Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration);
+        // Ensure animationProgress is always between 0 and 1
+        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
         
         // Calculate fist position - it should come from the side the player is facing
         // We'll calculate center position for the monster
