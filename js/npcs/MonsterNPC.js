@@ -8,6 +8,12 @@ export class MonsterNPC extends BaseNPC {
         // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
         this.canBeAggressive = true; // Start aggressive by default
         
+        // Attack properties
+        this.attackDamage = 10;
+        this.attackRange = 40; // Slightly larger than player's attack range
+        this.attackCooldown = 1500; // Milliseconds between attacks
+        this.nextAttackTime = 0; // Timestamp when the monster can attack again
+        
         // Visual effect properties
         this.glowIntensity = 0;
         this.glowDirection = 1;
@@ -76,6 +82,12 @@ export class MonsterNPC extends BaseNPC {
                 this.showingHitAnimation = false;
             }
         }
+        
+        // Check if the monster should attack the player
+        if (this.isAggressive && player && currentTime >= this.nextAttackTime) {
+            this.attackPlayer(player);
+            console.log('Monster attacking player!');
+        }
     }
     
     /**
@@ -86,6 +98,58 @@ export class MonsterNPC extends BaseNPC {
         this.showingHitAnimation = true;
         // Always set a new end time, even if an animation is already in progress
         this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
+    }
+    
+    /**
+     * Attack the player if in range
+     * @param {Player} player - The player to attack
+     * @returns {boolean} - Whether the player was attacked
+     */
+    attackPlayer(player) {
+        const currentTime = Date.now();
+        
+        // Calculate distance between monster and player
+        const monsterCenterX = this.x + (this.width / 2);
+        const monsterCenterY = this.y + (this.height / 2);
+        const playerCenterX = player.x + (player.width / 2);
+        const playerCenterY = player.y + (player.height / 2);
+        
+        const dx = playerCenterX - monsterCenterX;
+        const dy = playerCenterY - monsterCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Attack if player is in range
+        if (distance <= this.attackRange) {
+            // Face towards the player before attacking
+            this._faceTowardsTarget(dx, dy);
+            
+            // Deal damage to the player
+            player.takeDamage(this.attackDamage);
+            
+            // Set cooldown for next attack
+            this.nextAttackTime = currentTime + this.attackCooldown;
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Faces the monster towards a target based on relative position
+     * @param {number} dx - X distance to target (target.x - monster.x)
+     * @param {number} dy - Y distance to target (target.y - monster.y)
+     * @private
+     */
+    _faceTowardsTarget(dx, dy) {
+        // Determine predominant direction (horizontal or vertical)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal direction is predominant
+            this.direction = dx > 0 ? 'right' : 'left';
+        } else {
+            // Vertical direction is predominant
+            this.direction = dy > 0 ? 'down' : 'up';
+        }
     }
     
     // Override the render method to show health bar only when health < maxHealth

@@ -90,6 +90,11 @@ export class Player {
         this.currentHealth = this.maxHealth;
         /** @type {number} Initialize health bar display */
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        
+        // Hit animation properties
+        this.showingHitAnimation = false;
+        this.hitAnimationDuration = 500; // milliseconds
+        this.hitAnimationEndTime = 0;
     }
 
     /**
@@ -405,6 +410,11 @@ export class Player {
             this.isInvulnerable = false;
         }
         
+        // Check if hit animation should end
+        if (this.showingHitAnimation && Date.now() > this.hitAnimationEndTime) {
+            this.showingHitAnimation = false;
+        }
+        
         // Update health bar visibility
         this.showHealthBar = this.currentHealth < this.maxHealth || Date.now() < this.healthBarHideTime;
     }
@@ -494,6 +504,11 @@ export class Player {
         // Flash player when invulnerable
         if (!this.isInvulnerable || Math.floor(Date.now() / 100) % 2 === 0) {
             this._renderPlayer(ctx, screenX, screenY);
+            
+            // Show hit animation if active
+            if (this.showingHitAnimation) {
+                this._renderHitAnimation(ctx, screenX, screenY);
+            }
         }
         
         // Render health bar if needed
@@ -543,6 +558,36 @@ export class Player {
     }
     
     /**
+     * Shows hit animation when player takes damage
+     */
+    showHitAnimation() {
+        const currentTime = Date.now();
+        this.showingHitAnimation = true;
+        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
+    }
+    
+    /**
+     * Renders the hit animation effect on the player
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     */
+    _renderHitAnimation(ctx, screenX, screenY) {
+        // Calculate animation progress (0 to 1)
+        const currentTime = Date.now();
+        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
+        
+        // Flash the player red when hit
+        ctx.fillStyle = `rgba(255, 0, 0, ${0.5 * animationProgress})`;
+        ctx.fillRect(screenX, screenY, this.width, this.height);
+        
+        // Draw a damage effect (simple white flash)
+        ctx.strokeStyle = `rgba(255, 255, 255, ${animationProgress})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(screenX, screenY, this.width, this.height);
+    }
+    
+    /**
      * Takes damage and reduces the player's health
      * @param {number} amount - Amount of damage to take
      */
@@ -551,6 +596,9 @@ export class Player {
         
         this.currentHealth = Math.max(0, this.currentHealth - amount);
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        
+        // Show hit animation
+        this.showHitAnimation();
         
         // Make player invulnerable for a short time
         this.isInvulnerable = true;
