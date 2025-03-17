@@ -166,7 +166,7 @@ export class Player {
      * @param {number} range - Range in pixels to detect monsters
      * @returns {boolean} - Whether any monsters were attacked
      */
-    attack(damage = 5, range = 32) {
+    attack(damage = 20, range = 32) {
         // Check if attack is on cooldown
         const currentTime = Date.now();
         if (currentTime < this.nextAttackTime) {
