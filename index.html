@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Mini Game</title>
     <link rel="stylesheet" href="css/style.css">
     <!-- Prevent default behavior for game keys including 'q' for attack -->
 </head>
 <body>
     <div id="game-container">
+        <button id="fullscreen-toggle" class="fullscreen-button">Fullscreen</button>
         <button id="debug-toggle" class="debug-button">Debug Mode</button>
         <div class="debug-info">
             <h3>Debug Visualization:</h3>
@@ -60,5 +63,89 @@
         <canvas id="gameCanvas" tabindex="0"></canvas>
     </div>
     <script type="module" src="js/game.js"></script>
+    <script>
+        // Fullscreen functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const fullscreenBtn = document.getElementById('fullscreen-toggle');
+            const gameContainer = document.getElementById('game-container');
+            
+            // Check if fullscreen is supported
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    toggleFullScreen();
+                });
+            }
+            
+            function toggleFullScreen() {
+                if (!document.fullscreenElement && 
+                    !document.mozFullScreenElement && 
+                    !document.webkitFullscreenElement && 
+                    !document.msFullscreenElement) {
+                    // Enter fullscreen
+                    if (gameContainer.requestFullscreen) {
+                        gameContainer.requestFullscreen();
+                    } else if (gameContainer.msRequestFullscreen) {
+                        gameContainer.msRequestFullscreen();
+                    } else if (gameContainer.mozRequestFullScreen) {
+                        gameContainer.mozRequestFullScreen();
+                    } else if (gameContainer.webkitRequestFullscreen) {
+                        gameContainer.webkitRequestFullscreen();
+                    }
+                    fullscreenBtn.classList.add('active');
+                    gameContainer.classList.add('fullscreen');
+                    document.body.classList.add('fullscreen');
+                } else {
+                    // Exit fullscreen
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                    fullscreenBtn.classList.remove('active');
+                    gameContainer.classList.remove('fullscreen');
+                    document.body.classList.remove('fullscreen');
+                }
+            }
+            
+            // Auto enter fullscreen for mobile devices
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                // Add a slight delay to ensure everything is loaded
+                setTimeout(() => {
+                    // Try to auto-enable fullscreen on mobile
+                    try {
+                        toggleFullScreen();
+                    } catch (e) {
+                        console.log('Auto fullscreen failed:', e);
+                    }
+                }, 1000);
+            }
+            
+            // Handle fullscreen change events
+            document.addEventListener('fullscreenchange', updateFullscreenStatus);
+            document.addEventListener('webkitfullscreenchange', updateFullscreenStatus);
+            document.addEventListener('mozfullscreenchange', updateFullscreenStatus);
+            document.addEventListener('MSFullscreenChange', updateFullscreenStatus);
+            
+            function updateFullscreenStatus() {
+                if (document.fullscreenElement || 
+                    document.webkitFullscreenElement || 
+                    document.mozFullScreenElement || 
+                    document.msFullscreenElement) {
+                    fullscreenBtn.classList.add('active');
+                    gameContainer.classList.add('fullscreen');
+                    document.body.classList.add('fullscreen');
+                } else {
+                    fullscreenBtn.classList.remove('active');
+                    gameContainer.classList.remove('fullscreen');
+                    document.body.classList.remove('fullscreen');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
