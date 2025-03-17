@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="HandheldFriendly" content="true">
     <title>Mini Game</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Prevent default behavior for game keys including 'q' for attack -->
+
 </head>
 <body>
     <div id="game-container">
@@ -64,6 +65,23 @@
     </div>
     <script type="module" src="js/game.js"></script>
     <script>
+        // Prevent zooming on touch devices
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Double-tap prevention
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+        
         // Fullscreen functionality
         document.addEventListener('DOMContentLoaded', () => {
             const fullscreenBtn = document.getElementById('fullscreen-toggle');
@@ -71,43 +89,91 @@
             
             // Check if fullscreen is supported
             if (fullscreenBtn) {
-                fullscreenBtn.addEventListener('click', () => {
+                // Use a direct click event to avoid any delay
+                fullscreenBtn.onclick = () => {
                     toggleFullScreen();
-                });
+                };
             }
             
             function toggleFullScreen() {
-                if (!document.fullscreenElement && 
-                    !document.mozFullScreenElement && 
-                    !document.webkitFullscreenElement && 
-                    !document.msFullscreenElement) {
-                    // Enter fullscreen
-                    if (gameContainer.requestFullscreen) {
-                        gameContainer.requestFullscreen();
-                    } else if (gameContainer.msRequestFullscreen) {
-                        gameContainer.msRequestFullscreen();
-                    } else if (gameContainer.mozRequestFullScreen) {
-                        gameContainer.mozRequestFullScreen();
-                    } else if (gameContainer.webkitRequestFullscreen) {
-                        gameContainer.webkitRequestFullscreen();
+                try {
+                    console.log('Attempting to toggle fullscreen');
+                    
+                    // For iOS Safari browsers that don't support fullscreen API
+                    const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) || 
+                                 (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                    
+                    if (isIOS) {
+                        console.log('iOS device detected, using CSS fullscreen fallback');
+                        fullscreenBtn.classList.toggle('active');
+                        gameContainer.classList.toggle('fullscreen');
+                        document.body.classList.toggle('fullscreen');
+                        return; // Exit early for iOS devices
                     }
-                    fullscreenBtn.classList.add('active');
-                    gameContainer.classList.add('fullscreen');
-                    document.body.classList.add('fullscreen');
-                } else {
-                    // Exit fullscreen
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen();
-                    } else if (document.msExitFullscreen) {
-                        document.msExitFullscreen();
-                    } else if (document.mozCancelFullScreen) {
-                        document.mozCancelFullScreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
+                    
+                    if (!document.fullscreenElement && 
+                        !document.mozFullScreenElement && 
+                        !document.webkitFullscreenElement && 
+                        !document.msFullscreenElement) {
+                        // Enter fullscreen - try document element as fallback for iOS
+                        let element = gameContainer;
+                        
+                        // Try the game container first
+                        if (element.requestFullscreen) {
+                            console.log('Using standard fullscreen API');
+                            element.requestFullscreen();
+                        } else if (element.mozRequestFullScreen) {
+                            console.log('Using Mozilla fullscreen API');
+                            element.mozRequestFullScreen();
+                        } else if (element.webkitRequestFullscreen) {
+                            console.log('Using WebKit fullscreen API');
+                            element.webkitRequestFullscreen();
+                        } else if (element.msRequestFullscreen) {
+                            console.log('Using MS fullscreen API');
+                            element.msRequestFullscreen();
+                        } else {
+                            // Fallback - try with document.documentElement (for Safari on iOS)
+                            element = document.documentElement;
+                            console.log('Trying with documentElement instead');
+                            
+                            if (element.requestFullscreen) {
+                                element.requestFullscreen();
+                            } else if (element.mozRequestFullScreen) {
+                                element.mozRequestFullScreen();
+                            } else if (element.webkitRequestFullscreen) {
+                                element.webkitRequestFullscreen();
+                            } else if (element.msRequestFullscreen) {
+                                element.msRequestFullscreen();
+                            }
+                        }
+                        
+                        // Apply fullscreen classes regardless of API success
+                        fullscreenBtn.classList.add('active');
+                        gameContainer.classList.add('fullscreen');
+                        document.body.classList.add('fullscreen');
+                    } else {
+                        // Exit fullscreen
+                        console.log('Exiting fullscreen');
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.mozCancelFullScreen) {
+                            document.mozCancelFullScreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        } else if (document.msExitFullscreen) {
+                            document.msExitFullscreen();
+                        }
+                        
+                        fullscreenBtn.classList.remove('active');
+                        gameContainer.classList.remove('fullscreen');
+                        document.body.classList.remove('fullscreen');
                     }
-                    fullscreenBtn.classList.remove('active');
-                    gameContainer.classList.remove('fullscreen');
-                    document.body.classList.remove('fullscreen');
+                } catch (e) {
+                    console.error('Fullscreen error:', e);
+                    // Fallback: just apply the fullscreen classes
+                    fullscreenBtn.classList.toggle('active');
+                    gameContainer.classList.toggle('fullscreen');
+                    document.body.classList.toggle('fullscreen');
                 }
             }
             
