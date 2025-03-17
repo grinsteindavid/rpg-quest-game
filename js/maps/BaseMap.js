@@ -317,7 +317,10 @@ export class BaseMap {
      * @param {number} deltaTime - Time passed since last update in ms
      */
     update(player, deltaTime) {
-        // Update all NPCs
+        // Remove any defeated NPCs before updating
+        this.npcs = this.npcs.filter(npc => !npc.isDefeated);
+        
+        // Update all remaining NPCs
         for (const npc of this.npcs) {
             if (typeof npc.update === 'function') {
                 // Pass this map instance to the NPC for collision detection

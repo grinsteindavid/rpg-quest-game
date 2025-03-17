@@ -157,6 +157,50 @@ export class Player {
     }
 
     /**
+     * Attack nearby aggressive monsters.
+     * @param {number} damage - Amount of damage to deal
+     * @param {number} range - Range in pixels to detect monsters
+     * @returns {boolean} - Whether any monsters were attacked
+     */
+    attack(damage = 5, range = 32) {
+        if (!this.map || !this.map.npcs) return false;
+        
+        let attackedAny = false;
+        
+        // Get player center position
+        const playerCenterX = this.x + (this.width / 2);
+        const playerCenterY = this.y + (this.height / 2);
+        
+        this.map.npcs.forEach(npc => {
+            // Check if the NPC is a monster and can be aggressive
+            if (!npc.canBeAggressive) return;
+            
+            // Get NPC center position
+            const npcCenterX = npc.x + (npc.width / 2);
+            const npcCenterY = npc.y + (npc.height / 2);
+            
+            // Calculate distance between player and NPC
+            const dx = npcCenterX - playerCenterX;
+            const dy = npcCenterY - playerCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Attack if in range
+            if (distance <= range) {
+                // Deal damage to the NPC
+                const isDefeated = npc.takeDamage(damage);
+                attackedAny = true;
+                
+                // If the NPC is defeated, mark it for removal
+                if (isDefeated) {
+                    npc.isDefeated = true;
+                }
+            }
+        });
+        
+        return attackedAny;
+    }
+
+    /**
      * Updates the player's facing direction based on movement input.
      * @param {number} dx - Horizontal movement direction (-1, 0, or 1)
      * @param {number} dy - Vertical movement direction (-1, 0, or 1)
@@ -304,6 +348,16 @@ export class Player {
             this._handleMovementAnimation();
         } else {
             this._handleInput();
+        }
+        
+        // Handle attack with 'q' key
+        if (this.input.isPressed('q') && !this.isMoving && !this.game._dialog.isActive()) {
+            // Perform attack and show visual feedback if successful
+            const didAttack = this.attack();
+            if (didAttack) {
+                console.log('Player attacked nearby monsters!');
+                // Visual feedback could be added here in the future
+            }
         }
         
         // Update invulnerability status

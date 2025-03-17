@@ -134,4 +134,14 @@ export class MonsterNPC extends BaseNPC {
             this.isAggressive = true;
         }
     }
+    
+    /**
+     * Called when the monster is defeated (health <= 0)
+     * Marks the monster for removal from the map
+     */
+    onDefeat() {
+        // Monster death animation or effects can be added here
+        console.log(`${this.name} has been defeated!`);
+        // Monster will be removed in the map's update method
+    }
 }

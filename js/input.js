@@ -58,7 +58,7 @@ export class InputHandler {
         // Set up keyboard event listeners
         window.addEventListener('keydown', (e) => {
             // Prevent scrolling with arrow keys and space
-            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'q'].includes(e.key)) {
                 e.preventDefault();
             }
             this.keys.add(e.key);
