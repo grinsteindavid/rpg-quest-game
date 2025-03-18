@@ -7,8 +7,8 @@ export class GhostNPC extends BaseNPC {
         
         // Ghost-specific properties
         this.canBeAggressive = true;
-        this.speed = 0.8; // Slightly faster than monsters
-        this.moveInterval = 30; // More frequent movement decisions
+        this.speed = 0.7; // Slightly faster than monsters
+        this.moveInterval = 5; // More frequent movement decisions
         
         // Visual effect properties
         this.opacity = 0.7;
