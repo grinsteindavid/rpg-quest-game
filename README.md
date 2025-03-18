@@ -8,8 +8,6 @@ https://grinsteindavid.github.io/rpg-quest-game/
 
 <img width="779" alt="image" src="https://github.com/user-attachments/assets/30cb7db1-9357-4cc2-a1cc-a42d2da786d7" />
 
-<img width="765" alt="image" src="https://github.com/user-attachments/assets/11f5e2be-46cb-4950-a535-af0f6608d745" />
-
 <img width="753" alt="image" src="https://github.com/user-attachments/assets/6eef37c4-5a7a-4687-b546-82e0f8f19619" />
 
 
