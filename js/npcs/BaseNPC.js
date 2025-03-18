@@ -6,7 +6,9 @@ export class BaseNPC {
         // Store original tile coordinates for spawn position
         this.spawnTileX = x;
         this.spawnTileY = y;
-        
+
+        // Tile size
+        this.tileSize = 32;
         // Convert tile position to pixels for current position
         this.x = x * 32;
         this.y = y * 32;

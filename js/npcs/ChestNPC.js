@@ -1,5 +1,4 @@
 import { BaseNPC } from './BaseNPC.js';
-import { SPRITES } from '../colors.js';
 
 export class ChestNPC extends BaseNPC {
     constructor({ x, y, name = 'Treasure Chest', loot = [] }) {
