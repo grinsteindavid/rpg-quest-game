@@ -266,11 +266,35 @@ export class Player {
      * @private
      */
     _isValidMove(tileX, tileY) {
-        return tileX >= 0 && 
+        // First check if the tile is within map boundaries and is a walkable tile type
+        const isWalkableTile = tileX >= 0 && 
                tileX < this.map.mapData[0].length &&
                tileY >= 0 && 
                tileY < this.map.mapData.length &&
                this.map.isWalkableTile(this.map.mapData[tileY][tileX]);
+        
+        // If the tile is not walkable, return false immediately
+        if (!isWalkableTile) return false;
+        
+        // Check if any NPC with canMoveThruWalls=false is at this position
+        if (this.map.npcs) {
+            for (const npc of this.map.npcs) {
+                // Skip NPCs that can be walked through
+                if (npc.canMoveThruWalls) continue;
+                
+                // Check if NPC's position matches the target position
+                const npcTileX = Math.floor(npc.x / this.tileSize);
+                const npcTileY = Math.floor(npc.y / this.tileSize);
+                
+                if (npcTileX === tileX && npcTileY === tileY) {
+                    // NPC is blocking the way
+                    return false;
+                }
+            }
+        }
+        
+        // No blocking NPCs found, position is valid
+        return true;
     }
 
     /**
