@@ -509,7 +509,7 @@ export class BaseNPC {
             // AGGRO text
             ctx.fillStyle = 'red';
             ctx.font = '12px Arial';
-            ctx.fillText('AGGRO', screenX + this.width / 2, screenY - 30);
+            ctx.fillText('AGGRO', screenX + this.width / 2, screenY - 40);
         }
         
         // Show target with a line if there is one
