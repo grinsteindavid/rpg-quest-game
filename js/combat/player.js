@@ -2,6 +2,9 @@
  * Represents the player combat system in the game world.
  * Handles attacks, damage, health management, and combat animations.
  */
+import { HealthBar } from '../UI/HealthBar.js';
+import { CombatAnimations } from '../animations/CombatAnimations.js';
+
 export class PlayerCombat {
     /** @type {number} Maximum health points of the player */
     maxHealth = 100;
@@ -23,14 +26,6 @@ export class PlayerCombat {
     attackCooldown = 1000;
     /** @type {number} Timestamp when player can attack again */
     nextAttackTime = 0;
-    
-    // Hit animation properties
-    /** @type {boolean} Whether the hit animation is currently playing */
-    showingHitAnimation = false;
-    /** @type {number} Duration of hit animation in milliseconds */
-    hitAnimationDuration = 500;
-    /** @type {number} Timestamp when hit animation will end */
-    hitAnimationEndTime = 0;
 
     /** @type {Object} Reference to the player object */
     player = null;
@@ -43,6 +38,23 @@ export class PlayerCombat {
         this.player = player;
         this.currentHealth = this.maxHealth;
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        
+        // Initialize UI components
+        this.healthBar = new HealthBar({
+            width: 32,
+            height: 5,
+            yOffset: -10,
+            colors: {
+                fill: 'rgba(68, 204, 68, 1)',
+                low: 'rgba(204, 68, 68, 1)',
+                critical: 'rgba(255, 0, 0, 1)'
+            }
+        });
+        
+        // Initialize animations
+        this.animations = new CombatAnimations({
+            hitAnimationDuration: 500
+        });
     }
 
     /**
@@ -112,9 +124,7 @@ export class PlayerCombat {
      * Shows hit animation when player takes damage
      */
     showHitAnimation() {
-        const currentTime = Date.now();
-        this.showingHitAnimation = true;
-        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
+        this.animations.showHitAnimation();
     }
 
     /**
@@ -126,18 +136,7 @@ export class PlayerCombat {
      * @param {number} height - Height of the player sprite
      */
     renderHitAnimation(ctx, screenX, screenY, width, height) {
-        // Calculate animation progress (0 to 1)
-        const currentTime = Date.now();
-        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
-        
-        // Flash the player red when hit
-        ctx.fillStyle = `rgba(255, 0, 0, ${0.5 * animationProgress})`;
-        ctx.fillRect(screenX, screenY, width, height);
-        
-        // Draw a damage effect (simple white flash)
-        ctx.strokeStyle = `rgba(255, 255, 255, ${animationProgress})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(screenX, screenY, width, height);
+        this.animations.renderHitAnimation(ctx, screenX, screenY, width, height, false);
     }
 
     /**
@@ -148,32 +147,7 @@ export class PlayerCombat {
      * @param {number} width - Width of the player sprite
      */
     renderHealthBar(ctx, screenX, screenY, width) {
-        const barWidth = width;
-        const barHeight = 5;
-        const barX = screenX;
-        const barY = screenY - 10;
-        const healthPercentage = this.currentHealth / this.maxHealth;
-        
-        // Health bar background
-        ctx.fillStyle = 'rgba(51, 51, 51, 1)';
-        ctx.fillRect(barX, barY, barWidth, barHeight);
-        
-        // Health bar fill color based on health percentage
-        if (healthPercentage <= 0.25) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 1)';
-        } else if (healthPercentage <= 0.5) {
-            ctx.fillStyle = 'rgba(204, 68, 68, 1)';
-        } else {
-            ctx.fillStyle = 'rgba(68, 204, 68, 1)';
-        }
-        
-        // Health bar fill
-        ctx.fillRect(barX, barY, barWidth * healthPercentage, barHeight);
-        
-        // Health bar border
-        ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(barX, barY, barWidth, barHeight);
+        this.healthBar.render(ctx, screenX, screenY, this.currentHealth, this.maxHealth, width);
     }
 
     /**
@@ -239,10 +213,8 @@ export class PlayerCombat {
             this.isInvulnerable = false;
         }
         
-        // Check if hit animation should end
-        if (this.showingHitAnimation && Date.now() > this.hitAnimationEndTime) {
-            this.showingHitAnimation = false;
-        }
+        // Update animations
+        this.animations.update();
         
         // Update health bar visibility
         this.showHealthBar = this.currentHealth < this.maxHealth || Date.now() < this.healthBarHideTime;

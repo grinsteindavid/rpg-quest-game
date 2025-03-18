@@ -449,7 +449,7 @@ export class Player {
             this._renderPlayer(ctx, screenX, screenY);
             
             // Show hit animation if active
-            if (this.combat.showingHitAnimation) {
+            if (this.combat.animations.showingHitAnimation) {
                 this.combat.renderHitAnimation(ctx, screenX, screenY, this.width, this.height);
             }
         }
@@ -472,33 +472,13 @@ export class Player {
     }
     
     /**
-     * Shows hit animation when player takes damage
-     */
-    showHitAnimation() {
-        const currentTime = Date.now();
-        this.showingHitAnimation = true;
-        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
-    }
-    
-    /**
      * Renders the hit animation effect on the player
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
      * @param {number} screenX - Screen X coordinate
      * @param {number} screenY - Screen Y coordinate
      */
     _renderHitAnimation(ctx, screenX, screenY) {
-        // Calculate animation progress (0 to 1)
-        const currentTime = Date.now();
-        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
-        
-        // Flash the player red when hit
-        ctx.fillStyle = `rgba(255, 0, 0, ${0.5 * animationProgress})`;
-        ctx.fillRect(screenX, screenY, this.width, this.height);
-        
-        // Draw a damage effect (simple white flash)
-        ctx.strokeStyle = `rgba(255, 255, 255, ${animationProgress})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(screenX, screenY, this.width, this.height);
+        this.combat.renderHitAnimation(ctx, screenX, screenY, this.width, this.height);
     }
     
     /**

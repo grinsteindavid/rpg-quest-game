@@ -1,5 +1,6 @@
 import { SPRITES } from '../colors.js';
 import { CombatSystem } from '../combat/npc.js';
+import { Marker } from '../UI/Marker.js';
 
 export class BaseNPC {
     constructor({ x, y, name, canMove = false, canMoveThruWalls = false, loot = [] }) {
@@ -51,11 +52,12 @@ export class BaseNPC {
         this.pathChangeTimer = 0;
         this.pathChangeInterval = 60; // How often to update path when following target
 
-        // Marker properties
-        this.showMarker = true;
-        this.markerOffset = 0;
-        this.markerSpeed = 0.1;
-        this.markerTime = 0;
+        // Initialize marker UI component
+        this.marker = new Marker({
+            visible: true,
+            color: 'yellow',
+            speed: 0.1
+        });
 
         // Conversation properties
         this.conversationIndex = 0;
@@ -432,7 +434,7 @@ export class BaseNPC {
 
     _renderNPC(ctx, screenX, screenY) {
         // Render hit animation if active
-        if (this.combatSystem.showingHitAnimation) {
+        if (this.combatSystem.animations.showingHitAnimation) {
             this.combatSystem.renderHitAnimation(ctx, screenX, screenY);
         }
 
@@ -458,23 +460,12 @@ export class BaseNPC {
         
         // Draw health bar if enabled and not at full health
         if (this.combatSystem.showHealthBar && this.combatSystem.health < this.combatSystem.maxHealth) {
-            this._renderHealthBar(ctx, screenX, screenY);
+            this.combatSystem.renderHealthBar(ctx, screenX, screenY);
         }
     }
 
     _renderMarker(ctx, screenX, screenY) {
-        if (this.showMarker) {
-            this.markerTime += this.markerSpeed;
-            this.markerOffset = Math.sin(this.markerTime) * 4;
-            
-            ctx.fillStyle = 'yellow';
-            ctx.beginPath();
-            ctx.moveTo(screenX + 16, screenY - 8 + this.markerOffset);
-            ctx.lineTo(screenX + 21, screenY - 18 + this.markerOffset);
-            ctx.lineTo(screenX + 11, screenY - 18 + this.markerOffset);
-            ctx.closePath();
-            ctx.fill();
-        }
+        this.marker.render(ctx, screenX, screenY, this.width);
     }
 
     _renderDebug(ctx, screenX, screenY) {
@@ -608,11 +599,6 @@ export class BaseNPC {
         }
     }
     
-    // Draw health bar above the NPC
-    _renderHealthBar(ctx, screenX, screenY) {
-        this.combatSystem.renderHealthBar(ctx, screenX, screenY);
-    }
-    
     render(ctx, mapOffset) {
         const screenX = this.x + mapOffset.x;
         const screenY = this.y + mapOffset.y;
@@ -622,7 +608,7 @@ export class BaseNPC {
         this._renderDebug(ctx, screenX, screenY);
         
         // Render hit animation if it's active
-        if (this.combatSystem.showingHitAnimation) {
+        if (this.combatSystem.animations.showingHitAnimation) {
             this.combatSystem.renderHitAnimation(ctx, screenX, screenY);
         }
         
