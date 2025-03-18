@@ -46,6 +46,13 @@ export class Game {
         this._dialog = new Dialog();
         this._transition = new Transition();
         this._gameOver = new GameOver();
+        
+        // Flag to track if the page is currently visible/active
+        this._isPageVisible = true;
+        
+        // Set up visibility change detection
+        this._setupVisibilityChangeDetection();
+        
         requestAnimationFrame(this._gameLoop.bind(this));
     }
 
@@ -140,6 +147,27 @@ export class Game {
             this._updateDebugState();
         });
     }
+    
+    /**
+     * Sets up visibility change detection for tab switching.
+     * @private
+     */
+    _setupVisibilityChangeDetection() {
+        // Listen for visibility change events
+        document.addEventListener('visibilitychange', () => {
+            this._isPageVisible = document.visibilityState === 'visible';
+            
+            // Reset the frame timing when the page becomes visible again
+            // This prevents large deltaTime values when coming back to the tab
+            if (this._isPageVisible) {
+                this._lastUpdateTime = performance.now();
+                this._lastFrameTime = performance.now();
+                
+                // Force a render to prevent black screen
+                this._render();
+            }
+        });
+    }
 
     /**
      * Updates debug state for game components.
@@ -224,8 +252,20 @@ export class Game {
      * @private
      */
     _gameLoop = () => {
-        this._update();
-        this._render();
+        // Get current timestamp for delta time calculation
+        const now = performance.now();
+        
+        // Prevent huge deltaTime when tab is inactive
+        // This can cause issues with particle effects when returning to the tab
+        const deltaTime = Math.min(now - (this._lastFrameTime || now), 100);
+        this._lastFrameTime = now;
+        
+        // Only update if the page is visible to save resources when tab is inactive
+        if (this._isPageVisible) {
+            this._update();
+            this._render();
+        }
+        
         requestAnimationFrame(this._gameLoop);
     }
 
