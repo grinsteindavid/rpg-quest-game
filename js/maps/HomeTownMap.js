@@ -14,7 +14,7 @@ export class HomeTownMap extends BaseMap {
         
         // Define transition points
         this.transitions = {
-            forest: [
+            darkForest: [
                 {
                     x: [4], // Valid x coordinates for transition
                     y: 7,      // Y coordinate for transition

@@ -1,6 +1,6 @@
-import { COLORS } from '../colors.js';
-import { BaseMap } from './BaseMap.js';
-import { MonsterNPC } from '../npcs/MonsterNPC.js';
+import { COLORS } from '../../colors.js';
+import { BaseMap } from '../BaseMap.js';
+import { MonsterNPC } from '../../npcs/MonsterNPC.js';
 
 export class ForestMap extends BaseMap {
     constructor() {
@@ -24,13 +24,20 @@ export class ForestMap extends BaseMap {
                     y: 1,         // Y coordinate for transition
                     destination: { x: 6, y: 6 }  // Updated: Move to hometown's south exit
                 }
+            ],
+            darkForestDepths: [ 
+                {
+                    x: [12], // Valid x coordinates for transition
+                    y: 2,         // Y coordinate for transition
+                    destination: { x: 2, y: 2 }  // Updated: Move to hometown's south exit
+                },
             ]
         };
         
         this.mapData = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],
-            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1],
+            [1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1],
             [1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
             [1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1],
