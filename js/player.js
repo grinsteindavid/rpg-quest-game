@@ -29,6 +29,8 @@ export class Player {
     initialSpawn = true;
     /** @type {boolean} Whether the player is currently moving between tiles */
     isMoving = false;
+    /** @type {boolean} Whether the player is in a map transition */
+    isTransitioning = false;
     /** @type {'up'|'down'|'left'|'right'} Current facing direction of the player */
     direction = 'down';
     /** 
@@ -273,6 +275,11 @@ export class Player {
      * @private
      */
     _checkMapTransition() {
+        // Don't check for transitions if we're already transitioning
+        if (this.isTransitioning || (this.game._transition && this.game._transition.isActive())) {
+            return;
+        }
+        
         const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
         const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
         
@@ -303,8 +310,8 @@ export class Player {
      * @private
      */
     _handleInput() {
-        // Don't process movement input if dialog is active
-        if (this.game._dialog.isActive()) return;
+        // Don't process movement input if dialog is active or player is in transition
+        if (this.game._dialog.isActive() || this.isTransitioning) return;
         
         if (this.input.isPressed('ArrowLeft') || this.input.isPressed('a')) {
             this.move(-1, 0);
@@ -337,12 +344,12 @@ export class Player {
 
         if (this.isMoving) {
             this._handleMovementAnimation();
-        } else {
+        } else if (!this.isTransitioning) { // Only process input if not in transition
             this._handleInput();
         }
         
-        // Handle attack with 'q' key
-        if (this.input.isPressed('q') && !this.isMoving && !this.game._dialog.isActive()) {
+        // Handle attack with 'q' key - only if not in transition
+        if (this.input.isPressed('q') && !this.isMoving && !this.game._dialog.isActive() && !this.isTransitioning) {
             // Perform attack and show visual feedback if successful
             const didAttack = this.attack();
             if (didAttack) {
