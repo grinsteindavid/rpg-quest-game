@@ -2,7 +2,8 @@
 
 https://grinsteindavid.github.io/arena-game/
 
-<img width="769" alt="image" src="https://github.com/user-attachments/assets/383d44d0-d0c5-435d-b18a-fc09480f2d5c" />
+<img width="769" alt="image" src="https://github.com/user-attachments/assets/7b20c550-f3f0-4aea-affd-e58aa9f3dec4" />
+
 
 
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/5d7372a2-8cbe-49bb-921e-b0b2968637a2" />
