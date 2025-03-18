@@ -51,6 +51,7 @@ export class HomeTownMap extends BaseMap {
         this.addEffect(new RainEffect({
             opacity: 0.2,
             angle: 15,
+            speed: 4,
             density: 0.2,
             color: '#aaddff'
         }));
