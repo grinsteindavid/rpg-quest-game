@@ -11,6 +11,7 @@ export class GuideNPC extends BaseNPC {
                 "First, let me explain the controls...",
                 "Use WASD or arrow keys to move around.",
                 "Press E near NPCs like me to talk.",
+                "Press Q to attack nearby monsters.",
                 "You're doing great! Keep pressing E or Space to continue..."
             ],
             [
@@ -23,7 +24,7 @@ export class GuideNPC extends BaseNPC {
                 "Need a refresher on the controls?",
                 "WASD or Arrows to move",
                 "E to interact with NPCs and objects",
-                "Space or E to continue dialogues",
+                "Q to attack nearby monsters",
                 "Come back if you need more help!"
             ]
         ];
