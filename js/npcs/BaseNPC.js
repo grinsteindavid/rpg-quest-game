@@ -249,6 +249,28 @@ export class BaseNPC {
             }
         }
         
+        // Check for player collision if NPC can't move through walls and player is provided
+        if (!this.canMoveThruWalls && player !== null) {
+            // Get player's current tile position
+            const playerTileX = Math.floor(player.x / this.tileSize);
+            const playerTileY = Math.floor(player.y / this.tileSize);
+            
+            // Check if player is at the target tile position
+            if (playerTileX === tileX && playerTileY === tileY) {
+                return false;
+            }
+            
+            // Also check player's target position if they're moving
+            if (player.isMoving) {
+                const playerTargetTileX = Math.floor(player.targetX / this.tileSize);
+                const playerTargetTileY = Math.floor(player.targetY / this.tileSize);
+                
+                if (playerTargetTileX === tileX && playerTargetTileY === tileY) {
+                    return false;
+                }
+            }
+        }
+        
         return true;
     }
     

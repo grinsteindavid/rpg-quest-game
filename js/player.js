@@ -282,12 +282,19 @@ export class Player {
                 // Skip NPCs that can be walked through
                 if (npc.canMoveThruWalls) continue;
                 
-                // Check if NPC's position matches the target position
+                // Handle both current position and target position (for moving NPCs)
+                // Check current position
                 const npcTileX = Math.floor(npc.x / this.tileSize);
                 const npcTileY = Math.floor(npc.y / this.tileSize);
                 
-                if (npcTileX === tileX && npcTileY === tileY) {
-                    // NPC is blocking the way
+                // Check target position (if NPC is moving)
+                const npcTargetTileX = npc.isMoving ? Math.floor(npc.targetX / this.tileSize) : npcTileX;
+                const npcTargetTileY = npc.isMoving ? Math.floor(npc.targetY / this.tileSize) : npcTileY;
+                
+                // Check if either current position or target position matches player's target
+                if ((npcTileX === tileX && npcTileY === tileY) || 
+                    (npcTargetTileX === tileX && npcTargetTileY === tileY)) {
+                    // NPC is blocking the way (either at current position or will be at target)
                     return false;
                 }
             }
