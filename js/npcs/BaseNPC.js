@@ -1,4 +1,5 @@
 import { SPRITES } from '../colors.js';
+import { CombatSystem } from '../combat/npc.js';
 
 export class BaseNPC {
     constructor({ x, y, name, canMove = false, canMoveThruWalls = false }) {
@@ -56,16 +57,9 @@ export class BaseNPC {
         this.isInConversation = false;
         this.conversations = [["Hello!"]]; // Default conversation
         
-        // Health properties
-        this.maxHealth = 100; // Default maximum health
-        this.health = this.maxHealth; // Current health
-        this.showHealthBar = true; // Whether to display the health bar
-        this.healthBarWidth = 32; // Width of health bar (same as NPC width)
-        this.healthBarHeight = 4; // Height of health bar
-        this.healthBarYOffset = -10; // Position above the NPC
-        this.isDamaged = false; // Flag for damage visual effect
-        this.damageEffectDuration = 20; // Frames to show damage effect
-        this.damageEffectTimer = 0; // Timer for damage effect
+        // Create and initialize combat system
+        this.combatSystem = new CombatSystem(this);
+        this.combatSystem.maxHealth = 100; // Default maximum health
     }
 
     setDebug(debug) {
@@ -92,40 +86,25 @@ export class BaseNPC {
     
     // Take damage from player or other sources
     takeDamage(amount) {
-        this.health = Math.max(0, this.health - amount);
-        this.isDamaged = true;
-        this.damageEffectTimer = this.damageEffectDuration;
-        
-        // Check if NPC is defeated
-        if (this.health <= 0) {
-            this.onDefeat?.();
-        }
-        
-        return this.health <= 0; // Return true if defeated
+        return this.combatSystem.takeDamage(amount);
     }
     
     // Heal the NPC
     heal(amount) {
-        this.health = Math.min(this.maxHealth, this.health + amount);
+        this.combatSystem.heal(amount);
     }
     
     // Reset health to max
     resetHealth() {
-        this.health = this.maxHealth;
-        this.isDamaged = false;
+        this.combatSystem.resetHealth();
     }
     
     // Optional callback for when NPC is defeated
     onDefeat() {}
     
     update(player, deltaTime, map) {
-        // Update damage effect timer if active
-        if (this.isDamaged) {
-            this.damageEffectTimer--;
-            if (this.damageEffectTimer <= 0) {
-                this.isDamaged = false;
-            }
-        }
+        // Update combat system
+        this.combatSystem.update(player);
         
         // Don't update if NPC can't move or is in conversation
         if (!this.canMove || this.isInConversation) return;
@@ -447,8 +426,13 @@ export class BaseNPC {
     }
 
     _renderNPC(ctx, screenX, screenY) {
+        // Render hit animation if active
+        if (this.combatSystem.showingHitAnimation) {
+            this.combatSystem.renderHitAnimation(ctx, screenX, screenY);
+        }
+
         // Basic NPC appearance with damage effect if damaged
-        if (this.isDamaged) {
+        if (this.combatSystem.isDamaged) {
             // Flash red when damaged
             ctx.fillStyle = '#ff3333';
             ctx.fillRect(screenX, screenY, this.width, this.height);
@@ -468,7 +452,7 @@ export class BaseNPC {
         ctx.fillText(this.name, screenX + 16, screenY - 5);
         
         // Draw health bar if enabled and not at full health
-        if (this.showHealthBar && this.health < this.maxHealth) {
+        if (this.combatSystem.showHealthBar && this.combatSystem.health < this.combatSystem.maxHealth) {
             this._renderHealthBar(ctx, screenX, screenY);
         }
     }
@@ -512,7 +496,7 @@ export class BaseNPC {
         // Show health info in debug mode
         ctx.fillStyle = 'white';
         ctx.font = '10px Arial';
-        ctx.fillText(`HP: ${this.health}/${this.maxHealth}`, screenX + this.width / 2, screenY - 30);
+        ctx.fillText(`HP: ${this.combatSystem.health}/${this.combatSystem.maxHealth}`, screenX + this.width / 2, screenY - 30);
         
         // Show aggro state if aggressive
         if (this.isAggressive) {
@@ -621,30 +605,7 @@ export class BaseNPC {
     
     // Draw health bar above the NPC
     _renderHealthBar(ctx, screenX, screenY) {
-        const barX = screenX;
-        const barY = screenY + this.healthBarYOffset;
-        
-        // Background (empty health)
-        ctx.fillStyle = 'rgba(40, 40, 40, 0.7)';
-        ctx.fillRect(barX, barY, this.healthBarWidth, this.healthBarHeight);
-        
-        // Calculate health percentage
-        const healthPercentage = this.health / this.maxHealth;
-        const currentHealthWidth = this.healthBarWidth * healthPercentage;
-        
-        // Determine color based on health percentage
-        let healthColor;
-        if (healthPercentage > 0.6) {
-            healthColor = 'rgba(0, 200, 0, 0.8)'; // Green for high health
-        } else if (healthPercentage > 0.3) {
-            healthColor = 'rgba(200, 200, 0, 0.8)'; // Yellow for medium health
-        } else {
-            healthColor = 'rgba(200, 0, 0, 0.8)'; // Red for low health
-        }
-        
-        // Draw filled health
-        ctx.fillStyle = healthColor;
-        ctx.fillRect(barX, barY, currentHealthWidth, this.healthBarHeight);
+        this.combatSystem.renderHealthBar(ctx, screenX, screenY);
     }
     
     render(ctx, mapOffset) {
@@ -654,5 +615,15 @@ export class BaseNPC {
         this._renderNPC(ctx, screenX, screenY);
         this._renderMarker(ctx, screenX, screenY);
         this._renderDebug(ctx, screenX, screenY);
+        
+        // Render hit animation if it's active
+        if (this.combatSystem.showingHitAnimation) {
+            this.combatSystem.renderHitAnimation(ctx, screenX, screenY);
+        }
+        
+        // Render health bar if needed
+        if (this.combatSystem.showHealthBar && this.combatSystem.health < this.combatSystem.maxHealth) {
+            this.combatSystem.renderHealthBar(ctx, screenX, screenY);
+        }
     }
 }

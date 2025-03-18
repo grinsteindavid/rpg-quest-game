@@ -1,5 +1,5 @@
 import { SPRITES } from './colors.js';
-import { PlayerCombat } from './combat/PlayerCombat.js';
+import { PlayerCombat } from './combat/player.js';
 
 /**
  * Represents a player character in the game world.
