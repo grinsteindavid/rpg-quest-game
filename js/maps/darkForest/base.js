@@ -1,15 +1,19 @@
 import { COLORS } from '../../colors.js';
 import { BaseMap } from '../BaseMap.js';
 import { MonsterNPC } from '../../npcs/MonsterNPC.js';
+import { FogEffect } from '../../effects/FogEffect.js';
 
 export class ForestMap extends BaseMap {
-    constructor() {
-        super('Dark Forest');
-        
-        this.mapColors = {
-            primary: COLORS.DARK_GREEN,  // Dark green for forest
-            pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
-        };
+    constructor(config = {}) {
+        super({
+            name: 'Dark Forest',
+            game: config.game || null,
+            colors: {
+                primary: COLORS.DARK_GREEN,  // Dark green for forest
+                pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
+            }
+        });
+
         
         // Define transition points
         this.transitions = {
@@ -53,6 +57,13 @@ export class ForestMap extends BaseMap {
             new MonsterNPC({ x: 10, y: 8, name: "Dark Lurker" }), // Right side monster
             new MonsterNPC({ x: 2, y: 8, name: "Shadow Beast" })   // Bottom left monster
         ];
+
+        // Add a fog effect to the dark forest
+        this.addEffect(new FogEffect({
+            opacity: 0.8,
+            color: '#334433',
+            density: 1.2
+        }));
     }
     
 
