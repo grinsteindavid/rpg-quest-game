@@ -7,8 +7,8 @@ export class ForestMap extends BaseMap {
         super('Dark Forest');
         
         this.mapColors = {
-            primary: '#1a3300',  // Dark green for forest
-            pattern: '#0d1a00'   // Even darker green for pattern
+            primary: COLORS.DARK_GREEN,  // Dark green for forest
+            pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
         };
         
         // Define transition points
