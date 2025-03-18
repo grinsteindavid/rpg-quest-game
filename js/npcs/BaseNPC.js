@@ -2,7 +2,7 @@ import { SPRITES } from '../colors.js';
 import { CombatSystem } from '../combat/npc.js';
 
 export class BaseNPC {
-    constructor({ x, y, name, canMove = false, canMoveThruWalls = false }) {
+    constructor({ x, y, name, canMove = false, canMoveThruWalls = false, loot = [] }) {
         // Store original tile coordinates for spawn position
         this.spawnTileX = x;
         this.spawnTileY = y;
@@ -27,6 +27,9 @@ export class BaseNPC {
         this.moveRange = 4; // How many tiles it can move from spawn
         this.initialX = this.x; // Store initial pixel position
         this.initialY = this.y;
+
+        // Loot properties ( under development )
+        this.loot = loot;
         
         // Tile-by-tile movement properties
         this.isMoving = false; // Flag for when NPC is moving between tiles

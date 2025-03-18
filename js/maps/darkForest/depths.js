@@ -1,6 +1,5 @@
 import { COLORS } from '../../colors.js';
 import { BaseMap } from '../BaseMap.js';
-import { MonsterNPC } from '../../npcs/MonsterNPC.js';
 import { ChestNPC } from '../../npcs/ChestNPC.js';
 import { GhostNPC } from '../../npcs/GhostNPC.js';
 
