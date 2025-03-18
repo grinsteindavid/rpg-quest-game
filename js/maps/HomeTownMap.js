@@ -14,22 +14,29 @@ export class HomeTownMap extends BaseMap {
         
         // Define transition points
         this.transitions = {
-            forest: {
-                x: [4, 5], // Valid x coordinates for transition
-                y: 0,      // Y coordinate for transition
-                destination: { x: 2, y: 2 }  // Updated: Move to forest's north exit
-            }
+            forest: [
+                {
+                    x: [4], // Valid x coordinates for transition
+                    y: 7,      // Y coordinate for transition
+                    destination: { x: 2, y: 2 }  // Updated: Move to forest's north exit
+                },
+                {
+                    x: [6], // Valid x coordinates for transition
+                    y: 7,      // Y coordinate for transition
+                    destination: { x: 4, y: 2 }  // Updated: Move to forest's north exit
+                }
+            ]
         };
         
         this.mapData = [
-            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            [1, 1, 1, 1, 0, 1, 0, 1, 1, 1]
         ];
 
         this.npcs = [

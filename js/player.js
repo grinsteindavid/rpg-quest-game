@@ -332,10 +332,12 @@ export class Player {
         const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
         const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
         
-        for (const [mapName, transition] of Object.entries(this.map.transitions)) {
-            if (transition.x.includes(tileX) && tileY === transition.y) {
-                this.game.changeMap(mapName, transition.destination);
-                break;
+        for (const [mapName, transitions] of Object.entries(this.map.transitions)) {
+            for (const transition of transitions) {
+                if (transition.x.includes(tileX) && tileY === transition.y) {
+                    this.game.changeMap(mapName, transition.destination);
+                    break;
+                }
             }
         }
     }

@@ -155,8 +155,8 @@ export class InputHandler {
         
         // Set the symbol content based on direction
         switch(direction) {
-            case 'interact': symbol.textContent = 'E'; break;
-            case 'attack': symbol.textContent = 'Q'; break;
+            case 'interact': symbol.textContent = '💬'; break;
+            case 'attack': symbol.textContent = '⚔️'; break;
         }
         
         button.appendChild(symbol);

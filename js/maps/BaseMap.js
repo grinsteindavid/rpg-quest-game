@@ -34,8 +34,8 @@ export class BaseMap {
      */
     getInitialPlayerPosition() {
         return {
-            x: 4 * this.tileSize,
-            y: 4 * this.tileSize
+            x: 1 * this.tileSize,
+            y: 1 * this.tileSize
         };
     }
 
@@ -174,8 +174,10 @@ export class BaseMap {
         if (!this.transitions) return;
 
         const offset = this.getMapOffset();
-        for (const [mapName, transition] of Object.entries(this.transitions)) {
-            this.drawExit(ctx, mapName, transition, offset);
+        for (const [mapName, transitions] of Object.entries(this.transitions)) {
+            for (const transition of transitions) {
+                this.drawExit(ctx, mapName, transition, offset);
+            }
         }
     }
 
