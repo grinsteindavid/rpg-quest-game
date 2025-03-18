@@ -14,6 +14,7 @@ export class FogEffect extends BaseEffect {
      * @param {number} [config.density=0.5] - Density of the fog (0.1 to 1.0)
      * @param {number} [config.verticalSpeed=0.1] - Vertical movement speed of the fog
      * @param {boolean} [config.animate=true] - Whether to animate fog particles
+     * @param {boolean} [config.performanceMode=false] - Whether to use optimized performance mode for mobile devices
      */
     constructor(config = {}) {
         super({
@@ -37,6 +38,9 @@ export class FogEffect extends BaseEffect {
         /** @type {boolean} Whether to animate fog particles */
         this.animate = config.animate !== undefined ? config.animate : true;
         
+        /** @type {boolean} Whether to use optimized performance mode for mobile/tablet */
+        this.performanceMode = config.performanceMode !== undefined ? config.performanceMode : this._detectMobileDevice();
+        
         /** @type {Array} Array of fog particles */
         this.particles = [];
         
@@ -51,6 +55,20 @@ export class FogEffect extends BaseEffect {
         
         /** @private @type {number} Current intensity multiplier */
         this._intensityMultiplier = 1.0;
+        
+        /** @private @type {number} Frame counter for performance optimization */
+        this._frameCounter = 0;
+    }
+    
+    /**
+     * Detects if the current device is a mobile or tablet device
+     * @private
+     * @returns {boolean} Whether the current device is mobile/tablet
+     */
+    _detectMobileDevice() {
+        // Simple detection based on user agent
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        return /android|ipad|iphone|ipod|mobile|tablet/i.test(userAgent);
     }
     
     /**
@@ -63,7 +81,13 @@ export class FogEffect extends BaseEffect {
         const canvasHeight = ctx.canvas.height;
         
         // Calculate number of particles based on canvas size and density
-        const particleCount = Math.floor((canvasWidth * canvasHeight) / 10000 * this.density * 20);
+        // Reduce particle count in performance mode
+        let particleCount = Math.floor((canvasWidth * canvasHeight) / 10000 * this.density * 20);
+        
+        // Use fewer particles in performance mode
+        if (this.performanceMode) {
+            particleCount = Math.floor(particleCount / 3);
+        }
         
         this.particles = [];
         for (let i = 0; i < particleCount; i++) {
@@ -81,18 +105,29 @@ export class FogEffect extends BaseEffect {
      * @private
      */
     _addFogParticle(canvasWidth, canvasHeight, randomPosition = false) {
-        this.particles.push({
-            x: Math.random() * canvasWidth,
-            y: randomPosition ? Math.random() * canvasHeight : Math.random() < 0.5 ? -30 : canvasHeight + 30,
-            radius: Math.random() * 20 + 10,
-            alpha: Math.random() * 0.5 + 0.2,
-            speedModifier: Math.random() * 0.4 + 0.8, // Individual speed variation
-            fadeDirection: Math.random() < 0.5 ? 1 : -1, // Whether particle is fading in or out
-            fadeSpeed: Math.random() * 0.02 + 0.01, // Speed of fade effect
-            growDirection: Math.random() < 0.5 ? 1 : -1, // Whether particle is growing or shrinking
-            growSpeed: Math.random() * 0.05 + 0.02, // Speed of size change
-            verticalDirection: Math.random() < 0.5 ? 1 : -1 // Direction of vertical movement
-        });
+        // Simpler particles for performance mode
+        if (this.performanceMode) {
+            this.particles.push({
+                x: Math.random() * canvasWidth,
+                y: randomPosition ? Math.random() * canvasHeight : Math.random() < 0.5 ? -30 : canvasHeight + 30,
+                radius: Math.random() * 15 + 10,
+                alpha: Math.random() * 0.4 + 0.2,
+                speedModifier: Math.random() * 0.3 + 0.7
+            });
+        } else {
+            this.particles.push({
+                x: Math.random() * canvasWidth,
+                y: randomPosition ? Math.random() * canvasHeight : Math.random() < 0.5 ? -30 : canvasHeight + 30,
+                radius: Math.random() * 20 + 10,
+                alpha: Math.random() * 0.5 + 0.2,
+                speedModifier: Math.random() * 0.4 + 0.8, // Individual speed variation
+                fadeDirection: Math.random() < 0.5 ? 1 : -1, // Whether particle is fading in or out
+                fadeSpeed: Math.random() * 0.02 + 0.01, // Speed of fade effect
+                growDirection: Math.random() < 0.5 ? 1 : -1, // Whether particle is growing or shrinking
+                growSpeed: Math.random() * 0.05 + 0.02, // Speed of size change
+                verticalDirection: Math.random() < 0.5 ? 1 : -1 // Direction of vertical movement
+            });
+        }
     }
     
     /**
@@ -103,10 +138,20 @@ export class FogEffect extends BaseEffect {
     update(deltaTime, map) {
         if (!this.enabled) return;
         
-        // Update time-based effects
-        this._timeAccumulator += deltaTime / 1000;
-        // Create a slow pulsing intensity using a sine wave
-        this._intensityMultiplier = 0.9 + 0.1 * Math.sin(this._timeAccumulator * 0.2);
+        // Increment frame counter for performance optimizations
+        this._frameCounter++;
+        
+        // In performance mode, skip some update cycles for non-essential animations
+        if (this.performanceMode && this._frameCounter % 2 !== 0) {
+            return;
+        }
+        
+        // Update time-based effects (less frequently in performance mode)
+        if (!this.performanceMode || this._frameCounter % 3 === 0) {
+            this._timeAccumulator += deltaTime / 1000;
+            // Create a slow pulsing intensity using a sine wave
+            this._intensityMultiplier = 0.9 + 0.1 * Math.sin(this._timeAccumulator * 0.2);
+        }
         
         // Update fog horizontal movement
         this.offsetX += this.speed * (deltaTime / 1000);
@@ -125,32 +170,45 @@ export class FogEffect extends BaseEffect {
             
             // Move the particle
             particle.x += this.speed * particle.speedModifier * (deltaTime / 16);
-            particle.y += this.verticalSpeed * particle.verticalDirection * particle.speedModifier * (deltaTime / 16);
             
-            // Animate alpha (fading in/out)
-            particle.alpha += particle.fadeDirection * particle.fadeSpeed * (deltaTime / 16);
-            if (particle.alpha > 0.7) {
-                particle.fadeDirection = -1;
-            } else if (particle.alpha < 0.2) {
-                particle.fadeDirection = 1;
-            }
-            
-            // Animate size (growing/shrinking)
-            particle.radius += particle.growDirection * particle.growSpeed * (deltaTime / 16);
-            if (particle.radius > 30) {
-                particle.growDirection = -1;
-            } else if (particle.radius < 10) {
-                particle.growDirection = 1;
-            }
-            
-            // If the particle moves out of the canvas, recycle it
-            if (particle.x > canvasWidth + particle.radius || 
-                particle.y > canvasHeight + particle.radius || 
-                particle.y < -particle.radius) {
-                // Remove the particle and add a new one
-                this.particles.splice(i, 1);
-                this._addFogParticle(canvasWidth, canvasHeight);
-                i--; // Adjust index after splicing
+            // Performance mode has simpler animation
+            if (this.performanceMode) {
+                // If the particle moves out of the canvas, recycle it
+                if (particle.x > canvasWidth + particle.radius) {
+                    // Remove the particle and add a new one
+                    this.particles.splice(i, 1);
+                    this._addFogParticle(canvasWidth, canvasHeight);
+                    i--; // Adjust index after splicing
+                }
+            } else {
+                // Full animation mode
+                particle.y += this.verticalSpeed * particle.verticalDirection * particle.speedModifier * (deltaTime / 16);
+                
+                // Animate alpha (fading in/out)
+                particle.alpha += particle.fadeDirection * particle.fadeSpeed * (deltaTime / 16);
+                if (particle.alpha > 0.7) {
+                    particle.fadeDirection = -1;
+                } else if (particle.alpha < 0.2) {
+                    particle.fadeDirection = 1;
+                }
+                
+                // Animate size (growing/shrinking)
+                particle.radius += particle.growDirection * particle.growSpeed * (deltaTime / 16);
+                if (particle.radius > 30) {
+                    particle.growDirection = -1;
+                } else if (particle.radius < 10) {
+                    particle.growDirection = 1;
+                }
+                
+                // If the particle moves out of the canvas, recycle it
+                if (particle.x > canvasWidth + particle.radius || 
+                    particle.y > canvasHeight + particle.radius || 
+                    particle.y < -particle.radius) {
+                    // Remove the particle and add a new one
+                    this.particles.splice(i, 1);
+                    this._addFogParticle(canvasWidth, canvasHeight);
+                    i--; // Adjust index after splicing
+                }
             }
         }
     }
@@ -175,38 +233,101 @@ export class FogEffect extends BaseEffect {
         // Set global opacity for the entire effect, modulated by intensity multiplier
         ctx.globalAlpha = this.opacity * this._intensityMultiplier;
         
-        // Draw each fog particle
-        for (const particle of this.particles) {
-            // Handle wrapping around the canvas
-            let x = particle.x;
-            if (this.animate) {
-                x = (particle.x + this.offsetX) % canvasWidth;
-                // Wrap around negative positions too
+        // Performance mode: batch draw instead of individual gradients
+        if (this.performanceMode) {
+            // Group particles by size range to reduce gradient creation
+            const smallParticles = [];
+            const mediumParticles = [];
+            const largeParticles = [];
+            
+            // Sort particles into size buckets
+            for (const particle of this.particles) {
+                let x = (particle.x + this.offsetX) % canvasWidth;
                 if (x < -particle.radius) x += canvasWidth + particle.radius * 2;
-            } else {
-                x = (particle.x + this.offsetX) % canvasWidth;
+                
+                if (particle.radius < 15) {
+                    smallParticles.push({x, y: particle.y, alpha: particle.alpha, radius: particle.radius});
+                } else if (particle.radius < 25) {
+                    mediumParticles.push({x, y: particle.y, alpha: particle.alpha, radius: particle.radius});
+                } else {
+                    largeParticles.push({x, y: particle.y, alpha: particle.alpha, radius: particle.radius});
+                }
             }
             
-            ctx.beginPath();
-            const gradient = ctx.createRadialGradient(
-                x, particle.y, 0,
-                x, particle.y, particle.radius
-            );
-            
-            gradient.addColorStop(0, `${this.color}`);
-            gradient.addColorStop(1, `${this.color}00`);
-            
-            ctx.fillStyle = gradient;
-            ctx.globalAlpha = this.opacity * particle.alpha * this._intensityMultiplier;
-            ctx.arc(x, particle.y, particle.radius, 0, Math.PI * 2);
-            ctx.fill();
+            // Draw particles by size group with shared gradients
+            this._drawParticleGroup(ctx, smallParticles, 12);
+            this._drawParticleGroup(ctx, mediumParticles, 20);
+            this._drawParticleGroup(ctx, largeParticles, 30);
+        } else {
+            // Standard rendering with individual gradients
+            for (const particle of this.particles) {
+                // Handle wrapping around the canvas
+                let x = particle.x;
+                if (this.animate) {
+                    x = (particle.x + this.offsetX) % canvasWidth;
+                    // Wrap around negative positions too
+                    if (x < -particle.radius) x += canvasWidth + particle.radius * 2;
+                } else {
+                    x = (particle.x + this.offsetX) % canvasWidth;
+                }
+                
+                ctx.beginPath();
+                const gradient = ctx.createRadialGradient(
+                    x, particle.y, 0,
+                    x, particle.y, particle.radius
+                );
+                
+                gradient.addColorStop(0, `${this.color}`);
+                gradient.addColorStop(1, `${this.color}00`);
+                
+                ctx.fillStyle = gradient;
+                ctx.globalAlpha = this.opacity * particle.alpha * this._intensityMultiplier;
+                ctx.arc(x, particle.y, particle.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
         
-        // Add a very subtle overlay for fog atmosphere
-        ctx.fillStyle = `rgba(${this.color.slice(1, 3)}, ${this.color.slice(3, 5)}, ${this.color.slice(5, 7)}, 0.02)`;
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        // Skip overlay in performance mode to improve rendering speed
+        if (!this.performanceMode) {
+            // Add a very subtle overlay for fog atmosphere
+            ctx.fillStyle = `rgba(${this.color.slice(1, 3)}, ${this.color.slice(3, 5)}, ${this.color.slice(5, 7)}, 0.02)`;
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        }
         
         ctx.restore();
+    }
+    
+    /**
+     * Draws a group of particles with a shared gradient for better performance
+     * @param {CanvasRenderingContext2D} ctx - The canvas context
+     * @param {Array} particles - Array of particles to draw
+     * @param {number} avgRadius - Average radius to use for shared gradient
+     * @private
+     */
+    _drawParticleGroup(ctx, particles, avgRadius) {
+        if (particles.length === 0) return;
+        
+        // Create a shared gradient for all particles in this group
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, avgRadius);
+        gradient.addColorStop(0, `${this.color}`);
+        gradient.addColorStop(1, `${this.color}00`);
+        ctx.fillStyle = gradient;
+        
+        // Draw each particle using the shared gradient
+        for (const p of particles) {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.globalAlpha = this.opacity * p.alpha * this._intensityMultiplier;
+            
+            // Scale to match the particle's actual radius
+            const scale = p.radius / avgRadius;
+            ctx.scale(scale, scale);
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, avgRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
     }
     
     /**
@@ -240,6 +361,17 @@ export class FogEffect extends BaseEffect {
      */
     setAnimation(enable) {
         this.animate = enable;
+    }
+    
+    /**
+     * Enables or disables performance mode for mobile/tablet devices.
+     * @param {boolean} enable - Whether to enable performance mode
+     */
+    setPerformanceMode(enable) {
+        if (this.performanceMode !== enable) {
+            this.performanceMode = enable;
+            this._initialized = false; // Re-initialize particles with new settings
+        }
     }
     
     /**

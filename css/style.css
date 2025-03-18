@@ -19,10 +19,6 @@ html, body {
     -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlights */
 }
 
-/* Full screen mode styles */
-body.fullscreen {
-    padding: 0;
-}
 
 #game-container {
     position: relative;
@@ -62,20 +58,6 @@ body.fullscreen {
     }
 }
 
-/* Fullscreen mode */
-#game-container.fullscreen {
-    width: 100vw;
-    height: 100vh;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 9999;
-}
 
 #gameCanvas {
     position: absolute;
@@ -98,11 +80,6 @@ body.fullscreen {
     }
 }
 
-/* Fullscreen canvas */
-.fullscreen #gameCanvas {
-    width: 100%;
-    height: 100%;
-}
 
 .hidden {
     display: none;
@@ -147,37 +124,6 @@ body.fullscreen {
     z-index: 100;
 }
 
-/* Fullscreen button styles */
-.fullscreen-button {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    padding: 8px 16px;
-    background-color: #4d0000; /* Deep blood red */
-    color: #ccaa66; /* Light gold */
-    border: 2px solid #8B6F4E; /* Medium brown */
-    font-family: 'Times New Roman', serif;
-    cursor: pointer;
-    z-index: 9999; /* Ensure it's above everything else */
-    display: none; /* Hide on desktop by default */
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-
-@media (max-width: 900px) {
-    .fullscreen-button {
-        display: block; /* Show on mobile */
-    }
-}
-
-.fullscreen-button.active {
-    background-color: #8B6F4E; /* Medium brown */
-    color: #000000; /* Pure black */
-}
 
 .debug-button.active {
     background-color: #8B6F4E; /* Medium brown */

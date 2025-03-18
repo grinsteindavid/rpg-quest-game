@@ -62,7 +62,7 @@ export class ForestMap extends BaseMap {
         this.addEffect(new FogEffect({
             opacity: 0.8,
             color: '#334433',
-            density: 1.2
+            density: 1,
         }));
     }
     
