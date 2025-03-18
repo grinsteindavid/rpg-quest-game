@@ -34,8 +34,8 @@ export class BaseMap {
      */
     getInitialPlayerPosition() {
         return {
-            x: 4 * this.tileSize,
-            y: 4 * this.tileSize
+            x: 1 * this.tileSize,
+            y: 1 * this.tileSize
         };
     }
 
@@ -174,8 +174,10 @@ export class BaseMap {
         if (!this.transitions) return;
 
         const offset = this.getMapOffset();
-        for (const [mapName, transition] of Object.entries(this.transitions)) {
-            this.drawExit(ctx, mapName, transition, offset);
+        for (const [mapName, transitions] of Object.entries(this.transitions)) {
+            for (const transition of transitions) {
+                this.drawExit(ctx, mapName, transition, offset);
+            }
         }
     }
 
@@ -317,7 +319,10 @@ export class BaseMap {
      * @param {number} deltaTime - Time passed since last update in ms
      */
     update(player, deltaTime) {
-        // Update all NPCs
+        // Remove any defeated NPCs before updating
+        this.npcs = this.npcs.filter(npc => !npc.isDefeated);
+        
+        // Update all remaining NPCs
         for (const npc of this.npcs) {
             if (typeof npc.update === 'function') {
                 // Pass this map instance to the NPC for collision detection

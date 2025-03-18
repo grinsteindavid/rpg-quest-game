@@ -67,6 +67,10 @@ export class Player {
     healthBarDisplayTime = 3000;
     /** @type {number} Timestamp when health bar should hide */
     healthBarHideTime = 0;
+    /** @type {number} Cooldown duration between attacks in milliseconds */
+    attackCooldown = 1000;
+    /** @type {number} Timestamp when player can attack again */
+    nextAttackTime = 0;
 
     /**
      * Creates a new Player instance.
@@ -86,6 +90,11 @@ export class Player {
         this.currentHealth = this.maxHealth;
         /** @type {number} Initialize health bar display */
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        
+        // Hit animation properties
+        this.showingHitAnimation = false;
+        this.hitAnimationDuration = 500; // milliseconds
+        this.hitAnimationEndTime = 0;
     }
 
     /**
@@ -157,6 +166,69 @@ export class Player {
     }
 
     /**
+     * Attack nearby aggressive monsters.
+     * @param {number} damage - Amount of damage to deal
+     * @param {number} range - Range in pixels to detect monsters
+     * @returns {boolean} - Whether any monsters were attacked
+     */
+    attack(damage = 20, range = 32) {
+        // Check if attack is on cooldown
+        const currentTime = Date.now();
+        if (currentTime < this.nextAttackTime) {
+            return false; // Still on cooldown
+        }
+        
+        if (!this.map || !this.map.npcs) return false;
+        
+        let attackedAny = false;
+        
+        // Get player center position
+        const playerCenterX = this.x + (this.width / 2);
+        const playerCenterY = this.y + (this.height / 2);
+        
+        this.map.npcs.forEach(npc => {
+            // Check if the NPC is a monster and can be aggressive
+            if (!npc.canBeAggressive) return;
+            
+            // Get NPC center position
+            const npcCenterX = npc.x + (npc.width / 2);
+            const npcCenterY = npc.y + (npc.height / 2);
+            
+            // Calculate distance between player and NPC
+            const dx = npcCenterX - playerCenterX;
+            const dy = npcCenterY - playerCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Attack if in range
+            if (distance <= range) {
+                // Update player's direction to face the monster
+                this._faceTowardsTarget(dx, dy);
+                
+                // Deal damage to the NPC
+                const isDefeated = npc.takeDamage(damage);
+                attackedAny = true;
+                
+                // Trigger hit animation on the monster
+                if (typeof npc.showHitAnimation === 'function') {
+                    npc.showHitAnimation();
+                }
+                
+                // If the NPC is defeated, mark it for removal
+                if (isDefeated) {
+                    npc.isDefeated = true;
+                }
+            }
+        });
+        
+        // Set cooldown if attack was successful
+        if (attackedAny) {
+            this.nextAttackTime = currentTime + this.attackCooldown;
+        }
+        
+        return attackedAny;
+    }
+
+    /**
      * Updates the player's facing direction based on movement input.
      * @param {number} dx - Horizontal movement direction (-1, 0, or 1)
      * @param {number} dy - Vertical movement direction (-1, 0, or 1)
@@ -170,6 +242,23 @@ export class Player {
     }
 
     /**
+     * Faces the player towards a target based on relative position
+     * @param {number} dx - X distance to target (target.x - player.x)
+     * @param {number} dy - Y distance to target (target.y - player.y)
+     * @private
+     */
+    _faceTowardsTarget(dx, dy) {
+        // Determine predominant direction (horizontal or vertical)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal direction is predominant
+            this.direction = dx > 0 ? 'right' : 'left';
+        } else {
+            // Vertical direction is predominant
+            this.direction = dy > 0 ? 'down' : 'up';
+        }
+    }
+
+    /**
      * Checks if a move to the specified tile coordinates is valid.
      * @param {number} tileX - Target tile X coordinate
      * @param {number} tileY - Target tile Y coordinate
@@ -177,11 +266,42 @@ export class Player {
      * @private
      */
     _isValidMove(tileX, tileY) {
-        return tileX >= 0 && 
+        // First check if the tile is within map boundaries and is a walkable tile type
+        const isWalkableTile = tileX >= 0 && 
                tileX < this.map.mapData[0].length &&
                tileY >= 0 && 
                tileY < this.map.mapData.length &&
                this.map.isWalkableTile(this.map.mapData[tileY][tileX]);
+        
+        // If the tile is not walkable, return false immediately
+        if (!isWalkableTile) return false;
+        
+        // Check if any NPC with canMoveThruWalls=false is at this position
+        if (this.map.npcs) {
+            for (const npc of this.map.npcs) {
+                // Skip NPCs that can be walked through
+                if (npc.canMoveThruWalls) continue;
+                
+                // Handle both current position and target position (for moving NPCs)
+                // Check current position
+                const npcTileX = Math.floor(npc.x / this.tileSize);
+                const npcTileY = Math.floor(npc.y / this.tileSize);
+                
+                // Check target position (if NPC is moving)
+                const npcTargetTileX = npc.isMoving ? Math.floor(npc.targetX / this.tileSize) : npcTileX;
+                const npcTargetTileY = npc.isMoving ? Math.floor(npc.targetY / this.tileSize) : npcTileY;
+                
+                // Check if either current position or target position matches player's target
+                if ((npcTileX === tileX && npcTileY === tileY) || 
+                    (npcTargetTileX === tileX && npcTargetTileY === tileY)) {
+                    // NPC is blocking the way (either at current position or will be at target)
+                    return false;
+                }
+            }
+        }
+        
+        // No blocking NPCs found, position is valid
+        return true;
     }
 
     /**
@@ -243,10 +363,12 @@ export class Player {
         const tileX = Math.floor((this.x + this.width/2) / this.tileSize);
         const tileY = Math.floor((this.y + this.height/2) / this.tileSize);
         
-        for (const [mapName, transition] of Object.entries(this.map.transitions)) {
-            if (transition.x.includes(tileX) && tileY === transition.y) {
-                this.game.changeMap(mapName, transition.destination);
-                break;
+        for (const [mapName, transitions] of Object.entries(this.map.transitions)) {
+            for (const transition of transitions) {
+                if (transition.x.includes(tileX) && tileY === transition.y) {
+                    this.game.changeMap(mapName, transition.destination);
+                    break;
+                }
             }
         }
     }
@@ -306,9 +428,24 @@ export class Player {
             this._handleInput();
         }
         
+        // Handle attack with 'q' key
+        if (this.input.isPressed('q') && !this.isMoving && !this.game._dialog.isActive()) {
+            // Perform attack and show visual feedback if successful
+            const didAttack = this.attack();
+            if (didAttack) {
+                console.log('Player attacked nearby monsters!');
+                // Visual feedback could be added here in the future
+            }
+        }
+        
         // Update invulnerability status
         if (this.isInvulnerable && Date.now() > this.invulnerabilityEndTime) {
             this.isInvulnerable = false;
+        }
+        
+        // Check if hit animation should end
+        if (this.showingHitAnimation && Date.now() > this.hitAnimationEndTime) {
+            this.showingHitAnimation = false;
         }
         
         // Update health bar visibility
@@ -400,6 +537,11 @@ export class Player {
         // Flash player when invulnerable
         if (!this.isInvulnerable || Math.floor(Date.now() / 100) % 2 === 0) {
             this._renderPlayer(ctx, screenX, screenY);
+            
+            // Show hit animation if active
+            if (this.showingHitAnimation) {
+                this._renderHitAnimation(ctx, screenX, screenY);
+            }
         }
         
         // Render health bar if needed
@@ -449,6 +591,36 @@ export class Player {
     }
     
     /**
+     * Shows hit animation when player takes damage
+     */
+    showHitAnimation() {
+        const currentTime = Date.now();
+        this.showingHitAnimation = true;
+        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
+    }
+    
+    /**
+     * Renders the hit animation effect on the player
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     */
+    _renderHitAnimation(ctx, screenX, screenY) {
+        // Calculate animation progress (0 to 1)
+        const currentTime = Date.now();
+        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
+        
+        // Flash the player red when hit
+        ctx.fillStyle = `rgba(255, 0, 0, ${0.5 * animationProgress})`;
+        ctx.fillRect(screenX, screenY, this.width, this.height);
+        
+        // Draw a damage effect (simple white flash)
+        ctx.strokeStyle = `rgba(255, 255, 255, ${animationProgress})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(screenX, screenY, this.width, this.height);
+    }
+    
+    /**
      * Takes damage and reduces the player's health
      * @param {number} amount - Amount of damage to take
      */
@@ -457,6 +629,9 @@ export class Player {
         
         this.currentHealth = Math.max(0, this.currentHealth - amount);
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        
+        // Show hit animation
+        this.showHitAnimation();
         
         // Make player invulnerable for a short time
         this.isInvulnerable = true;

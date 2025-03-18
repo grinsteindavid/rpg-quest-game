@@ -31,11 +31,8 @@ export class InputHandler {
         
         /** @type {Object} D-pad button elements */
         this.dpadButtons = {
-            up: null,
-            down: null,
-            left: null,
-            right: null,
-            interact: null
+            interact: null,
+            attack: null
         };
         
         /** @type {HTMLElement|null} Joystick container element */
@@ -58,7 +55,7 @@ export class InputHandler {
         // Set up keyboard event listeners
         window.addEventListener('keydown', (e) => {
             // Prevent scrolling with arrow keys and space
-            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+            if(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'q'].includes(e.key)) {
                 e.preventDefault();
             }
             this.keys.add(e.key);
@@ -123,16 +120,13 @@ export class InputHandler {
         setTimeout(() => {
             console.log('Touch controls initialized after delay');
         
-            // Create D-pad buttons
-            const directions = ['up', 'down', 'left', 'right'];
-            directions.forEach(direction => {
-                this.dpadButtons[direction] = this._createDpadButton(direction);
-                this.dpad.appendChild(this.dpadButtons[direction]);
-            });
-            
             // Create interact button
             this.dpadButtons.interact = this._createDpadButton('interact');
             this.dpad.appendChild(this.dpadButtons.interact);
+            
+            // Create attack button
+            this.dpadButtons.attack = this._createDpadButton('attack');
+            this.dpad.appendChild(this.dpadButtons.attack);
             
             // Add D-pad to document
             document.body.appendChild(this.dpad);
@@ -161,22 +155,16 @@ export class InputHandler {
         
         // Set the symbol content based on direction
         switch(direction) {
-            case 'up': symbol.textContent = '▲'; break;
-            case 'down': symbol.textContent = '▼'; break;
-            case 'left': symbol.textContent = '◀'; break;
-            case 'right': symbol.textContent = '▶'; break;
-            case 'interact': symbol.textContent = 'E'; break;
+            case 'interact': symbol.textContent = '💬'; break;
+            case 'attack': symbol.textContent = '⚔️'; break;
         }
         
         button.appendChild(symbol);
         
         // Map direction to keyboard key
         const keyMap = {
-            up: 'ArrowUp',
-            down: 'ArrowDown',
-            left: 'ArrowLeft',
-            right: 'ArrowRight',
-            interact: 'e'
+            interact: 'e',
+            attack: 'q'
         };
         
         // Touch start event - simulate key press
@@ -409,30 +397,16 @@ export class InputHandler {
                 transform: scale(0.95);
             }
             
-            .dpad-up {
-                top: 0;
-                left: 50px;
-            }
-            
-            .dpad-down {
-                bottom: 0;
-                left: 50px;
-            }
-            
-            .dpad-left {
-                left: 0;
-                top: 50px;
-            }
-            
-            .dpad-right {
-                right: 0;
-                top: 50px;
-            }
-            
             .dpad-interact {
                 bottom: 20px;
-                left: -80px; /* Changed from right to left since D-pad is now on the right */
+                left: 20px;
                 background-color: rgba(0, 200, 100, 0.4);
+            }
+            
+            .dpad-attack {
+                bottom: 20px;
+                right: 20px;
+                background-color: rgba(200, 0, 0, 0.4);
             }
             
             /* Hide D-pad on non-touch devices using hover capability detection */

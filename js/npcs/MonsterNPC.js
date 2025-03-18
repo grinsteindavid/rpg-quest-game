@@ -8,9 +8,32 @@ export class MonsterNPC extends BaseNPC {
         // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
         this.canBeAggressive = true; // Start aggressive by default
         
+        // Attack properties
+        this.attackDamage = 10;
+        this.attackRange = 40; // Slightly larger than player's attack range
+        this.attackCooldown = 1500; // Milliseconds between attacks
+        this.nextAttackTime = 0; // Timestamp when the monster can attack again
+        
         // Visual effect properties
         this.glowIntensity = 0;
         this.glowDirection = 1;
+        
+        // Hit animation properties
+        this.showingHitAnimation = false;
+        this.hitAnimationDuration = 500; // milliseconds
+        this.hitAnimationEndTime = 0;
+        this.hitFistSize = 12;
+        this.hitFistColor = 'rgba(255, 255, 255, 0.8)';
+        
+        // Custom health bar appearance for monsters
+        this.healthBarHeight = 5; // Slightly taller for better visibility
+        this.healthBarYOffset = -12; // Position a bit higher above the monster
+        this.healthBarColors = {
+            background: 'rgba(40, 40, 40, 0.8)',
+            border: 'rgba(0, 0, 0, 0.8)',
+            fill: 'rgba(200, 0, 0, 0.9)', // Red for monsters
+            critical: 'rgba(255, 50, 50, 1.0)' // Bright red when critical
+        };
         
         // Monster conversation options
         this.conversations = [
@@ -51,9 +74,139 @@ export class MonsterNPC extends BaseNPC {
             this.glowIntensity = 0.4;
             this.glowDirection = 1;
         }
+        
+        // Check if hit animation should end
+        const currentTime = Date.now();
+        if (this.showingHitAnimation) {
+            if (currentTime >= this.hitAnimationEndTime) {
+                this.showingHitAnimation = false;
+            }
+        }
+        
+        // Check if the monster should attack the player
+        if (this.isAggressive && player && currentTime >= this.nextAttackTime) {
+            this.attackPlayer(player);
+            console.log('Monster attacking player!');
+        }
+    }
+    
+    /**
+     * Trigger the hit animation on the monster
+     */
+    showHitAnimation() {
+        const currentTime = Date.now();
+        this.showingHitAnimation = true;
+        // Always set a new end time, even if an animation is already in progress
+        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
+    }
+    
+    /**
+     * Attack the player if in range
+     * @param {Player} player - The player to attack
+     * @returns {boolean} - Whether the player was attacked
+     */
+    attackPlayer(player) {
+        const currentTime = Date.now();
+        
+        // Calculate distance between monster and player
+        const monsterCenterX = this.x + (this.width / 2);
+        const monsterCenterY = this.y + (this.height / 2);
+        const playerCenterX = player.x + (player.width / 2);
+        const playerCenterY = player.y + (player.height / 2);
+        
+        const dx = playerCenterX - monsterCenterX;
+        const dy = playerCenterY - monsterCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Attack if player is in range
+        if (distance <= this.attackRange) {
+            // Face towards the player before attacking
+            this._faceTowardsTarget(dx, dy);
+            
+            // Deal damage to the player
+            player.takeDamage(this.attackDamage);
+            
+            // Set cooldown for next attack
+            this.nextAttackTime = currentTime + this.attackCooldown;
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Faces the monster towards a target based on relative position
+     * @param {number} dx - X distance to target (target.x - monster.x)
+     * @param {number} dy - Y distance to target (target.y - monster.y)
+     * @private
+     */
+    _faceTowardsTarget(dx, dy) {
+        // Determine predominant direction (horizontal or vertical)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal direction is predominant
+            this.direction = dx > 0 ? 'right' : 'left';
+        } else {
+            // Vertical direction is predominant
+            this.direction = dy > 0 ? 'down' : 'up';
+        }
+    }
+    
+    // Override the render method to show health bar only when health < maxHealth
+    render(ctx, mapOffset) {
+        const screenX = this.x + mapOffset.x;
+        const screenY = this.y + mapOffset.y;
+
+        // Render the basic NPC components
+        this._renderNPC(ctx, screenX, screenY);
+        this._renderMarker(ctx, screenX, screenY);
+        this._renderDebug(ctx, screenX, screenY);
+        
+        // Only show health bar when health is below max
+        if (this.health < this.maxHealth) {
+            this._renderHealthBar(ctx, screenX, screenY);
+        }
+    }
+    
+    // Override the _renderHealthBar method for monsters with custom styling
+    _renderHealthBar(ctx, screenX, screenY) {
+        const barX = screenX;
+        const barY = screenY + this.healthBarYOffset;
+        
+        // Draw border first (slightly larger than the health bar)
+        ctx.fillStyle = this.healthBarColors.border;
+        ctx.fillRect(
+            barX - 1, 
+            barY - 1, 
+            this.healthBarWidth + 2, 
+            this.healthBarHeight + 2
+        );
+        
+        // Background (empty health)
+        ctx.fillStyle = this.healthBarColors.background;
+        ctx.fillRect(barX, barY, this.healthBarWidth, this.healthBarHeight);
+        
+        // Calculate health percentage
+        const healthPercentage = this.health / this.maxHealth;
+        const currentHealthWidth = this.healthBarWidth * healthPercentage;
+        
+        // Determine color based on health percentage
+        let healthColor = this.healthBarColors.fill;
+        if (healthPercentage <= 0.3) {
+            healthColor = this.healthBarColors.critical; // Critical health
+        }
+        
+        // Draw filled health
+        ctx.fillStyle = healthColor;
+        ctx.fillRect(barX, barY, currentHealthWidth, this.healthBarHeight);
     }
     
     _renderNPC(ctx, screenX, screenY) {
+        // Render the hit animation if active
+        if (this.showingHitAnimation) {
+            this._renderHitAnimation(ctx, screenX, screenY);
+        }
+        
         // Monster body
         ctx.fillStyle = 'rgba(40, 40, 40, 0.9)';
         ctx.fillRect(screenX + 6, screenY + 8, 20, 22);
@@ -133,5 +286,86 @@ export class MonsterNPC extends BaseNPC {
         if (this.conversationIndex >= 1) {
             this.isAggressive = true;
         }
+    }
+    
+    /**
+     * Override takeDamage to add additional visual effects
+     * @param {number} amount - Amount of damage to take
+     * @returns {boolean} - Whether the monster was defeated
+     */
+    takeDamage(amount) {
+        // Call the parent takeDamage method
+        const isDefeated = super.takeDamage(amount);
+        
+        // Always trigger the hit animation when taking damage
+        this.showHitAnimation();
+        
+        return isDefeated;
+    }
+    
+    /**
+     * Called when the monster is defeated (health <= 0)
+     * Marks the monster for removal from the map
+     */
+    onDefeat() {
+        // Monster death animation or effects can be added here
+        console.log(`${this.name} has been defeated!`);
+        // Monster will be removed in the map's update method
+    }
+    
+    /**
+     * Renders a fist hit animation on the monster
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     * @private
+     */
+    _renderHitAnimation(ctx, screenX, screenY) {
+        // Calculate animation progress (0 to 1)
+        const currentTime = Date.now();
+        // Ensure animationProgress is always between 0 and 1
+        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
+        
+        // Calculate fist position - it should come from the side the player is facing
+        // We'll calculate center position for the monster
+        const centerX = screenX + 16;
+        const centerY = screenY + 16;
+        
+        // Draw fist
+        ctx.save();
+        
+        // Make the fist appear from a random direction each hit for variety
+        const angle = Math.random() * Math.PI * 2;
+        const distance = this.width / 2 * (1 - animationProgress);
+        const fistX = centerX + Math.cos(angle) * distance;
+        const fistY = centerY + Math.sin(angle) * distance;
+        
+        // Draw the fist (simple circle)
+        ctx.fillStyle = this.hitFistColor;
+        ctx.beginPath();
+        ctx.arc(fistX, fistY, this.hitFistSize * animationProgress, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw impact lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, ' + animationProgress + ')';
+        ctx.lineWidth = 2;
+        
+        const impactLineLength = this.hitFistSize * 1.5 * animationProgress;
+        for (let i = 0; i < 5; i++) {
+            const lineAngle = angle + (Math.PI / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(fistX, fistY);
+            ctx.lineTo(
+                fistX + Math.cos(lineAngle) * impactLineLength,
+                fistY + Math.sin(lineAngle) * impactLineLength
+            );
+            ctx.stroke();
+        }
+        
+        // Flash the monster red when hit
+        ctx.fillStyle = `rgba(255, 0, 0, ${0.3 * animationProgress})`;
+        ctx.fillRect(screenX, screenY, this.width, this.height);
+        
+        ctx.restore();
     }
 }

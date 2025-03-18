@@ -1,13 +1,27 @@
-body {
+html, body {
     background-color: #306230;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    height: 100vh;
+    width: 100vw;
     font-family: monospace;
     overflow: hidden;  /* Prevent scrolling */
+    touch-action: none; /* Prevent pinch zoom */
+    -webkit-touch-callout: none; /* Prevent callouts */
+    -webkit-user-select: none; /* Prevent selection */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none; /* Standard property for compatibility */
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* Remove tap highlights */
+}
+
+/* Full screen mode styles */
+body.fullscreen {
+    padding: 0;
 }
 
 #game-container {
@@ -22,6 +36,47 @@ body {
     overflow: hidden;  /* Clip content */
 }
 
+/* Responsive game container for mobile */
+@media (max-width: 900px) {
+    #game-container {
+        width: 100vw;
+        height: 100vh;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        position: fixed; /* Fix position on mobile */
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+    
+    body {
+        padding: 0;
+    }
+
+    #gameCanvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+/* Fullscreen mode */
+#game-container.fullscreen {
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+}
+
 #gameCanvas {
     position: absolute;
     top: 0;
@@ -32,6 +87,21 @@ body {
     background-color: #8bac0f;
     display: block;  /* Remove any extra space */
     margin: 0 auto;
+}
+
+/* Responsive canvas for mobile devices */
+@media (max-width: 900px) {
+    #gameCanvas {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+/* Fullscreen canvas */
+.fullscreen #gameCanvas {
+    width: 100%;
+    height: 100%;
 }
 
 .hidden {
@@ -61,6 +131,38 @@ body {
     font-family: monospace;
     cursor: pointer;
     z-index: 100;
+}
+
+/* Fullscreen button styles */
+.fullscreen-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 8px 16px;
+    background-color: #0f380f;
+    color: #9bbc0f;
+    border: 2px solid #8bac0f;
+    font-family: monospace;
+    cursor: pointer;
+    z-index: 9999; /* Ensure it's above everything else */
+    display: none; /* Hide on desktop by default */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+@media (max-width: 900px) {
+    .fullscreen-button {
+        display: block; /* Show on mobile */
+    }
+}
+
+.fullscreen-button.active {
+    background-color: #8bac0f;
+    color: #0f380f;
 }
 
 .debug-button.active {

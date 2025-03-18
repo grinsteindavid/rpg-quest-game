@@ -13,11 +13,18 @@ export class ForestMap extends BaseMap {
         
         // Define transition points
         this.transitions = {
-            hometown: {
-                x: [2, 4], // Valid x coordinates for transition
-                y: 1,         // Y coordinate for transition
-                destination: { x: 4, y: 1 }  // Updated: Move to hometown's south exit
-            }
+            hometown: [ 
+                {
+                    x: [2], // Valid x coordinates for transition
+                    y: 1,         // Y coordinate for transition
+                    destination: { x: 4, y: 6 }  // Updated: Move to hometown's south exit
+                },      
+                {
+                    x: [4], // Valid x coordinates for transition
+                    y: 1,         // Y coordinate for transition
+                    destination: { x: 6, y: 6 }  // Updated: Move to hometown's south exit
+                }
+            ]
         };
         
         this.mapData = [
