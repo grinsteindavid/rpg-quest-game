@@ -1,13 +1,5 @@
 import { SPRITES } from './colors.js';
-
-// Health bar colors
-const HEALTH_BAR = {
-    BACKGROUND: '#333333',
-    BORDER: '#000000',
-    FILL: '#44cc44',
-    LOW: '#cc4444',
-    CRITICAL: '#ff0000'
-};
+import { PlayerCombat } from './combat/PlayerCombat.js';
 
 /**
  * Represents a player character in the game world.
@@ -51,26 +43,8 @@ export class Player {
     input = null;
     /** @type {Game|null} Reference to the main game instance */
     game = null;
-    /** @type {number} Maximum health points of the player */
-    maxHealth = 100;
-    /** @type {number} Current health points of the player */
-    currentHealth = 100;
-    /** @type {boolean} Whether the player is currently invulnerable */
-    isInvulnerable = false;
-    /** @type {number} Duration of invulnerability in milliseconds after taking damage */
-    invulnerabilityDuration = 1000;
-    /** @type {number} Timestamp when invulnerability will end */
-    invulnerabilityEndTime = 0;
-    /** @type {boolean} Whether to show the health bar */
-    showHealthBar = true;
-    /** @type {number} Time in milliseconds to show health bar after taking damage */
-    healthBarDisplayTime = 3000;
-    /** @type {number} Timestamp when health bar should hide */
-    healthBarHideTime = 0;
-    /** @type {number} Cooldown duration between attacks in milliseconds */
-    attackCooldown = 1000;
-    /** @type {number} Timestamp when player can attack again */
-    nextAttackTime = 0;
+    /** @type {PlayerCombat} The player's combat system */
+    combat = null;
 
     /**
      * Creates a new Player instance.
@@ -86,15 +60,8 @@ export class Player {
         this.targetX = x;
         /** @type {number} Target y position for movement */
         this.targetY = y;
-        /** @type {number} Initialize health values */
-        this.currentHealth = this.maxHealth;
-        /** @type {number} Initialize health bar display */
-        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
-        
-        // Hit animation properties
-        this.showingHitAnimation = false;
-        this.hitAnimationDuration = 500; // milliseconds
-        this.hitAnimationEndTime = 0;
+        // Initialize the combat system
+        this.combat = new PlayerCombat(this);
     }
 
     /**
@@ -172,60 +139,7 @@ export class Player {
      * @returns {boolean} - Whether any monsters were attacked
      */
     attack(damage = 20, range = 32) {
-        // Check if attack is on cooldown
-        const currentTime = Date.now();
-        if (currentTime < this.nextAttackTime) {
-            return false; // Still on cooldown
-        }
-        
-        if (!this.map || !this.map.npcs) return false;
-        
-        let attackedAny = false;
-        
-        // Get player center position
-        const playerCenterX = this.x + (this.width / 2);
-        const playerCenterY = this.y + (this.height / 2);
-        
-        this.map.npcs.forEach(npc => {
-            // Check if the NPC is a monster and can be aggressive
-            if (!npc.canBeAggressive) return;
-            
-            // Get NPC center position
-            const npcCenterX = npc.x + (npc.width / 2);
-            const npcCenterY = npc.y + (npc.height / 2);
-            
-            // Calculate distance between player and NPC
-            const dx = npcCenterX - playerCenterX;
-            const dy = npcCenterY - playerCenterY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            // Attack if in range
-            if (distance <= range) {
-                // Update player's direction to face the monster
-                this._faceTowardsTarget(dx, dy);
-                
-                // Deal damage to the NPC
-                const isDefeated = npc.takeDamage(damage);
-                attackedAny = true;
-                
-                // Trigger hit animation on the monster
-                if (typeof npc.showHitAnimation === 'function') {
-                    npc.showHitAnimation();
-                }
-                
-                // If the NPC is defeated, mark it for removal
-                if (isDefeated) {
-                    npc.isDefeated = true;
-                }
-            }
-        });
-        
-        // Set cooldown if attack was successful
-        if (attackedAny) {
-            this.nextAttackTime = currentTime + this.attackCooldown;
-        }
-        
-        return attackedAny;
+        return this.combat.attack(damage, range);
     }
 
     /**
@@ -438,18 +352,8 @@ export class Player {
             }
         }
         
-        // Update invulnerability status
-        if (this.isInvulnerable && Date.now() > this.invulnerabilityEndTime) {
-            this.isInvulnerable = false;
-        }
-        
-        // Check if hit animation should end
-        if (this.showingHitAnimation && Date.now() > this.hitAnimationEndTime) {
-            this.showingHitAnimation = false;
-        }
-        
-        // Update health bar visibility
-        this.showHealthBar = this.currentHealth < this.maxHealth || Date.now() < this.healthBarHideTime;
+        // Update combat system
+        this.combat.update();
     }
 
     /**
@@ -534,19 +438,19 @@ export class Player {
         const screenX = this.x + mapOffset.x;
         const screenY = this.y + mapOffset.y;
 
-        // Flash player when invulnerable
-        if (!this.isInvulnerable || Math.floor(Date.now() / 100) % 2 === 0) {
+        // Flash player when invulnerable using combat system logic
+        if (this.combat.shouldRenderPlayer()) {
             this._renderPlayer(ctx, screenX, screenY);
             
             // Show hit animation if active
-            if (this.showingHitAnimation) {
-                this._renderHitAnimation(ctx, screenX, screenY);
+            if (this.combat.showingHitAnimation) {
+                this.combat.renderHitAnimation(ctx, screenX, screenY, this.width, this.height);
             }
         }
         
         // Render health bar if needed
-        if (this.showHealthBar) {
-            this._renderHealthBar(ctx, screenX, screenY);
+        if (this.combat.showHealthBar) {
+            this.combat.renderHealthBar(ctx, screenX, screenY, this.width);
         }
         
         if (this.debug) {
@@ -555,69 +459,10 @@ export class Player {
     }
 
     /**
-     * Renders the health bar above the player
-     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-     * @param {number} screenX - Screen X coordinate
-     * @param {number} screenY - Screen Y coordinate
-     * @private
-     */
-    _renderHealthBar(ctx, screenX, screenY) {
-        const barWidth = this.width;
-        const barHeight = 5;
-        const barX = screenX;
-        const barY = screenY - 10;
-        const healthPercentage = this.currentHealth / this.maxHealth;
-        
-        // Health bar background
-        ctx.fillStyle = HEALTH_BAR.BACKGROUND;
-        ctx.fillRect(barX, barY, barWidth, barHeight);
-        
-        // Health bar fill color based on health percentage
-        if (healthPercentage <= 0.25) {
-            ctx.fillStyle = HEALTH_BAR.CRITICAL;
-        } else if (healthPercentage <= 0.5) {
-            ctx.fillStyle = HEALTH_BAR.LOW;
-        } else {
-            ctx.fillStyle = HEALTH_BAR.FILL;
-        }
-        
-        // Health bar fill
-        ctx.fillRect(barX, barY, barWidth * healthPercentage, barHeight);
-        
-        // Health bar border
-        ctx.strokeStyle = HEALTH_BAR.BORDER;
-        ctx.lineWidth = 1;
-        ctx.strokeRect(barX, barY, barWidth, barHeight);
-    }
-    
-    /**
      * Shows hit animation when player takes damage
      */
     showHitAnimation() {
-        const currentTime = Date.now();
-        this.showingHitAnimation = true;
-        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
-    }
-    
-    /**
-     * Renders the hit animation effect on the player
-     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-     * @param {number} screenX - Screen X coordinate
-     * @param {number} screenY - Screen Y coordinate
-     */
-    _renderHitAnimation(ctx, screenX, screenY) {
-        // Calculate animation progress (0 to 1)
-        const currentTime = Date.now();
-        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
-        
-        // Flash the player red when hit
-        ctx.fillStyle = `rgba(255, 0, 0, ${0.5 * animationProgress})`;
-        ctx.fillRect(screenX, screenY, this.width, this.height);
-        
-        // Draw a damage effect (simple white flash)
-        ctx.strokeStyle = `rgba(255, 255, 255, ${animationProgress})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(screenX, screenY, this.width, this.height);
+        this.combat.showHitAnimation();
     }
     
     /**
@@ -625,22 +470,7 @@ export class Player {
      * @param {number} amount - Amount of damage to take
      */
     takeDamage(amount) {
-        if (this.isInvulnerable) return;
-        
-        this.currentHealth = Math.max(0, this.currentHealth - amount);
-        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
-        
-        // Show hit animation
-        this.showHitAnimation();
-        
-        // Make player invulnerable for a short time
-        this.isInvulnerable = true;
-        this.invulnerabilityEndTime = Date.now() + this.invulnerabilityDuration;
-        
-        // Game over if health reaches zero
-        if (this.currentHealth <= 0) {
-            this._handleGameOver();
-        }
+        this.combat.takeDamage(amount);
     }
     
     /**
@@ -648,31 +478,13 @@ export class Player {
      * @param {number} amount - Amount of health to restore
      */
     heal(amount) {
-        this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
-        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+        this.combat.heal(amount);
     }
     
     /**
      * Resets the player's health to maximum
      */
     resetHealth() {
-        this.currentHealth = this.maxHealth;
-        this.isInvulnerable = false;
-    }
-    
-    /**
-     * Handles game over when player health reaches zero
-     * @private
-     */
-    _handleGameOver() {
-        // For now, just reset health - in a real game, you would
-        // trigger game over screen or respawn logic here
-        console.log('Game Over!');
-        this.resetHealth();
-        
-        // If the game has a game over handler, call it
-        if (this.game && typeof this.game.handleGameOver === 'function') {
-            this.game.handleGameOver();
-        }
+        this.combat.resetHealth();
     }
 }
