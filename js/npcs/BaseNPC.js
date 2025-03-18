@@ -10,10 +10,10 @@ export class BaseNPC {
         // Tile size
         this.tileSize = 32;
         // Convert tile position to pixels for current position
-        this.x = x * 32;
-        this.y = y * 32;
-        this.width = 32;
-        this.height = 32;
+        this.x = x * this.tileSize;
+        this.y = y * this.tileSize;
+        this.width = this.tileSize;
+        this.height = this.tileSize;
         this.name = name;
         this.direction = 'down';
         this.debug = false;
@@ -39,8 +39,8 @@ export class BaseNPC {
         this.isAggressive = false; // Whether the NPC is currently aggressive (can change dynamically)
         this.canBeAggressive = false; // Whether the NPC can become aggressive when player is in range
         this.followPlayer = false; // Whether the NPC should always follow the player when in range (friendly or not)
-        this.aggroRange = 96; // 3 tiles detection range (can be overridden by subclasses)
-        this.followDistance = 32; // How close the NPC tries to get to target (1 tile)
+        this.aggroRange = this.tileSize * 3; // 3 tiles detection range (can be overridden by subclasses)
+        this.followDistance = this.tileSize; // How close the NPC tries to get to target (1 tile)
         
         // Path tracking properties
         this.lastTargetX = null;
@@ -164,8 +164,8 @@ export class BaseNPC {
     
     // Set a target position for the NPC to move toward
     setMoveTarget(x, y) {
-        const tileX = Math.floor(x / 32);
-        const tileY = Math.floor(y / 32);
+        const tileX = Math.floor(x / this.tileSize);
+        const tileY = Math.floor(y / this.tileSize);
         
         // Store the target for pathfinding
         this.lastTargetX = tileX;
@@ -258,8 +258,8 @@ export class BaseNPC {
     // Check if the new position is valid (no collisions)
     // This is used during movement animation
     isValidMove(x, y, player, map) {
-        const tileX = Math.floor(x / 32);
-        const tileY = Math.floor(y / 32);
+        const tileX = Math.floor(x / this.tileSize);
+        const tileY = Math.floor(y / this.tileSize);
         return this._isValidTileMove(tileX, tileY, player, map);
     }
 
@@ -282,8 +282,8 @@ export class BaseNPC {
 
     // Calculate distance from spawn point
     _getDistanceFromSpawn() {
-        const dx = this.x - (this.spawnTileX * 32);
-        const dy = this.y - (this.spawnTileY * 32);
+        const dx = this.x - (this.spawnTileX * this.tileSize);
+        const dy = this.y - (this.spawnTileY * this.tileSize);
         return Math.sqrt(dx * dx + dy * dy);
     }
     
@@ -303,10 +303,10 @@ export class BaseNPC {
         }
         
         // Calculate direction to move towards player
-        const playerTileX = Math.floor(player.x / 32);
-        const playerTileY = Math.floor(player.y / 32);
-        const npcTileX = Math.floor(this.x / 32);
-        const npcTileY = Math.floor(this.y / 32);
+        const playerTileX = Math.floor(player.x / this.tileSize);
+        const playerTileY = Math.floor(player.y / this.tileSize);
+        const npcTileX = Math.floor(this.x / this.tileSize);
+        const npcTileY = Math.floor(this.y / this.tileSize);
         
         // Already at same tile as player
         if (playerTileX === npcTileX && playerTileY === npcTileY) {
@@ -338,8 +338,8 @@ export class BaseNPC {
         const newTileY = npcTileY + dirY;
         
         if (this._isValidTileMove(newTileX, newTileY, player, map)) {
-            this.targetX = newTileX * 32;
-            this.targetY = newTileY * 32;
+            this.targetX = newTileX * this.tileSize;
+            this.targetY = newTileY * this.tileSize;
             this.directionX = dirX;
             this.directionY = dirY;
             this.isMoving = true;
@@ -358,8 +358,8 @@ export class BaseNPC {
             const altTileY = npcTileY + dirY;
             
             if (this._isValidTileMove(altTileX, altTileY, player, map)) {
-                this.targetX = altTileX * 32;
-                this.targetY = altTileY * 32;
+                this.targetX = altTileX * this.tileSize;
+                this.targetY = altTileY * this.tileSize;
                 this.directionX = dirX;
                 this.directionY = dirY;
                 this.isMoving = true;
@@ -370,8 +370,8 @@ export class BaseNPC {
     
     // Make NPC return to spawn position
     _returnToSpawn(map) {
-        const currentTileX = Math.floor(this.x / 32);
-        const currentTileY = Math.floor(this.y / 32);
+        const currentTileX = Math.floor(this.x / this.tileSize);
+        const currentTileY = Math.floor(this.y / this.tileSize);
         
         // Already at spawn position
         if (currentTileX === this.spawnTileX && currentTileY === this.spawnTileY) {
@@ -397,8 +397,8 @@ export class BaseNPC {
         
         // Use null as player since we don't need to check player collision
         if (this._isValidTileMove(newTileX, newTileY, null, map)) {
-            this.targetX = newTileX * 32;
-            this.targetY = newTileY * 32;
+            this.targetX = newTileX * this.tileSize;
+            this.targetY = newTileY * this.tileSize;
             this.directionX = dirX;
             this.directionY = dirY;
             this.isMoving = true;
@@ -417,13 +417,13 @@ export class BaseNPC {
             const altTileY = currentTileY + dirY;
             
             if (this._isValidTileMove(altTileX, altTileY, null, map)) {
-                this.targetX = altTileX * 32;
-                this.targetY = altTileY * 32;
+                this.targetX = altTileX * this.tileSize;
+                this.targetY = altTileY * this.tileSize;
                 this.directionX = dirX;
                 this.directionY = dirY;
                 this.isMoving = true;
                 this._updateDirection();
-            }
+            }   
         }
     }
 
@@ -490,8 +490,8 @@ export class BaseNPC {
         // NPC name is already displayed elsewhere, so we don't need to show it in debug mode
         
         // Show current tile position
-        const tileX = Math.floor(this.x / 32);
-        const tileY = Math.floor(this.y / 32);
+        const tileX = Math.floor(this.x / this.tileSize);
+        const tileY = Math.floor(this.y / this.tileSize);
         ctx.fillStyle = 'yellow';
         ctx.fillText(`Tile: (${tileX},${tileY})`, screenX + this.width / 2, screenY - 18);
         
@@ -540,14 +540,14 @@ export class BaseNPC {
             ctx.beginPath();
             
             // Convert spawn coordinates to screen coordinates
-            const spawnScreenX = screenX + ((this.spawnTileX * 32) - this.x);
-            const spawnScreenY = screenY + ((this.spawnTileY * 32) - this.y);
+            const spawnScreenX = screenX + ((this.spawnTileX * this.tileSize) - this.x);
+            const spawnScreenY = screenY + ((this.spawnTileY * this.tileSize) - this.y);
             
             // Draw rectangle showing movement range
-            const rangeSize = this.moveRange * 32 * 2;
+            const rangeSize = this.moveRange * this.tileSize * 2;
             ctx.strokeRect(
-                spawnScreenX - (this.moveRange * 32), 
-                spawnScreenY - (this.moveRange * 32),
+                spawnScreenX - (this.moveRange * this.tileSize), 
+                spawnScreenY - (this.moveRange * this.tileSize),
                 rangeSize,
                 rangeSize
             );
@@ -560,8 +560,8 @@ export class BaseNPC {
         if (this.isMoving || !this.canMove) return;
         
         // Get current tile position
-        const currentTileX = Math.floor(this.x / 32);
-        const currentTileY = Math.floor(this.y / 32);
+        const currentTileX = Math.floor(this.x / this.tileSize);
+        const currentTileY = Math.floor(this.y / this.tileSize);
         
         // Choose a random cardinal direction (up, down, left, right)
         const direction = Math.floor(Math.random() * 4);
@@ -590,12 +590,12 @@ export class BaseNPC {
     _attemptMove(tileX, tileY, player, map) {
         if (this._isValidTileMove(tileX, tileY, player, map)) {
             // Set target position in pixels
-            this.targetX = tileX * 32;
-            this.targetY = tileY * 32;
+            this.targetX = tileX * this.tileSize;
+            this.targetY = tileY * this.tileSize;
             
             // Set movement direction for animation
-            this.directionX = tileX - Math.floor(this.x / 32);
-            this.directionY = tileY - Math.floor(this.y / 32);
+            this.directionX = tileX - Math.floor(this.x / this.tileSize);
+            this.directionY = tileY - Math.floor(this.y / this.tileSize);
             
             // Update character direction based on movement
             this._updateDirection();
