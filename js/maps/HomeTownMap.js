@@ -2,6 +2,7 @@ import { BaseMap } from './BaseMap.js';
 import { GuideNPC } from '../npcs/GuideNPC.js';
 import { MerchantNPC } from '../npcs/MerchantNPC.js';
 import { COLORS } from '../colors.js';
+import { RainEffect } from '../effects/RainEffect.js';
 
 export class HomeTownMap extends BaseMap {
     constructor(config = {}) {
@@ -14,7 +15,6 @@ export class HomeTownMap extends BaseMap {
             }
         });
 
-        
         // Define transition points
         this.transitions = {
             darkForest: [
@@ -46,6 +46,14 @@ export class HomeTownMap extends BaseMap {
             new GuideNPC({ x: 2, y: 4, name: "Town Guide" }),
             new MerchantNPC({ x: 8, y: 5, name: "Town Merchant" }),
         ];
+
+        // Add a rain effect to the hometown map
+        this.addEffect(new RainEffect({
+            opacity: 0.2,
+            angle: 15,
+            density: 0.2,
+            color: '#aaddff'
+        }));
     }
     
   

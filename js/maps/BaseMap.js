@@ -25,6 +25,9 @@ export class BaseMap {
         /** @type {Array} Array of NPCs on this map */
         this.npcs = [];
         
+        /** @type {Array} Array of visual effects on this map */
+        this.effects = [];
+        
         /** @type {Object} Map colors */
         this.mapColors = config.colors || {
             primary: COLORS.LIGHT,    // Default gray
@@ -126,7 +129,7 @@ export class BaseMap {
     }
 
     /**
-     * Renders the complete map including background, tiles, exits, and map name.
+     * Renders the complete map including background, tiles, exits, map name, and effects.
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
      */
     render(ctx) {
@@ -143,6 +146,9 @@ export class BaseMap {
                 npc.render(ctx, mapOffset);
             });
         }
+        
+        // Render all active effects
+        this.renderEffects(ctx);
     }
 
     /**
@@ -329,7 +335,7 @@ export class BaseMap {
     }
     
     /**
-     * Updates all NPCs and other active entities on the map
+     * Updates all NPCs, effects, and other active entities on the map
      * @param {Player} player - The player entity for NPC interactions
      * @param {number} deltaTime - Time passed since last update in ms
      */
@@ -344,5 +350,87 @@ export class BaseMap {
                 npc.update(player, deltaTime, this);
             }
         }
+        
+        // Update all active effects
+        this.updateEffects(deltaTime);
+    }
+    
+    /**
+     * Updates all active effects on the map.
+     * @param {number} deltaTime - Time passed since last update in ms
+     */
+    updateEffects(deltaTime) {
+        for (const effect of this.effects) {
+            if (effect.enabled && typeof effect.update === 'function') {
+                effect.update(deltaTime, this);
+            }
+        }
+    }
+    
+    /**
+     * Renders all active effects on the map.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     */
+    renderEffects(ctx) {
+        for (const effect of this.effects) {
+            if (effect.enabled && typeof effect.render === 'function') {
+                effect.render(ctx, this);
+            }
+        }
+    }
+    
+    /**
+     * Adds an effect to the map.
+     * @param {BaseEffect} effect - The effect to add
+     * @returns {BaseEffect} The added effect for chaining
+     */
+    addEffect(effect) {
+        this.effects.push(effect);
+        return effect;
+    }
+    
+    /**
+     * Removes an effect from the map.
+     * @param {BaseEffect} effect - The effect to remove
+     * @returns {boolean} True if the effect was removed, false otherwise
+     */
+    removeEffect(effect) {
+        const index = this.effects.indexOf(effect);
+        if (index !== -1) {
+            this.effects.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Removes all effects from the map.
+     */
+    clearEffects() {
+        this.effects = [];
+    }
+    
+    /**
+     * Gets an effect by name.
+     * @param {string} name - The name of the effect to get
+     * @returns {BaseEffect|undefined} The effect or undefined if not found
+     */
+    getEffectByName(name) {
+        return this.effects.find(effect => effect.name === name);
+    }
+    
+    /**
+     * Enables or disables an effect by name.
+     * @param {string} name - The name of the effect to toggle
+     * @param {boolean} enabled - Whether to enable or disable the effect
+     * @returns {boolean} True if the effect was found and toggled, false otherwise
+     */
+    toggleEffect(name, enabled) {
+        const effect = this.getEffectByName(name);
+        if (effect) {
+            effect.setEnabled(enabled);
+            return true;
+        }
+        return false;
     }
 }

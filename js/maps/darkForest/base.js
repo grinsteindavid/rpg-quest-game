@@ -1,6 +1,7 @@
 import { COLORS } from '../../colors.js';
 import { BaseMap } from '../BaseMap.js';
 import { MonsterNPC } from '../../npcs/MonsterNPC.js';
+import { FogEffect } from '../../effects/FogEffect.js';
 
 export class ForestMap extends BaseMap {
     constructor(config = {}) {
@@ -56,6 +57,13 @@ export class ForestMap extends BaseMap {
             new MonsterNPC({ x: 10, y: 8, name: "Dark Lurker" }), // Right side monster
             new MonsterNPC({ x: 2, y: 8, name: "Shadow Beast" })   // Bottom left monster
         ];
+
+        // Add a fog effect to the dark forest
+        this.addEffect(new FogEffect({
+            opacity: 0.8,
+            color: '#334433',
+            density: 1.2
+        }));
     }
     
 

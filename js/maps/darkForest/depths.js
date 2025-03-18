@@ -2,6 +2,7 @@ import { COLORS } from '../../colors.js';
 import { BaseMap } from '../BaseMap.js';
 import { ChestNPC } from '../../npcs/ChestNPC.js';
 import { GhostNPC } from '../../npcs/GhostNPC.js';
+import { FogEffect } from '../../effects/FogEffect.js';
 
 export class DepthsDarkForestMap extends BaseMap {
     constructor(config = {}) {
@@ -46,6 +47,13 @@ export class DepthsDarkForestMap extends BaseMap {
             new GhostNPC({ x: 2, y: 8, name: "Wandering Spirit" }),   // Bottom left monster
             new ChestNPC({ x: 11, y: 1, name: "Chest" }), // Bottom right chest
         ];
+
+        // Add a fog effect to the dark forest
+        this.addEffect(new FogEffect({
+            opacity: 0.8,
+            color: '#334433',
+            density: 1.2
+        }));
     }
     
 
