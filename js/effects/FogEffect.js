@@ -1,51 +1,45 @@
 import { BaseEffect } from './BaseEffect.js';
 
 /**
- * Creates a fog effect that adds an ambient, moving fog to a map.
+ * Creates a high-performance fog effect that adds ambient, moving fog to a map.
+ * Optimized to use fewer, larger cloud-like particles for better performance.
  */
 export class FogEffect extends BaseEffect {
     /**
      * Creates a new fog effect instance.
      * @param {Object} config - Configuration options
      * @param {string} [config.name='Fog Effect'] - The name of the effect
-     * @param {number} [config.opacity=0.4] - The opacity of the fog (0.0 to 1.0)
-     * @param {string} [config.color='#CCCCCC'] - The color of the fog
-     * @param {number} [config.speed=0.3] - Movement speed of the fog
-     * @param {number} [config.density=0.5] - Density of the fog (0.1 to 1.0)
-     * @param {number} [config.verticalSpeed=0.1] - Vertical movement speed of the fog
+     * @param {number} [config.opacity=0.35] - The opacity of the fog (0.0 to 1.0)
+     * @param {string} [config.color='#DDDDDD'] - The color of the fog
+     * @param {number} [config.speed=0.2] - Movement speed of the fog
+     * @param {number} [config.density=0.15] - Density of the fog (0.05 to 1.0)
+     * @param {number} [config.cloudSize=1.5] - Relative size of cloud particles (1.0 is default)
      * @param {boolean} [config.animate=true] - Whether to animate fog particles
-     * @param {boolean} [config.performanceMode=false] - Whether to use optimized performance mode for mobile devices
      */
     constructor(config = {}) {
         super({
             name: config.name || 'Fog Effect',
-            opacity: config.opacity !== undefined ? config.opacity : 0.4,
+            opacity: config.opacity !== undefined ? config.opacity : 0.35,
             enabled: config.enabled !== undefined ? config.enabled : true
         });
         
         /** @type {string} The color of the fog */
-        this.color = config.color || '#CCCCCC';
+        this.color = config.color || '#DDDDDD';
         
         /** @type {number} Movement speed of the fog */
-        this.speed = config.speed !== undefined ? config.speed : 0.3;
+        this.speed = config.speed !== undefined ? config.speed : 0.2;
         
-        /** @type {number} Vertical movement speed of the fog */
-        this.verticalSpeed = config.verticalSpeed !== undefined ? config.verticalSpeed : 0.1;
+        /** @type {number} Density of the fog (controls number of particles) - reduced default value */
+        this.density = Math.min(Math.max(config.density || 0.15, 0.05), 1.0);
         
-        /** @type {number} Density of the fog (controls number of particles) */
-        this.density = Math.min(Math.max(config.density || 0.5, 0.1), 1.0);
+        /** @type {number} Size multiplier for cloud particles */
+        this.cloudSize = config.cloudSize || 1.5;
         
         /** @type {boolean} Whether to animate fog particles */
         this.animate = config.animate !== undefined ? config.animate : true;
         
-        /** @type {boolean} Whether to use optimized performance mode for mobile/tablet */
-        this.performanceMode = config.performanceMode !== undefined ? config.performanceMode : this._detectMobileDevice();
-        
-        /** @type {Array} Array of fog particles */
-        this.particles = [];
-        
-        /** @type {number} X-offset for fog movement */
-        this.offsetX = 0;
+        /** @type {Array} Array of fog cloud particles */
+        this.clouds = [];
         
         /** @private @type {boolean} Whether particles have been initialized */
         this._initialized = false;
@@ -56,286 +50,208 @@ export class FogEffect extends BaseEffect {
         /** @private @type {number} Current intensity multiplier */
         this._intensityMultiplier = 1.0;
         
-        /** @private @type {number} Frame counter for performance optimization */
+        /** @private @type {number} Update throttling - only update every N frames */
+        this._updateThrottle = 3;
+        
+        /** @private @type {number} Frame counter for update throttling */
         this._frameCounter = 0;
+        
+        /** @private @type {Object} Offscreen rendering cache */
+        this._cloudCache = {};
+        
+        /** @private @type {CanvasGradient} Cached radial gradient */
+        this._cachedGradient = null;
     }
     
     /**
-     * Detects if the current device is a mobile or tablet device
-     * @private
-     * @returns {boolean} Whether the current device is mobile/tablet
-     */
-    _detectMobileDevice() {
-        // Simple detection based on user agent
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        return /android|ipad|iphone|ipod|mobile|tablet/i.test(userAgent);
-    }
-    
-    /**
-     * Initialize fog particles based on map dimensions.
+     * Initialize fog clouds based on canvas dimensions.
+     * Creates fewer, larger particles that cover more area for better performance.
      * @param {BaseMap} map - The map this effect is attached to
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @private
      */
-    _initParticles(map, ctx) {
+    _initClouds(map, ctx) {
         const canvasWidth = ctx.canvas.width;
         const canvasHeight = ctx.canvas.height;
         
-        // Calculate number of particles based on canvas size and density
-        // Reduce particle count in performance mode
-        let particleCount = Math.floor((canvasWidth * canvasHeight) / 10000 * this.density * 20);
+        // Calculate a reduced number of clouds based on canvas size and density
+        // Fewer particles means better performance
+        const cloudCount = Math.floor((canvasWidth * canvasHeight) / 50000 * this.density * 2);
         
-        // Use fewer particles in performance mode
-        if (this.performanceMode) {
-            particleCount = Math.floor(particleCount / 3);
+        this.clouds = [];
+        for (let i = 0; i < cloudCount; i++) {
+            this._addCloud(canvasWidth, canvasHeight);
         }
         
-        this.particles = [];
-        for (let i = 0; i < particleCount; i++) {
-            this._addFogParticle(canvasWidth, canvasHeight, true);
-        }
+        // Create and cache the cloud gradient for reuse
+        this._createCloudGradient(ctx);
         
         this._initialized = true;
     }
     
     /**
-     * Adds a new fog particle to the effect.
-     * @param {number} canvasWidth - Width of the canvas
-     * @param {number} canvasHeight - Height of the canvas
-     * @param {boolean} randomPosition - Whether to randomize position (for initialization)
+     * Creates and caches a radial gradient for cloud rendering.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
      * @private
      */
-    _addFogParticle(canvasWidth, canvasHeight, randomPosition = false) {
-        // Simpler particles for performance mode
-        if (this.performanceMode) {
-            this.particles.push({
-                x: Math.random() * canvasWidth,
-                y: randomPosition ? Math.random() * canvasHeight : Math.random() < 0.5 ? -30 : canvasHeight + 30,
-                radius: Math.random() * 15 + 10,
-                alpha: Math.random() * 0.4 + 0.2,
-                speedModifier: Math.random() * 0.3 + 0.7
-            });
-        } else {
-            this.particles.push({
-                x: Math.random() * canvasWidth,
-                y: randomPosition ? Math.random() * canvasHeight : Math.random() < 0.5 ? -30 : canvasHeight + 30,
-                radius: Math.random() * 20 + 10,
-                alpha: Math.random() * 0.5 + 0.2,
-                speedModifier: Math.random() * 0.4 + 0.8, // Individual speed variation
-                fadeDirection: Math.random() < 0.5 ? 1 : -1, // Whether particle is fading in or out
-                fadeSpeed: Math.random() * 0.02 + 0.01, // Speed of fade effect
-                growDirection: Math.random() < 0.5 ? 1 : -1, // Whether particle is growing or shrinking
-                growSpeed: Math.random() * 0.05 + 0.02, // Speed of size change
-                verticalDirection: Math.random() < 0.5 ? 1 : -1 // Direction of vertical movement
-            });
-        }
+    _createCloudGradient(ctx) {
+        // Create a radial gradient for the cloud shape
+        const gradientRadius = 100 * this.cloudSize;
+        const gradient = ctx.createRadialGradient(gradientRadius, gradientRadius, 0, 
+                                                gradientRadius, gradientRadius, gradientRadius);
+        
+        // Create a soft cloud appearance with transparency at the edges
+        gradient.addColorStop(0, this.color);
+        gradient.addColorStop(0.4, this._adjustColor(this.color, 0.9));
+        gradient.addColorStop(0.7, this._adjustColor(this.color, 0.5));
+        gradient.addColorStop(1, this._adjustColor(this.color, 0));
+        
+        this._cachedGradient = gradient;
+    }
+    
+    /**
+     * Adjusts a color's opacity for gradient effects.
+     * @param {string} color - The base color
+     * @param {number} opacity - Target opacity (0-1)
+     * @returns {string} RGBA color string with adjusted opacity
+     * @private
+     */
+    _adjustColor(color, opacity) {
+        // Extract RGB components from hex color
+        const r = parseInt(color.substring(1, 3), 16);
+        const g = parseInt(color.substring(3, 5), 16);
+        const b = parseInt(color.substring(5, 7), 16);
+        
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    }
+    
+    /**
+     * Adds a new cloud particle to the effect.
+     * @param {number} canvasWidth - Width of the canvas
+     * @param {number} canvasHeight - Height of the canvas
+     * @private
+     */
+    _addCloud(canvasWidth, canvasHeight) {
+        // Create larger, more varied clouds
+        const sizeVariation = Math.random() * 0.5 + 0.75;
+        const size = this.cloudSize * 100 * sizeVariation; // Base size * variation
+        
+        this.clouds.push({
+            // Randomly position clouds across and above the canvas
+            x: Math.random() * (canvasWidth + size * 2) - size,
+            y: Math.random() * (canvasHeight + size * 2) - size,
+            // Create variation in size
+            size: size,
+            // Create variation in opacity for depth effect
+            opacity: Math.random() * 0.3 + 0.3,
+            // Create variation in movement speed
+            speedMultiplier: Math.random() * 0.5 + 0.75,
+            // Create a slightly different shade for each cloud
+            colorShift: Math.random() * 20 - 10
+        });
     }
     
     /**
      * Updates the fog effect animation.
+     * Optimized to update less frequently for better performance.
      * @param {number} deltaTime - Time passed since last update in ms
      * @param {BaseMap} map - The map this effect is attached to
      */
     update(deltaTime, map) {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.animate) return;
         
-        // Increment frame counter for performance optimizations
+        // Performance optimization: only update every few frames
         this._frameCounter++;
+        if (this._frameCounter % this._updateThrottle !== 0) return;
         
-        // In performance mode, skip some update cycles for non-essential animations
-        if (this.performanceMode && this._frameCounter % 2 !== 0) {
-            return;
-        }
+        // Update intensity variation over time
+        this._timeAccumulator += deltaTime / 1000;
+        // Create a very slow pulsing intensity using a sine wave
+        this._intensityMultiplier = 0.9 + 0.1 * Math.sin(this._timeAccumulator * 0.03);
         
-        // Update time-based effects (less frequently in performance mode)
-        if (!this.performanceMode || this._frameCounter % 3 === 0) {
-            this._timeAccumulator += deltaTime / 1000;
-            // Create a slow pulsing intensity using a sine wave
-            this._intensityMultiplier = 0.9 + 0.1 * Math.sin(this._timeAccumulator * 0.2);
-        }
-        
-        // Update fog horizontal movement
-        this.offsetX += this.speed * (deltaTime / 1000);
-        
-        // Loop offsetX to prevent values becoming too large over time
-        if (this.offsetX > 1000) this.offsetX -= 1000;
-        
-        if (!this._initialized || !this.particles.length || !this.animate) return;
+        if (!this._initialized || !this.clouds.length) return;
         
         const canvasWidth = map.game ? map.game._canvas.width : 800;
         const canvasHeight = map.game ? map.game._canvas.height : 600;
         
-        // Update each fog particle
-        for (let i = 0; i < this.particles.length; i++) {
-            const particle = this.particles[i];
+        // Update each cloud's position
+        for (let i = 0; i < this.clouds.length; i++) {
+            const cloud = this.clouds[i];
             
-            // Move the particle
-            particle.x += this.speed * particle.speedModifier * (deltaTime / 16);
+            // Move the cloud horizontally with the cloud's speed variation
+            cloud.x += this.speed * cloud.speedMultiplier * (deltaTime / 16);
             
-            // Performance mode has simpler animation
-            if (this.performanceMode) {
-                // If the particle moves out of the canvas, recycle it
-                if (particle.x > canvasWidth + particle.radius) {
-                    // Remove the particle and add a new one
-                    this.particles.splice(i, 1);
-                    this._addFogParticle(canvasWidth, canvasHeight);
-                    i--; // Adjust index after splicing
-                }
-            } else {
-                // Full animation mode
-                particle.y += this.verticalSpeed * particle.verticalDirection * particle.speedModifier * (deltaTime / 16);
-                
-                // Animate alpha (fading in/out)
-                particle.alpha += particle.fadeDirection * particle.fadeSpeed * (deltaTime / 16);
-                if (particle.alpha > 0.7) {
-                    particle.fadeDirection = -1;
-                } else if (particle.alpha < 0.2) {
-                    particle.fadeDirection = 1;
-                }
-                
-                // Animate size (growing/shrinking)
-                particle.radius += particle.growDirection * particle.growSpeed * (deltaTime / 16);
-                if (particle.radius > 30) {
-                    particle.growDirection = -1;
-                } else if (particle.radius < 10) {
-                    particle.growDirection = 1;
-                }
-                
-                // If the particle moves out of the canvas, recycle it
-                if (particle.x > canvasWidth + particle.radius || 
-                    particle.y > canvasHeight + particle.radius || 
-                    particle.y < -particle.radius) {
-                    // Remove the particle and add a new one
-                    this.particles.splice(i, 1);
-                    this._addFogParticle(canvasWidth, canvasHeight);
-                    i--; // Adjust index after splicing
-                }
+            // If the cloud moves out of the canvas, reset it on the other side
+            if (cloud.x > canvasWidth + cloud.size) {
+                cloud.x = -cloud.size * 2;
+                cloud.y = Math.random() * (canvasHeight + cloud.size * 2) - cloud.size;
             }
         }
     }
     
     /**
-     * Renders the fog effect.
+     * Renders the fog effect with large, cloud-like particles.
+     * Optimized for performance with cached rendering.
      * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
      * @param {BaseMap} map - The map this effect is attached to
      */
     render(ctx, map) {
         if (!this.enabled) return;
         
-        // Initialize particles if this is the first render
+        // Initialize clouds if this is the first render
         if (!this._initialized) {
-            this._initParticles(map, ctx);
+            this._initClouds(map, ctx);
         }
-        
-        const canvasWidth = ctx.canvas.width;
         
         ctx.save();
         
-        // Set global opacity for the entire effect, modulated by intensity multiplier
-        ctx.globalAlpha = this.opacity * this._intensityMultiplier;
+        // Set global alpha for the entire effect
+        const effectiveOpacity = this.opacity * this._intensityMultiplier;
+        ctx.globalAlpha = effectiveOpacity;
+        ctx.globalCompositeOperation = 'lighter'; // Creates a more atmospheric effect
         
-        // Performance mode: batch draw instead of individual gradients
-        if (this.performanceMode) {
-            // Group particles by size range to reduce gradient creation
-            const smallParticles = [];
-            const mediumParticles = [];
-            const largeParticles = [];
-            
-            // Sort particles into size buckets
-            for (const particle of this.particles) {
-                let x = (particle.x + this.offsetX) % canvasWidth;
-                if (x < -particle.radius) x += canvasWidth + particle.radius * 2;
-                
-                if (particle.radius < 15) {
-                    smallParticles.push({x, y: particle.y, alpha: particle.alpha, radius: particle.radius});
-                } else if (particle.radius < 25) {
-                    mediumParticles.push({x, y: particle.y, alpha: particle.alpha, radius: particle.radius});
-                } else {
-                    largeParticles.push({x, y: particle.y, alpha: particle.alpha, radius: particle.radius});
-                }
-            }
-            
-            // Draw particles by size group with shared gradients
-            this._drawParticleGroup(ctx, smallParticles, 12);
-            this._drawParticleGroup(ctx, mediumParticles, 20);
-            this._drawParticleGroup(ctx, largeParticles, 30);
-        } else {
-            // Standard rendering with individual gradients
-            for (const particle of this.particles) {
-                // Handle wrapping around the canvas
-                let x = particle.x;
-                if (this.animate) {
-                    x = (particle.x + this.offsetX) % canvasWidth;
-                    // Wrap around negative positions too
-                    if (x < -particle.radius) x += canvasWidth + particle.radius * 2;
-                } else {
-                    x = (particle.x + this.offsetX) % canvasWidth;
-                }
-                
-                ctx.beginPath();
-                const gradient = ctx.createRadialGradient(
-                    x, particle.y, 0,
-                    x, particle.y, particle.radius
-                );
-                
-                gradient.addColorStop(0, `${this.color}`);
-                gradient.addColorStop(1, `${this.color}00`);
-                
-                ctx.fillStyle = gradient;
-                ctx.globalAlpha = this.opacity * particle.alpha * this._intensityMultiplier;
-                ctx.arc(x, particle.y, particle.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        
-        // Skip overlay in performance mode to improve rendering speed
-        if (!this.performanceMode) {
-            // Add a very subtle overlay for fog atmosphere
-            ctx.fillStyle = `rgba(${this.color.slice(1, 3)}, ${this.color.slice(3, 5)}, ${this.color.slice(5, 7)}, 0.02)`;
-            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        // Render each cloud
+        for (const cloud of this.clouds) {
+            this._renderCloud(ctx, cloud);
         }
         
         ctx.restore();
     }
     
     /**
-     * Draws a group of particles with a shared gradient for better performance
-     * @param {CanvasRenderingContext2D} ctx - The canvas context
-     * @param {Array} particles - Array of particles to draw
-     * @param {number} avgRadius - Average radius to use for shared gradient
+     * Render an individual cloud using the cached gradient.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {Object} cloud - The cloud particle to render
      * @private
      */
-    _drawParticleGroup(ctx, particles, avgRadius) {
-        if (particles.length === 0) return;
+    _renderCloud(ctx, cloud) {
+        ctx.save();
         
-        // Create a shared gradient for all particles in this group
-        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, avgRadius);
-        gradient.addColorStop(0, `${this.color}`);
-        gradient.addColorStop(1, `${this.color}00`);
-        ctx.fillStyle = gradient;
+        // Apply cloud-specific opacity for depth effect
+        ctx.globalAlpha *= cloud.opacity;
         
-        // Draw each particle using the shared gradient
-        for (const p of particles) {
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.globalAlpha = this.opacity * p.alpha * this._intensityMultiplier;
-            
-            // Scale to match the particle's actual radius
-            const scale = p.radius / avgRadius;
-            ctx.scale(scale, scale);
-            
-            ctx.beginPath();
-            ctx.arc(0, 0, avgRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
+        // Draw the cloud using the cached gradient
+        ctx.fillStyle = this._cachedGradient;
+        
+        // Scale the context to the cloud's size
+        const scale = cloud.size / (100 * this.cloudSize);
+        ctx.translate(cloud.x, cloud.y);
+        ctx.scale(scale, scale);
+        
+        // Draw a circle with the gradient fill
+        ctx.beginPath();
+        ctx.arc(100 * this.cloudSize, 100 * this.cloudSize, 100 * this.cloudSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
     }
     
     /**
      * Sets the density of the fog.
-     * @param {number} density - The density value (0.1 to 1.0)
+     * @param {number} density - The density value (0.05 to 1.0)
      */
     setDensity(density) {
-        this.density = Math.min(Math.max(density, 0.1), 1.0);
+        this.density = Math.min(Math.max(density, 0.05), 1.0);
         this._initialized = false; // Force re-initialization of particles
     }
     
@@ -348,37 +264,22 @@ export class FogEffect extends BaseEffect {
     }
     
     /**
-     * Sets the vertical speed of the fog movement.
-     * @param {number} speed - The vertical speed value
-     */
-    setVerticalSpeed(speed) {
-        this.verticalSpeed = speed;
-    }
-    
-    /**
-     * Enables or disables fog particle animation.
-     * @param {boolean} enable - Whether to enable animation
-     */
-    setAnimation(enable) {
-        this.animate = enable;
-    }
-    
-    /**
-     * Enables or disables performance mode for mobile/tablet devices.
-     * @param {boolean} enable - Whether to enable performance mode
-     */
-    setPerformanceMode(enable) {
-        if (this.performanceMode !== enable) {
-            this.performanceMode = enable;
-            this._initialized = false; // Re-initialize particles with new settings
-        }
-    }
-    
-    /**
      * Sets the color of the fog.
      * @param {string} color - The color value (CSS color string)
      */
     setColor(color) {
         this.color = color;
+        if (this._initialized) {
+            this._createCloudGradient(this._lastContext);
+        }
+    }
+    
+    /**
+     * Sets the cloud size multiplier.
+     * @param {number} size - The size multiplier (0.5 to 3.0 recommended)
+     */
+    setCloudSize(size) {
+        this.cloudSize = Math.max(size, 0.5);
+        this._initialized = false; // Force re-initialization of particles
     }
 }

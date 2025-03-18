@@ -2,6 +2,7 @@ import { COLORS } from '../../colors.js';
 import { BaseMap } from '../BaseMap.js';
 import { MonsterNPC } from '../../npcs/MonsterNPC.js';
 import { FogEffect } from '../../effects/FogEffect.js';
+import { RainEffect } from '../../effects/RainEffect.js';
 
 export class ForestMap extends BaseMap {
     constructor(config = {}) {
@@ -58,11 +59,22 @@ export class ForestMap extends BaseMap {
             new MonsterNPC({ x: 2, y: 8, name: "Shadow Beast" })   // Bottom left monster
         ];
 
+        // Add a rain effect 
+        this.addEffect(new RainEffect({
+            opacity: 0.2,
+            angle: 15,
+            speed: 2,
+            density: 0.2,
+            color: '#aaddff'
+        }));
+
         // Add a fog effect to the dark forest
         this.addEffect(new FogEffect({
             opacity: 0.8,
-            color: '#334433',
-            density: 1,
+            color: '#282828',
+            density: 4,
+            speed: 2,
+            cloudSize: 0.8
         }));
     }
     
