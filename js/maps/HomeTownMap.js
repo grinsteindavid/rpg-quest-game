@@ -8,8 +8,8 @@ export class HomeTownMap extends BaseMap {
         super('Home Town');
         
         this.mapColors = {
-            primary: COLORS.LIGHT,
-            pattern: COLORS.WHITE
+            primary: COLORS.DARK_GREEN,
+            pattern: COLORS.DARKER_GREEN
         };
         
         // Define transition points

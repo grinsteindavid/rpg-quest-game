@@ -5,6 +5,8 @@ export const COLORS = {
     WHITE: '#ccaa66',          // Light tan/gold for text and highlights
     DARK_RED: '#4d0000',       // Deep blood red for accents
     DARKER_RED: '#330000',     // Very dark red for shadows
+    DARK_GREEN: '#004d00',     // Dark green for accents
+    DARKER_GREEN: '#003300',   // Very dark green for shadows
 };
 
 export const SPRITES = {

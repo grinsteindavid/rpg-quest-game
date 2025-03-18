@@ -70,11 +70,6 @@ export class Game {
             darkForestDepths: new DepthsDarkForestMap()
         };
 
-        // Connect maps to each other
-        Object.values(this._maps).forEach(map => {
-            map.maps = this._maps;
-        });
-
         this._currentMap = this._maps.hometown;
     }
 
