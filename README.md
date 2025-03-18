@@ -1,6 +1,6 @@
-# Arena Game
+# RPG QUEST GAME
 
-https://grinsteindavid.github.io/arena-game/
+https://grinsteindavid.github.io/rpg-quest-game/
 
 <img width="769" alt="image" src="https://github.com/user-attachments/assets/7b20c550-f3f0-4aea-affd-e58aa9f3dec4" />
 
