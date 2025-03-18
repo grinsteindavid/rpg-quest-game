@@ -3,7 +3,7 @@
  * Handles all combat-related functionality for NPCs and potentially other game entities
  */
 import { HealthBar } from '../UI/HealthBar.js';
-import { CombatAnimations } from '../animations/CombatAnimations.js';
+import { HitAnimation } from '../animations/HitAnimation.js';
 
 export class CombatSystem {
     constructor(entity) {
@@ -36,7 +36,9 @@ export class CombatSystem {
         });
         
         // Initialize animations
-        this.animations = new CombatAnimations();
+        this.animations = new HitAnimation({
+            hitAnimationDuration: 500
+        });
     }
     
     /**

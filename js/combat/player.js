@@ -3,7 +3,7 @@
  * Handles attacks, damage, health management, and combat animations.
  */
 import { HealthBar } from '../UI/HealthBar.js';
-import { CombatAnimations } from '../animations/CombatAnimations.js';
+import { HitAnimation } from '../animations/HitAnimation.js';
 
 export class PlayerCombat {
     /** @type {number} Maximum health points of the player */
@@ -52,7 +52,7 @@ export class PlayerCombat {
         });
         
         // Initialize animations
-        this.animations = new CombatAnimations({
+        this.animations = new HitAnimation({
             hitAnimationDuration: 500
         });
     }
@@ -136,7 +136,7 @@ export class PlayerCombat {
      * @param {number} height - Height of the player sprite
      */
     renderHitAnimation(ctx, screenX, screenY, width, height) {
-        this.animations.renderHitAnimation(ctx, screenX, screenY, width, height, false);
+        this.animations.render(ctx, screenX, screenY, width, height);
     }
 
     /**
