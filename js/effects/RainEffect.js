@@ -99,8 +99,12 @@ export class RainEffect extends BaseEffect {
     update(deltaTime, map) {
         if (!this.enabled) return;
         
+        // Safety check for abnormally large deltaTime (tab change/browser sleep)
+        // This prevents particles from jumping very large distances when tab becomes active again
+        const safeDeltaTime = Math.min(deltaTime, 100);
+        
         // Update intensity variation over time
-        this._timeAccumulator += deltaTime / 1000;
+        this._timeAccumulator += safeDeltaTime / 1000;
         // Create a slow pulsing intensity using a sine wave
         this._intensityMultiplier = 0.8 + 0.2 * Math.sin(this._timeAccumulator * 0.1);
         
@@ -115,8 +119,9 @@ export class RainEffect extends BaseEffect {
             const drop = this.drops[i];
             
             // Move the drop based on angle and speed
-            drop.y += drop.speed * (deltaTime / 16); // Normalize for 60fps
-            drop.x += Math.tan(angleRad) * drop.speed * (deltaTime / 16);
+            // Use safeDeltaTime to prevent large jumps
+            drop.y += drop.speed * (safeDeltaTime / 16); // Normalize for 60fps
+            drop.x += Math.tan(angleRad) * drop.speed * (safeDeltaTime / 16);
             
             // If the drop moves out of the canvas, reset it
             if (drop.y > canvasHeight || drop.x > canvasWidth || drop.x < -drop.length) {

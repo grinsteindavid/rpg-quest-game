@@ -360,9 +360,15 @@ export class BaseMap {
      * @param {number} deltaTime - Time passed since last update in ms
      */
     updateEffects(deltaTime) {
+        // Additional safety check for very large deltaTime values
+        // This can happen when the tab becomes inactive and then active again
+        const safeDeltaTime = Math.min(deltaTime || 16, 100);
+        
         for (const effect of this.effects) {
             if (effect.enabled && typeof effect.update === 'function') {
-                effect.update(deltaTime, this);
+                // Even though we've added protection in individual effects,
+                // this provides an additional safeguard at the map level
+                effect.update(safeDeltaTime, this);
             }
         }
     }

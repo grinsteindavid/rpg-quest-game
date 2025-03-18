@@ -160,12 +160,16 @@ export class FogEffect extends BaseEffect {
     update(deltaTime, map) {
         if (!this.enabled || !this.animate) return;
         
+        // Safety check for abnormally large deltaTime (tab change/browser sleep)
+        // This prevents particles from jumping very large distances when tab becomes active again
+        const safeDeltaTime = Math.min(deltaTime, 100);
+        
         // Performance optimization: only update every few frames
         this._frameCounter++;
         if (this._frameCounter % this._updateThrottle !== 0) return;
         
         // Update intensity variation over time
-        this._timeAccumulator += deltaTime / 1000;
+        this._timeAccumulator += safeDeltaTime / 1000;
         // Create a very slow pulsing intensity using a sine wave
         this._intensityMultiplier = 0.9 + 0.1 * Math.sin(this._timeAccumulator * 0.03);
         
@@ -179,7 +183,8 @@ export class FogEffect extends BaseEffect {
             const cloud = this.clouds[i];
             
             // Move the cloud horizontally with the cloud's speed variation
-            cloud.x += this.speed * cloud.speedMultiplier * (deltaTime / 16);
+            // Use safeDeltaTime to prevent large jumps
+            cloud.x += this.speed * cloud.speedMultiplier * (safeDeltaTime / 16);
             
             // If the cloud moves out of the canvas, reset it on the other side
             if (cloud.x > canvasWidth + cloud.size) {

@@ -8,6 +8,12 @@ export class MonsterNPC extends BaseNPC {
         // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
         this.canBeAggressive = true; // Start aggressive by default
         
+        // Attack properties
+        this.attackDamage = 10;
+        this.attackRange = 40; // Slightly larger than player's attack range
+        this.attackCooldown = 1500; // Milliseconds between attacks
+        this.nextAttackTime = 0; // Timestamp when the monster can attack again
+        
         // Visual effect properties
         this.glowIntensity = 0;
         this.glowDirection = 1;
@@ -61,6 +67,131 @@ export class MonsterNPC extends BaseNPC {
             this.glowIntensity = 0.4;
             this.glowDirection = 1;
         }
+        
+        // Check if hit animation should end
+        const currentTime = Date.now();
+        if (this.showingHitAnimation) {
+            if (currentTime >= this.hitAnimationEndTime) {
+                this.showingHitAnimation = false;
+            }
+        }
+        
+        // Check if the monster should attack the player
+        if (this.isAggressive && player && currentTime >= this.nextAttackTime) {
+            this.attackPlayer(player);
+            console.log('Monster attacking player!');
+        }
+    }
+    
+    /**
+     * Trigger the hit animation on the monster
+     */
+    showHitAnimation() {
+        const currentTime = Date.now();
+        this.showingHitAnimation = true;
+        // Always set a new end time, even if an animation is already in progress
+        this.hitAnimationEndTime = currentTime + this.hitAnimationDuration;
+    }
+    
+    /**
+     * Attack the player if in range
+     * @param {Player} player - The player to attack
+     * @returns {boolean} - Whether the player was attacked
+     */
+    attackPlayer(player) {
+        const currentTime = Date.now();
+        
+        // Calculate distance between monster and player
+        const monsterCenterX = this.x + (this.width / 2);
+        const monsterCenterY = this.y + (this.height / 2);
+        const playerCenterX = player.x + (player.width / 2);
+        const playerCenterY = player.y + (player.height / 2);
+        
+        const dx = playerCenterX - monsterCenterX;
+        const dy = playerCenterY - monsterCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Attack if player is in range
+        if (distance <= this.attackRange) {
+            // Face towards the player before attacking
+            this._faceTowardsTarget(dx, dy);
+            
+            // Deal damage to the player
+            player.takeDamage(this.attackDamage);
+            
+            // Set cooldown for next attack
+            this.nextAttackTime = currentTime + this.attackCooldown;
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Faces the monster towards a target based on relative position
+     * @param {number} dx - X distance to target (target.x - monster.x)
+     * @param {number} dy - Y distance to target (target.y - monster.y)
+     * @private
+     */
+    _faceTowardsTarget(dx, dy) {
+        // Determine predominant direction (horizontal or vertical)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal direction is predominant
+            this.direction = dx > 0 ? 'right' : 'left';
+        } else {
+            // Vertical direction is predominant
+            this.direction = dy > 0 ? 'down' : 'up';
+        }
+    }
+    
+    // Override the render method to show health bar only when health < maxHealth
+    render(ctx, mapOffset) {
+        const screenX = this.x + mapOffset.x;
+        const screenY = this.y + mapOffset.y;
+
+        // Render the basic NPC components
+        this._renderNPC(ctx, screenX, screenY);
+        this._renderMarker(ctx, screenX, screenY);
+        this._renderDebug(ctx, screenX, screenY);
+        
+        // Only show health bar when health is below max
+        if (this.health < this.maxHealth) {
+            this._renderHealthBar(ctx, screenX, screenY);
+        }
+    }
+    
+    // Override the _renderHealthBar method for monsters with custom styling
+    _renderHealthBar(ctx, screenX, screenY) {
+        const barX = screenX;
+        const barY = screenY + this.healthBarYOffset;
+        
+        // Draw border first (slightly larger than the health bar)
+        ctx.fillStyle = this.healthBarColors.border;
+        ctx.fillRect(
+            barX - 1, 
+            barY - 1, 
+            this.healthBarWidth + 2, 
+            this.healthBarHeight + 2
+        );
+        
+        // Background (empty health)
+        ctx.fillStyle = this.healthBarColors.background;
+        ctx.fillRect(barX, barY, this.healthBarWidth, this.healthBarHeight);
+        
+        // Calculate health percentage
+        const healthPercentage = this.health / this.maxHealth;
+        const currentHealthWidth = this.healthBarWidth * healthPercentage;
+        
+        // Determine color based on health percentage
+        let healthColor = this.healthBarColors.fill;
+        if (healthPercentage <= 0.3) {
+            healthColor = this.healthBarColors.critical; // Critical health
+        }
+        
+        // Draw filled health
+        ctx.fillStyle = healthColor;
+        ctx.fillRect(barX, barY, currentHealthWidth, this.healthBarHeight);
     }
     
     // Override the render method 
