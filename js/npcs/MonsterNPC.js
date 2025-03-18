@@ -18,17 +18,13 @@ export class MonsterNPC extends BaseNPC {
         this.glowIntensity = 0;
         this.glowDirection = 1;
         
-        // Hit animation properties
-        this.showingHitAnimation = false;
-        this.hitAnimationDuration = 500; // milliseconds
-        this.hitAnimationEndTime = 0;
-        this.hitFistSize = 12;
-        this.hitFistColor = 'rgba(255, 255, 255, 0.8)';
-        
-        // Custom health bar appearance for monsters
-        this.healthBarHeight = 5; // Slightly taller for better visibility
-        this.healthBarYOffset = -12; // Position a bit higher above the monster
-        this.healthBarColors = {
+        // Configure combat system for monster
+        this.combatSystem.attackDamage = 10;
+        this.combatSystem.attackRange = 40;
+        this.combatSystem.attackCooldown = 1500;
+        this.combatSystem.healthBarHeight = 5; // Slightly taller for better visibility
+        this.combatSystem.healthBarYOffset = -12; // Position a bit higher above the monster
+        this.combatSystem.healthBarColors = {
             background: 'rgba(40, 40, 40, 0.8)',
             border: 'rgba(0, 0, 0, 0.8)',
             fill: 'rgba(200, 0, 0, 0.9)', // Red for monsters
@@ -59,11 +55,8 @@ export class MonsterNPC extends BaseNPC {
     }
     
     update(player, deltaTime, map) {
-        // Call the BaseNPC update method first to handle aggro detection and movement
+        // Call the BaseNPC update method first to handle aggro detection, movement, and combat
         super.update(player, deltaTime, map);
-        
-        // We've removed the speed adjustment here since we're using tile-by-tile movement
-        // This ensures the monster moves exactly like the player now
         
         // Update visual effects
         this.glowIntensity += 0.05 * this.glowDirection;
@@ -201,11 +194,12 @@ export class MonsterNPC extends BaseNPC {
         ctx.fillRect(barX, barY, currentHealthWidth, this.healthBarHeight);
     }
     
+    // Override the render method 
+    render(ctx, mapOffset) {
+        super.render(ctx, mapOffset);
+    }
+    
     _renderNPC(ctx, screenX, screenY) {
-        // Render the hit animation if active
-        if (this.showingHitAnimation) {
-            this._renderHitAnimation(ctx, screenX, screenY);
-        }
         
         // Monster body
         ctx.fillStyle = 'rgba(40, 40, 40, 0.9)';
@@ -289,18 +283,13 @@ export class MonsterNPC extends BaseNPC {
     }
     
     /**
-     * Override takeDamage to add additional visual effects
+     * Override takeDamage to add additional effects if needed
      * @param {number} amount - Amount of damage to take
      * @returns {boolean} - Whether the monster was defeated
      */
     takeDamage(amount) {
-        // Call the parent takeDamage method
-        const isDefeated = super.takeDamage(amount);
-        
-        // Always trigger the hit animation when taking damage
-        this.showHitAnimation();
-        
-        return isDefeated;
+        // Call the parent takeDamage method which uses combat system
+        return super.takeDamage(amount);
     }
     
     /**
@@ -313,59 +302,5 @@ export class MonsterNPC extends BaseNPC {
         // Monster will be removed in the map's update method
     }
     
-    /**
-     * Renders a fist hit animation on the monster
-     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-     * @param {number} screenX - Screen X coordinate
-     * @param {number} screenY - Screen Y coordinate
-     * @private
-     */
-    _renderHitAnimation(ctx, screenX, screenY) {
-        // Calculate animation progress (0 to 1)
-        const currentTime = Date.now();
-        // Ensure animationProgress is always between 0 and 1
-        const animationProgress = Math.max(0, Math.min(1, (this.hitAnimationEndTime - currentTime) / this.hitAnimationDuration));
-        
-        // Calculate fist position - it should come from the side the player is facing
-        // We'll calculate center position for the monster
-        const centerX = screenX + 16;
-        const centerY = screenY + 16;
-        
-        // Draw fist
-        ctx.save();
-        
-        // Make the fist appear from a random direction each hit for variety
-        const angle = Math.random() * Math.PI * 2;
-        const distance = this.width / 2 * (1 - animationProgress);
-        const fistX = centerX + Math.cos(angle) * distance;
-        const fistY = centerY + Math.sin(angle) * distance;
-        
-        // Draw the fist (simple circle)
-        ctx.fillStyle = this.hitFistColor;
-        ctx.beginPath();
-        ctx.arc(fistX, fistY, this.hitFistSize * animationProgress, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Draw impact lines
-        ctx.strokeStyle = 'rgba(255, 255, 255, ' + animationProgress + ')';
-        ctx.lineWidth = 2;
-        
-        const impactLineLength = this.hitFistSize * 1.5 * animationProgress;
-        for (let i = 0; i < 5; i++) {
-            const lineAngle = angle + (Math.PI / 4) * i;
-            ctx.beginPath();
-            ctx.moveTo(fistX, fistY);
-            ctx.lineTo(
-                fistX + Math.cos(lineAngle) * impactLineLength,
-                fistY + Math.sin(lineAngle) * impactLineLength
-            );
-            ctx.stroke();
-        }
-        
-        // Flash the monster red when hit
-        ctx.fillStyle = `rgba(255, 0, 0, ${0.3 * animationProgress})`;
-        ctx.fillRect(screenX, screenY, this.width, this.height);
-        
-        ctx.restore();
-    }
+    // Hit animation rendering has been moved to the CombatSystem class
 }

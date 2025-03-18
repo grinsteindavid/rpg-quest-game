@@ -176,27 +176,72 @@ body.fullscreen {
     right: 10px;
     background-color: #ffffff9a;
     border: 2px solid #0f380f;
-    padding: 10px;
+    padding: 5px;
     font-family: monospace;
-    font-size: 12px;
+    font-size: 10px;
     display: none;
     z-index: 100;
+    max-width: 50vw; /* Limit width using viewport width */
+    max-height: 30vh; /* Limit height using viewport height */
+    overflow-y: auto; /* Add scrolling for overflow */
+    overflow-x: hidden;
 }
 
 .debug-button.active + .debug-info {
     display: block;
 }
 
+/* Smaller debug info on mobile */
+@media (max-width: 900px) {
+    .debug-info {
+        max-width: 150px;
+        max-height: 120px;
+        font-size: 8px;
+        padding: 3px;
+    }
+    
+    .debug-info h3, .debug-info h4 {
+        margin: 5px 0;
+        font-size: 9px;
+    }
+    
+    .debug-info ul {
+        padding-left: 15px;
+        margin: 3px 0;
+    }
+    
+    .debug-info li {
+        margin: 2px 0;
+    }
+}
+
 #dialog-container {
     position: absolute;
-    bottom: 20px;
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
+    max-width: 600px;
     z-index: 1000;
     opacity: 1;
     visibility: visible;
     transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+/* Responsive dialog positioning for mobile */
+@media (max-width: 900px) {
+    #dialog-container {
+        bottom: 15%;
+        width: 90%;
+    }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    #dialog-container {
+        bottom: 20px;
+        width: 70%;
+    }
 }
 
 #dialog-container.hidden {
@@ -215,6 +260,24 @@ body.fullscreen {
     line-height: 1.4;
     transform: translateY(0);
     transition: transform 0.2s ease-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+/* Responsive dialog box for mobile */
+@media (max-width: 900px) {
+    .dialog-box {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .dialog-box {
+        padding: 8px;
+        font-size: 12px;
+    }
 }
 
 #dialog-container.hidden .dialog-box {

@@ -1,8 +1,9 @@
 import { Player } from './player.js';
 import { HomeTownMap } from './maps/HomeTownMap.js';
-import { ForestMap } from './maps/ForestMap.js';
+import { ForestMap } from './maps/darkForest/base.js';
 import { InputHandler } from './input.js';
 import { Dialog } from './UI/Dialog.js';
+import { DepthsDarkForestMap } from './maps/darkForest/depths.js';
 
 /**
  * Main game controller class that manages the game loop, maps, and player interactions.
@@ -57,7 +58,8 @@ export class Game {
     _initializeMaps() {
         this._maps = {
             hometown: new HomeTownMap(),
-            forest: new ForestMap()
+            darkForest: new ForestMap(),
+            darkForestDepths: new DepthsDarkForestMap()
         };
 
         // Connect maps to each other
