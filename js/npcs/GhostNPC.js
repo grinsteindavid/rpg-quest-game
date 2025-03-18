@@ -15,6 +15,9 @@ export class GhostNPC extends BaseNPC {
         this.opacityDirection = -1;
         this.hoverOffset = 0;
         this.hoverDirection = 1;
+
+        //aggro
+        this.aggroRange = this.tileSize * 5;
         
         // Configure combat system for ghost
         this.combatSystem.attackDamage = 25;

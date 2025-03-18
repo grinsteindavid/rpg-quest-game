@@ -3,6 +3,8 @@ import { HomeTownMap } from './maps/HomeTownMap.js';
 import { ForestMap } from './maps/darkForest/base.js';
 import { InputHandler } from './input.js';
 import { Dialog } from './UI/Dialog.js';
+import { Transition } from './UI/Transition.js';
+import { GameOver } from './UI/GameOver.js';
 import { DepthsDarkForestMap } from './maps/darkForest/depths.js';
 
 /**
@@ -25,6 +27,10 @@ export class Game {
     _debug = false;
     /** @private @type {Dialog} Dialog instance */
     _dialog;
+    /** @private @type {Transition} Transition system for scene changes */
+    _transition;
+    /** @private @type {GameOver} Game over screen manager */
+    _gameOver;
 
     /**
      * Creates a new Game instance.
@@ -38,7 +44,9 @@ export class Game {
         this._initializeGameComponents();
         this._setupDebugMode();
         this._dialog = new Dialog();
-        requestAnimationFrame(this._gameLoop);
+        this._transition = new Transition();
+        this._gameOver = new GameOver();
+        requestAnimationFrame(this._gameLoop.bind(this));
     }
 
     /**
@@ -85,22 +93,44 @@ export class Game {
     }
 
     /**
-     * Changes the current map and updates player position.
+     * Changes the current map and updates player position with a transition effect.
      * @param {string} mapName - Name of the destination map
      * @param {Object} [destination] - Optional destination coordinates
      * @param {number} destination.x - X coordinate in tiles
      * @param {number} destination.y - Y coordinate in tiles
      */
     changeMap(mapName, destination) {
-        this._currentMap = this._maps[mapName];
-        const pos = destination ? {
-            x: destination.x * this._currentMap.tileSize,
-            y: destination.y * this._currentMap.tileSize
-        } : this._currentMap.getInitialPlayerPosition();
+        // Don't allow changing map during transition
+        if (this._transition.isActive() || this._player.isTransitioning) {
+            return;
+        }
+        
+        // Lock player movement during transition
+        this._player.isTransitioning = true;
+        
+        // Start the transition sequence
+        this._transition.transition(async () => {
+            // This callback runs between fade out and fade in
+            this._currentMap = this._maps[mapName];
+            const pos = destination ? {
+                x: destination.x * this._currentMap.tileSize,
+                y: destination.y * this._currentMap.tileSize
+            } : this._currentMap.getInitialPlayerPosition();
 
-        this._player.x = pos.x;
-        this._player.y = pos.y;
-        this._player.setMap(this._currentMap);
+            this._player.x = pos.x;
+            this._player.y = pos.y;
+            this._player.targetX = pos.x;
+            this._player.targetY = pos.y;
+            this._player.setMap(this._currentMap);
+            
+            // Small delay to ensure map is fully loaded
+            return new Promise(resolve => setTimeout(resolve, 100));
+        }).then(() => {
+            // Release player movement lock after fade-in plus a delay
+            setTimeout(() => {
+                this._player.isTransitioning = false;
+            }, 100); // Keep player locked for 2 seconds after fade-in completes
+        });
     }
 
     /**
@@ -130,11 +160,17 @@ export class Game {
      * @private
      */
     _update() {
+        // Don't update the game if dialog is active, transition is in progress, or game over is shown
         if (this._dialog.isActive()) {
             if (this._input.isPressed('e') || this._input.isPressed(' ')) {
                 this._dialog.hide();
             }
             return; // Pause game updates while dialog is showing
+        }
+        
+        // Pausing during transitions is handled at the individual component level
+        if (this._transition.isActive() || this._gameOver.isVisible()) {
+            return;
         }
         
         // Get current timestamp for delta time calculation
@@ -162,6 +198,30 @@ export class Game {
         this._currentMap.render(this._ctx);
         this._player.render(this._ctx);
         this._ctx.restore();
+    }
+    
+    /**
+     * Handles game over event when player dies
+     */
+    handleGameOver() {
+        console.log('Game Over triggered!');
+        
+        // Show the game over screen with a callback for restart
+        this._gameOver.show(() => {
+            // Reset the player's health
+            this._player.resetHealth();
+            this._initializeMaps();
+            
+            // Reset player to starting position
+            const startPos = this._maps.hometown.getInitialPlayerPosition();
+            this._player.x = startPos.x;
+            this._player.y = startPos.y;
+            this._player.targetX = startPos.x;
+            this._player.targetY = startPos.y;
+            this._player.setMap(this._currentMap);
+            
+            console.log('Game restarted!');
+        });
     }
 
     /**

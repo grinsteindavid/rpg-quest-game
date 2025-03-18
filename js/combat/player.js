@@ -221,12 +221,10 @@ export class PlayerCombat {
      * @private
      */
     _handleGameOver() {
-        // For now, just reset health - in a real game, you would
-        // trigger game over screen or respawn logic here
-        console.log('Game Over!');
-        this.resetHealth();
+        console.log('Game Over!'); 
         
-        // If the game has a game over handler, call it
+        // Don't reset health immediately - let the game over handler handle it
+        // Call the game's handleGameOver method if available
         if (this.player.game && typeof this.player.game.handleGameOver === 'function') {
             this.player.game.handleGameOver();
         }

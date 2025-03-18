@@ -120,6 +120,20 @@ body.fullscreen {
     display: none;  /* Changed from position: absolute to just hide it */
 }
 
+/* Scene transition overlay */
+#transition-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease-in-out;
+    z-index: 1000;
+}
+
 .debug-button {
     position: absolute;
     top: 10px;
@@ -293,4 +307,105 @@ body.fullscreen {
 @keyframes bounce {
     from { transform: translateY(0); }
     to { transform: translateY(-5px); }
+}
+
+/* Game Over Screen Styles */
+#game-over-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#game-over-container.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.game-over-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    padding: 40px;
+}
+
+.skull-icon {
+    font-size: 120px;
+    color: #ffffff;
+    margin-bottom: 10px;
+    animation: pulse 1.5s infinite alternate;
+}
+
+.game-over-text {
+    font-family: monospace;
+    font-size: 48px;
+    font-weight: bold;
+    color: #bb0000;
+    text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+    margin: 20px 0 40px 0;
+    animation: drip 2s ease-in-out;
+}
+
+.blood-splatter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(circle, rgba(150, 0, 0, 0.7) 10%, transparent 70%);
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: -1;
+}
+
+.blood-splatter.animate {
+    opacity: 0.8;
+    animation: spread 1.5s ease-out;
+}
+
+#restart-button {
+    font-family: monospace;
+    background-color: #bb0000;
+    color: white;
+    border: 2px solid #ffffff;
+    padding: 10px 20px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulse 1.5s infinite alternate;
+}
+
+#restart-button:hover {
+    background-color: #ff0000;
+    transform: scale(1.1);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); }
+}
+
+@keyframes drip {
+    0% { opacity: 0; transform: translateY(-20px); }
+    50% { opacity: 1; transform: translateY(0); }
+    60% { transform: translateY(-5px); }
+    70% { transform: translateY(0); }
+    80% { transform: translateY(-2px); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes spread {
+    0% { transform: scale(0.2); opacity: 0; }
+    100% { transform: scale(1); opacity: 0.8; }
 }
