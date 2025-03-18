@@ -425,7 +425,7 @@ export class Player {
         // Debug health info
         ctx.font = '10px Arial';
         ctx.fillStyle = 'white';
-        ctx.fillText(`HP: ${this.currentHealth}/${this.maxHealth}`, screenX, screenY - 5);
+        ctx.fillText(`HP: ${this.combat.currentHealth}/${this.combat.maxHealth}`, screenX, screenY - 5);
     }
 
     /**
