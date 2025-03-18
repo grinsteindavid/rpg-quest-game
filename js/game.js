@@ -210,10 +210,10 @@ export class Game {
         this._gameOver.show(() => {
             // Reset the player's health
             this._player.resetHealth();
+            this._initializeMaps();
             
             // Reset player to starting position
             const startPos = this._maps.hometown.getInitialPlayerPosition();
-            this._currentMap = this._maps.hometown;
             this._player.x = startPos.x;
             this._player.y = startPos.y;
             this._player.targetX = startPos.x;

@@ -26,7 +26,7 @@ export class Transition {
         
         this.overlay = transitionOverlay;
         this.isTransitioning = false;
-        this.duration = 2000; // Default transition duration in ms
+        this.duration = 1000; // Default transition duration in ms
         this.callback = null;
     }
 
