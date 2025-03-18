@@ -1,6 +1,7 @@
 import { COLORS } from '../../colors.js';
 import { BaseMap } from '../BaseMap.js';
 import { MonsterNPC } from '../../npcs/MonsterNPC.js';
+import { ChestNPC } from '../../npcs/ChestNPC.js';
 
 export class DepthsDarkForestMap extends BaseMap {
     constructor() {
@@ -24,7 +25,7 @@ export class DepthsDarkForestMap extends BaseMap {
         
         this.mapData = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+            [1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1],
             [1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1],
             [1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1],
             [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
@@ -39,7 +40,8 @@ export class DepthsDarkForestMap extends BaseMap {
         this.npcs = [
             new MonsterNPC({ x: 5, y: 4, name: "Forest Monster" }),  // Center monster
             new MonsterNPC({ x: 10, y: 8, name: "Dark Lurker" }), // Right side monster
-            new MonsterNPC({ x: 2, y: 8, name: "Shadow Beast" })   // Bottom left monster
+            new MonsterNPC({ x: 2, y: 8, name: "Shadow Beast" }),   // Bottom left monster
+            new ChestNPC({ x: 11, y: 1, name: "Chest" }), // Bottom right chest
         ];
     }
     
