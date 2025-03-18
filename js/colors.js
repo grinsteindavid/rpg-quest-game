@@ -3,6 +3,8 @@ export const COLORS = {
     DARK: '#306230',
     LIGHT: '#8bac0f',
     WHITE: '#9bbc0f',
+    DARK_GREEN: '#306230',
+    DARKER_GREEN: '#205220',
 };
 
 export const SPRITES = {
