@@ -4,13 +4,16 @@ import { MerchantNPC } from '../npcs/MerchantNPC.js';
 import { COLORS } from '../colors.js';
 
 export class HomeTownMap extends BaseMap {
-    constructor() {
-        super('Home Town');
-        
-        this.mapColors = {
-            primary: COLORS.DARK_GREEN,
-            pattern: COLORS.DARKER_GREEN
-        };
+    constructor(config = {}) {
+        super({
+            name: 'Home Town',
+            game: config.game || null,
+            colors: {
+                primary: COLORS.DARK_GREEN,
+                pattern: COLORS.DARKER_GREEN
+            }
+        });
+
         
         // Define transition points
         this.transitions = {

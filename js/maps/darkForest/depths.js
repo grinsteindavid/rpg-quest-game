@@ -4,13 +4,16 @@ import { ChestNPC } from '../../npcs/ChestNPC.js';
 import { GhostNPC } from '../../npcs/GhostNPC.js';
 
 export class DepthsDarkForestMap extends BaseMap {
-    constructor() {
-        super('Dark Forest - Depths');
-        
-        this.mapColors = {
-            primary: COLORS.DARK_GREEN,  // Dark green for forest
-            pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
-        };
+    constructor(config = {}) {
+        super({
+            name: 'Dark Forest - Depths',
+            game: config.game || null,
+            colors: {
+                primary: COLORS.DARK_GREEN,  // Dark green for forest
+                pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
+            }
+        });
+
         
         // Define transition points
         this.transitions = {

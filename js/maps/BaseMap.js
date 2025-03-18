@@ -7,25 +7,35 @@ import { COLORS, SPRITES } from '../colors.js';
 export class BaseMap {
     /**
      * Creates a new map instance.
-     * @param {string} name - The display name of the map
+     * @param {Object} config - Configuration options
+     * @param {string} [config.name='Map'] - The display name of the map
+     * @param {Game} [config.game=null] - The game instance this map belongs to
+     * @param {Object} [config.colors=null] - Map colors (primary and pattern)
      */
-    constructor(name) {
+    constructor(config = {}) {
         /** @type {string} The display name of the map */
-        this.name = name;
+        this.name = config.name || 'Map';
+        
         /** @type {number} Size of each tile in pixels */
         this.tileSize = 32;
+        
         /** @type {boolean} Debug mode flag */
         this.debug = false;
+        
         /** @type {Array} Array of NPCs on this map */
         this.npcs = [];
+        
         /** @type {Object} Map colors */
-        this.mapColors = {
+        this.mapColors = config.colors || {
             primary: COLORS.LIGHT,    // Default gray
             pattern: COLORS.WHITE     // Default light gray
         };
 
         /** @type {Array} Array representing the map data */
         this.mapData = [];
+        
+        /** @type {Game} Reference to the game instance */
+        this.game = config.game || null;
     }
 
     /**
@@ -189,7 +199,12 @@ export class BaseMap {
      * @param {{x: number, y: number}} offset - Map offset for centered rendering
      */
     drawExit(ctx, mapName, transition, offset) {
-        const colors = this.maps?.[mapName]?.getColors() || { primary: '#666', pattern: '#999' };
+        let colors = { primary: '#666', pattern: '#999' }; // Default fallback colors
+        
+        // Get colors from the destination map if available via game instance
+        if (this.game && this.game._maps && this.game._maps[mapName]) {
+            colors = this.game._maps[mapName].getColors();
+        }
         
         for (const x of transition.x) {
             const screenX = x * this.tileSize + offset.x;

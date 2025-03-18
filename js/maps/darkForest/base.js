@@ -3,13 +3,16 @@ import { BaseMap } from '../BaseMap.js';
 import { MonsterNPC } from '../../npcs/MonsterNPC.js';
 
 export class ForestMap extends BaseMap {
-    constructor() {
-        super('Dark Forest');
-        
-        this.mapColors = {
-            primary: COLORS.DARK_GREEN,  // Dark green for forest
-            pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
-        };
+    constructor(config = {}) {
+        super({
+            name: 'Dark Forest',
+            game: config.game || null,
+            colors: {
+                primary: COLORS.DARK_GREEN,  // Dark green for forest
+                pattern: COLORS.DARKER_GREEN   // Even darker green for pattern
+            }
+        });
+
         
         // Define transition points
         this.transitions = {

@@ -65,9 +65,9 @@ export class Game {
      */
     _initializeMaps() {
         this._maps = {
-            hometown: new HomeTownMap(),
-            darkForest: new ForestMap(),
-            darkForestDepths: new DepthsDarkForestMap()
+            hometown: new HomeTownMap({ game: this }),
+            darkForest: new ForestMap({ game: this }),
+            darkForestDepths: new DepthsDarkForestMap({ game: this })
         };
 
         this._currentMap = this._maps.hometown;
