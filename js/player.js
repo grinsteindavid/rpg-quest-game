@@ -159,7 +159,6 @@ export class Player {
      * Faces the player towards a target based on relative position
      * @param {number} dx - X distance to target (target.x - player.x)
      * @param {number} dy - Y distance to target (target.y - player.y)
-     * @private
      */
     _faceTowardsTarget(dx, dy) {
         // Determine predominant direction (horizontal or vertical)
