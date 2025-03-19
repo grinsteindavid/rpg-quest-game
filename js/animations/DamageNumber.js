@@ -5,7 +5,7 @@
 
 import { Animation } from './Animation.js';
 
-export class DamageNumber extends Animation {
+export class DamageNumberAnimation extends Animation {
     /**
      * @param {Object} config - Configuration for the damage number animation
      */
@@ -33,7 +33,7 @@ export class DamageNumber extends Animation {
      */
     determineColor(config) {
         if (config.color) return config.color;
-        if (this.isHeal) return 'rgba(0, 255, 0, 1)';
+        if (this.isHeal) return 'rgba(0, 128, 0, 1)';
         if (this.isCritical) return 'rgba(255, 255, 0, 1)';
         return 'rgba(255, 255, 255, 1)';
     }

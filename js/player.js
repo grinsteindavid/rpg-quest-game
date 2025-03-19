@@ -140,7 +140,7 @@ export class Player {
      * @param {number} range - Range in pixels to detect monsters
      * @returns {boolean} - Whether any monsters were attacked
      */
-    attack(damage = 20, range = 32) {
+    attack(damage = 20, range = this.tileSize * 1) {
         return this.combat.attack(damage, range);
     }
 
@@ -447,16 +447,7 @@ export class Player {
         // Flash player when invulnerable using combat system logic
         if (this.combat.shouldRenderPlayer()) {
             this._renderPlayer(ctx, screenX, screenY);
-            
-            // Show hit animation if active
-            if (this.combat.animations.showingHitAnimation) {
-                this.combat.renderHitAnimation(ctx, screenX, screenY, this.width, this.height);
-            }
-        }
-        
-        // Render health bar if needed
-        if (this.combat.showHealthBar) {
-            this.combat.renderHealthBar(ctx, screenX, screenY, this.width);
+            this.combat.render(ctx, screenX, screenY);
         }
         
         if (this.debug) {

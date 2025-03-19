@@ -433,11 +433,6 @@ export class BaseNPC {
     }
 
     _renderNPC(ctx, screenX, screenY) {
-        // Render hit animation if active
-        if (this.combatSystem.animations.showingHitAnimation) {
-            this.combatSystem.renderHitAnimation(ctx, screenX, screenY);
-        }
-
         // Basic NPC appearance with damage effect if damaged
         if (this.combatSystem.isDamaged) {
             // Flash red when damaged
@@ -457,11 +452,6 @@ export class BaseNPC {
         ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(this.name, screenX + 16, screenY - 5);
-        
-        // Draw health bar if enabled and not at full health
-        if (this.combatSystem.showHealthBar && this.combatSystem.health < this.combatSystem.maxHealth) {
-            this.combatSystem.renderHealthBar(ctx, screenX, screenY);
-        }
     }
 
     _renderMarker(ctx, screenX, screenY) {
@@ -607,14 +597,6 @@ export class BaseNPC {
         this._renderMarker(ctx, screenX, screenY);
         this._renderDebug(ctx, screenX, screenY);
         
-        // Render hit animation if it's active
-        if (this.combatSystem.animations.showingHitAnimation) {
-            this.combatSystem.renderHitAnimation(ctx, screenX, screenY);
-        }
-        
-        // Render health bar if needed
-        if (this.combatSystem.showHealthBar && this.combatSystem.health < this.combatSystem.maxHealth) {
-            this.combatSystem.renderHealthBar(ctx, screenX, screenY);
-        }
+        this.combatSystem.render(ctx, screenX, screenY);
     }
 }

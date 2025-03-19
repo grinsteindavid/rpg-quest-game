@@ -23,10 +23,12 @@ export class HitAnimation extends Animation {
     }
     
     /**
-     * Starts the hit animation
+     * Updates the animation state
+     * @returns {boolean} True if animation is still active, false if it has ended
+     * @override
      */
-    showHitAnimation() {
-        this.start();
+    update() {
+        return super.update();
     }
 
     /**
