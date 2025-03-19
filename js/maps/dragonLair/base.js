@@ -64,11 +64,11 @@ export class DragonLairMap extends BaseMap {
 
         // Add a fog effect for the dragon lair atmosphere
         this.addEffect(new FogEffect({
-            opacity: 0.5,
+            opacity: 0.6,
             color: '#661111',  // Reddish fog
-            density: 3,
-            speed: 1.5,
-            cloudSize: 0.7
+            density: 8,
+            speed: 2,
+            cloudSize: 0.9
         }));
     }
     
