@@ -5,6 +5,7 @@ import { InputHandler } from './input.js';
 import { Dialog } from './UI/Dialog.js';
 import { Transition } from './UI/Transition.js';
 import { GameOver } from './UI/GameOver.js';
+import { IntroScene } from './UI/IntroScene.js';
 import { DepthsDarkForestMap } from './maps/darkForest/depths.js';
 
 /**
@@ -31,6 +32,8 @@ export class Game {
     _transition;
     /** @private @type {GameOver} Game over screen manager */
     _gameOver;
+    /** @private @type {IntroScene} Intro scene manager */
+    _introScene;
 
     /**
      * Creates a new Game instance.
@@ -46,12 +49,16 @@ export class Game {
         this._dialog = new Dialog();
         this._transition = new Transition();
         this._gameOver = new GameOver();
+        this._introScene = new IntroScene();
         
         // Flag to track if the page is currently visible/active
         this._isPageVisible = true;
         
         // Set up visibility change detection
         this._setupVisibilityChangeDetection();
+        
+        // Show intro scene first instead of starting game immediately
+        this._showIntroScreen();
         
         requestAnimationFrame(this._gameLoop.bind(this));
     }
@@ -183,7 +190,7 @@ export class Game {
      * @private
      */
     _update() {
-        // Don't update the game if dialog is active, transition is in progress, or game over is shown
+        // Don't update the game if dialog is active, transition is in progress, intro is showing, or game over is shown
         if (this._dialog.isActive()) {
             if (this._input.isPressed('e') || this._input.isPressed(' ')) {
                 this._dialog.hide();
@@ -192,7 +199,7 @@ export class Game {
         }
         
         // Pausing during transitions is handled at the individual component level
-        if (this._transition.isActive() || this._gameOver.isVisible()) {
+        if (this._transition.isActive() || this._gameOver.isVisible() || this._introScene.isVisible()) {
             return;
         }
         
@@ -231,18 +238,8 @@ export class Game {
         
         // Show the game over screen with a callback for restart
         this._gameOver.show(() => {
-            // Reset the player's health
-            this._player.resetHealth();
-            this._initializeMaps();
-            
-            // Reset player to starting position
-            const startPos = this._maps.hometown.getInitialPlayerPosition();
-            this._player.x = startPos.x;
-            this._player.y = startPos.y;
-            this._player.targetX = startPos.x;
-            this._player.targetY = startPos.y;
-            this._player.setMap(this._currentMap);
-            
+            // Use the restartGame method to restart
+            this.restartGame();
             console.log('Game restarted!');
         });
     }
@@ -276,6 +273,38 @@ export class Game {
      */
     showDialog(messages, onComplete = null) {
         this._dialog.startConversation(messages, onComplete);
+    }
+    
+    /**
+     * Shows the intro screen with menu options
+     * @private
+     */
+    _showIntroScreen() {
+        // Show intro scene with callback for starting game
+        this._introScene.show(() => {
+            // Start the actual game when START is clicked
+            console.log('Game started from intro screen!');
+        });
+    }
+    
+    /**
+     * Restarts the game and shows the intro screen
+     */
+    restartGame() {
+        // Reset the player's health
+        this._player.resetHealth();
+        this._initializeMaps();
+        
+        // Reset player to starting position
+        const startPos = this._maps.hometown.getInitialPlayerPosition();
+        this._player.x = startPos.x;
+        this._player.y = startPos.y;
+        this._player.targetX = startPos.x;
+        this._player.targetY = startPos.y;
+        this._player.setMap(this._currentMap);
+        
+        // Show the intro screen again
+        this._showIntroScreen();
     }
 }
 
