@@ -136,7 +136,7 @@ export class InputHandler {
             
             // Add touch styles
             this._addTouchStyles();
-        }, 500); // 500ms delay
+        }, 100); 
     }
     
     /**
@@ -357,6 +357,38 @@ export class InputHandler {
             } else if (Math.sin(angle) < -0.4) {
                 this.keys.add('ArrowUp');
             }
+        }
+    }
+    
+    /**
+     * Hides the touch controls (joystick and d-pad).
+     * Used when displaying intro screen or game over screen.
+     */
+    hideControls() {
+        if (!this.touchEnabled) return;
+        
+        if (this.joystick) {
+            this.joystick.style.display = 'none';
+        }
+        
+        if (this.dpad) {
+            this.dpad.style.display = 'none';
+        }
+    }
+    
+    /**
+     * Shows the touch controls (joystick and d-pad).
+     * Used when actual gameplay starts.
+     */
+    showControls() {
+        if (!this.touchEnabled) return;
+        
+        if (this.joystick) {
+            this.joystick.style.display = 'block';
+        }
+        
+        if (this.dpad) {
+            this.dpad.style.display = 'block';
         }
     }
     

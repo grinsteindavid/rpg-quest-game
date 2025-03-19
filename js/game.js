@@ -236,6 +236,11 @@ export class Game {
     handleGameOver() {
         console.log('Game Over triggered!');
         
+        // Hide controls when showing game over screen
+        if (this._input && this._input.hideControls) {
+            this._input.hideControls();
+        }
+        
         // Show the game over screen with a callback for restart
         this._gameOver.show(() => {
             // Use the restartGame method to restart
@@ -280,10 +285,20 @@ export class Game {
      * @private
      */
     _showIntroScreen() {
+        // Hide controls when showing intro screen
+        if (this._input && this._input.hideControls) {
+            this._input.hideControls();
+        }
+        
         // Show intro scene with callback for starting game
         this._introScene.show(() => {
             // Start the actual game when START is clicked
             console.log('Game started from intro screen!');
+            
+            // Show controls when game starts
+            if (this._input && this._input.showControls) {
+                this._input.showControls();
+            }
         });
     }
     
@@ -302,6 +317,11 @@ export class Game {
         this._player.targetX = startPos.x;
         this._player.targetY = startPos.y;
         this._player.setMap(this._currentMap);
+        
+        // Make sure controls are hidden (will be shown when game starts)
+        if (this._input && this._input.hideControls) {
+            this._input.hideControls();
+        }
         
         // Show the intro screen again
         this._showIntroScreen();
