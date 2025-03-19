@@ -82,23 +82,37 @@ export class IntroScene {
             });
         }
 
-        // Options button - show options panel
+        // Options button - hide menu and show only options panel in the center
         const optionsButton = document.getElementById('options-button');
         if (optionsButton) {
             optionsButton.addEventListener('click', () => {
                 document.getElementById('options-panel').classList.remove('hidden');
                 document.getElementById('credits-panel').classList.add('hidden');
                 document.querySelector('.intro-menu').classList.add('hidden');
+                
+                // Center the options panel
+                const optionsPanel = document.getElementById('options-panel');
+                optionsPanel.style.position = 'absolute';
+                optionsPanel.style.left = '50%';
+                optionsPanel.style.top = '50%';
+                optionsPanel.style.transform = 'translate(-50%, -50%)';
             });
         }
 
-        // Credits button - show credits panel
+        // Credits button - hide menu and show only credits panel in the center
         const creditsButton = document.getElementById('credits-button');
         if (creditsButton) {
             creditsButton.addEventListener('click', () => {
                 document.getElementById('credits-panel').classList.remove('hidden');
                 document.getElementById('options-panel').classList.add('hidden');
                 document.querySelector('.intro-menu').classList.add('hidden');
+                
+                // Center the credits panel
+                const creditsPanel = document.getElementById('credits-panel');
+                creditsPanel.style.position = 'absolute';
+                creditsPanel.style.left = '50%';
+                creditsPanel.style.top = '50%';
+                creditsPanel.style.transform = 'translate(-50%, -50%)';
             });
         }
 
@@ -108,6 +122,13 @@ export class IntroScene {
             backButton.addEventListener('click', () => {
                 document.getElementById('credits-panel').classList.add('hidden');
                 document.querySelector('.intro-menu').classList.remove('hidden');
+                
+                // Reset the credits panel positioning
+                const creditsPanel = document.getElementById('credits-panel');
+                creditsPanel.style.position = '';
+                creditsPanel.style.left = '';
+                creditsPanel.style.top = '';
+                creditsPanel.style.transform = '';
             });
         }
 
@@ -117,6 +138,13 @@ export class IntroScene {
             optionsBackButton.addEventListener('click', () => {
                 document.getElementById('options-panel').classList.add('hidden');
                 document.querySelector('.intro-menu').classList.remove('hidden');
+                
+                // Reset the options panel positioning
+                const optionsPanel = document.getElementById('options-panel');
+                optionsPanel.style.position = '';
+                optionsPanel.style.left = '';
+                optionsPanel.style.top = '';
+                optionsPanel.style.transform = '';
             });
         }
     }
@@ -136,6 +164,19 @@ export class IntroScene {
         document.querySelector('.intro-menu').classList.remove('hidden');
         document.getElementById('credits-panel').classList.add('hidden');
         document.getElementById('options-panel').classList.add('hidden');
+        
+        // Reset panel positioning
+        const creditsPanel = document.getElementById('credits-panel');
+        creditsPanel.style.position = '';
+        creditsPanel.style.left = '';
+        creditsPanel.style.top = '';
+        creditsPanel.style.transform = '';
+        
+        const optionsPanel = document.getElementById('options-panel');
+        optionsPanel.style.position = '';
+        optionsPanel.style.left = '';
+        optionsPanel.style.top = '';
+        optionsPanel.style.transform = '';
         
         // Add animation class for the torch flicker effect
         document.querySelectorAll('.intro-torch').forEach(torch => {
