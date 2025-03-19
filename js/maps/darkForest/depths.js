@@ -25,6 +25,13 @@ export class DepthsDarkForestMap extends BaseMap {
                     y: 1,         // Y coordinate for transition
                     destination: { x: 12, y: 3 }  // Updated: Move to hometown's south exit
                 },
+            ],
+            dragonLair: [ 
+                {
+                    x: [1], // Valid x coordinates for transition
+                    y: 3,         // Y coordinate for transition
+                    destination: { x: 1, y: 2 }  // Move to the dragon lair entrance
+                },
             ]
         };
         

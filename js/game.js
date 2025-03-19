@@ -7,6 +7,7 @@ import { Transition } from './UI/Transition.js';
 import { GameOver } from './UI/GameOver.js';
 import { IntroScene } from './UI/IntroScene.js';
 import { DepthsDarkForestMap } from './maps/darkForest/depths.js';
+import { DragonLairMap } from './maps/dragonLair/base.js';
 
 /**
  * Main game controller class that manages the game loop, maps, and player interactions.
@@ -81,7 +82,8 @@ export class Game {
         this._maps = {
             hometown: new HomeTownMap({ game: this }),
             darkForest: new ForestMap({ game: this }),
-            darkForestDepths: new DepthsDarkForestMap({ game: this })
+            darkForestDepths: new DepthsDarkForestMap({ game: this }),
+            dragonLair: new DragonLairMap({ game: this })
         };
 
         this._currentMap = this._maps.hometown;
