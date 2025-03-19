@@ -3,7 +3,9 @@
  * Handles attacks, damage, health management, and combat animations.
  */
 import { HealthBar } from '../UI/HealthBar.js';
-import { CombatAnimations } from '../animations/CombatAnimations.js';
+import { AnimationManager } from '../animations/AnimationManager.js';
+import { DamageNumberAnimation } from '../animations/DamageNumber.js';
+import { HitAnimation } from '../animations/HitAnimation.js';
 
 export class PlayerCombat {
     /** @type {number} Maximum health points of the player */
@@ -44,17 +46,12 @@ export class PlayerCombat {
             width: 32,
             height: 5,
             yOffset: -10,
-            colors: {
-                fill: 'rgba(68, 204, 68, 1)',
-                low: 'rgba(204, 68, 68, 1)',
-                critical: 'rgba(255, 0, 0, 1)'
-            }
         });
         
         // Initialize animations
-        this.animations = new CombatAnimations({
-            hitAnimationDuration: 500
-        });
+        this.animations = new AnimationManager(this.player);
+        this.animations.registerAnimationType('hit', HitAnimation);
+        this.animations.registerAnimationType('damage', DamageNumberAnimation);
     }
 
     /**
@@ -63,7 +60,7 @@ export class PlayerCombat {
      * @param {number} range - Range in pixels to detect monsters
      * @returns {boolean} - Whether any monsters were attacked
      */
-    attack(damage = 20, range = 32) {
+    attack(damage = 20, range = this.player.tileSize * 1) {
         // Check if attack is on cooldown
         const currentTime = Date.now();
         if (currentTime < this.nextAttackTime) {
@@ -100,11 +97,6 @@ export class PlayerCombat {
                 const isDefeated = npc.takeDamage(damage);
                 attackedAny = true;
                 
-                // Trigger hit animation on the monster
-                if (typeof npc.showHitAnimation === 'function') {
-                    npc.showHitAnimation();
-                }
-                
                 // If the NPC is defeated, mark it for removal
                 if (isDefeated) {
                     npc.isDefeated = true;
@@ -121,36 +113,6 @@ export class PlayerCombat {
     }
 
     /**
-     * Shows hit animation when player takes damage
-     */
-    showHitAnimation() {
-        this.animations.showHitAnimation();
-    }
-
-    /**
-     * Renders the hit animation effect on the player
-     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-     * @param {number} screenX - Screen X coordinate
-     * @param {number} screenY - Screen Y coordinate
-     * @param {number} width - Width of the player sprite
-     * @param {number} height - Height of the player sprite
-     */
-    renderHitAnimation(ctx, screenX, screenY, width, height) {
-        this.animations.renderHitAnimation(ctx, screenX, screenY, width, height, false);
-    }
-
-    /**
-     * Renders the health bar above the player
-     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-     * @param {number} screenX - Screen X coordinate
-     * @param {number} screenY - Screen Y coordinate
-     * @param {number} width - Width of the player sprite
-     */
-    renderHealthBar(ctx, screenX, screenY, width) {
-        this.healthBar.render(ctx, screenX, screenY, this.currentHealth, this.maxHealth, width);
-    }
-
-    /**
      * Takes damage and reduces the player's health
      * @param {number} amount - Amount of damage to take
      */
@@ -161,7 +123,8 @@ export class PlayerCombat {
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
         // Show hit animation
-        this.showHitAnimation();
+        this.animations.play('hit');
+        this.animations.play('damage', {value: amount});
         
         // Make player invulnerable for a short time
         this.isInvulnerable = true;
@@ -180,6 +143,9 @@ export class PlayerCombat {
     heal(amount) {
         this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
+
+        // Show heal animation
+        this.animations.play('heal', {value: amount});
     }
 
     /**
@@ -226,5 +192,21 @@ export class PlayerCombat {
      */
     shouldRenderPlayer() {
         return !this.isInvulnerable || Math.floor(Date.now() / 100) % 2 === 0;
+    }
+
+    /**
+     * Renders the health bar and animations above the entity
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     */
+    render(ctx, screenX, screenY) {
+        // Draw health bar if enabled and not at full health
+        if (this.showHealthBar && this.currentHealth < this.maxHealth) {
+            this.healthBar.render(ctx, screenX, screenY, this.currentHealth, this.maxHealth, this.player.width);
+        }
+
+        // Render animations
+        this.animations.render(ctx, screenX, screenY, this.player.width, this.player.height);
     }
 }
