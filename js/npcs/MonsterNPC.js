@@ -22,14 +22,6 @@ export class MonsterNPC extends BaseNPC {
         this.combatSystem.attackDamage = 10;
         this.combatSystem.attackRange = 40;
         this.combatSystem.attackCooldown = 1500;
-        this.combatSystem.healthBarHeight = 5; // Slightly taller for better visibility
-        this.combatSystem.healthBarYOffset = -12; // Position a bit higher above the monster
-        this.combatSystem.healthBarColors = {
-            background: 'rgba(40, 40, 40, 0.8)',
-            border: 'rgba(0, 0, 0, 0.8)',
-            fill: 'rgba(200, 0, 0, 0.9)', // Red for monsters
-            critical: 'rgba(255, 50, 50, 1.0)' // Bright red when critical
-        };
         
         // Monster conversation options
         this.conversations = [

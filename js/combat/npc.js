@@ -30,10 +30,13 @@ export class CombatSystem {
         this.healthBar = new HealthBar({
             width: 32,
             height: 4,
-            yOffset: -10,
+            yOffset: -23,
             colors: {
+                background: 'rgba(40, 40, 40, 0.8)',
+                border: 'rgba(0, 0, 0, 0.8)',
                 fill: 'rgba(200, 0, 0, 0.9)',
-                critical: 'rgba(255, 50, 50, 1.0)'
+                low: 'rgba(200, 200, 0, 0.8)',
+                critical:'rgba(255, 50, 50, 1.0)'
             }
         });
         

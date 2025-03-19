@@ -21,14 +21,13 @@ export class GhostNPC extends BaseNPC {
         
         // Configure combat system for ghost
         this.combatSystem.attackDamage = 25;
-        this.combatSystem.attackRange = 50; // Slightly longer range than monsters
+        this.combatSystem.attackRange = this.tileSize * 1; // Slightly longer range than monsters
         this.combatSystem.attackCooldown = 2000;
-        this.combatSystem.healthBarHeight = 4;
-        this.combatSystem.healthBarYOffset = -14;
-        this.combatSystem.healthBarColors = {
+        this.combatSystem.healthBar.colors = {
             background: 'rgba(40, 40, 40, 0.6)',
             border: 'rgba(0, 0, 0, 0.6)',
-            fill: 'rgba(120, 180, 240, 0.8)', // Ethereal blue for ghosts
+            fill: 'rgba(120, 180, 240, 0.8)', // Ethereal blue for ghosts,
+            low: 'rgba(200, 200, 0, 0.8)',
             critical: 'rgba(150, 230, 255, 1.0)' // Bright blue when critical
         };
         

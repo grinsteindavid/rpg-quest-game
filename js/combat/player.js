@@ -46,11 +46,6 @@ export class PlayerCombat {
             width: 32,
             height: 5,
             yOffset: -10,
-            colors: {
-                fill: 'rgba(68, 204, 68, 1)',
-                low: 'rgba(204, 68, 68, 1)',
-                critical: 'rgba(255, 0, 0, 1)'
-            }
         });
         
         // Initialize animations

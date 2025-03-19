@@ -15,7 +15,7 @@ export class HealthBar {
     constructor(config = {}) {
         this.width = config.width || 32;
         this.height = config.height || 4;
-        this.yOffset = config.yOffset || -10;
+        this.yOffset = config.yOffset || -20;
         
         // Default colors for health bar
         this.colors = {
