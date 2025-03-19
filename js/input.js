@@ -114,7 +114,8 @@ export class InputHandler {
         
         // Create D-pad container
         this.dpad = document.createElement('div');
-        this.dpad.className = 'dpad-container';
+        this.dpad.className = 'dpad-container controls-hidden';
+        this.dpad.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;';
         
         // Add a delay to ensure the DOM is ready
         setTimeout(() => {
@@ -200,7 +201,7 @@ export class InputHandler {
     _createJoystick() {
         // Create joystick container
         this.joystick = document.createElement('div');
-        this.joystick.className = 'joystick-container';
+        this.joystick.className = 'joystick-container controls-hidden';
         
         // Create joystick knob (the movable part)
         this.joystickKnob = document.createElement('div');
@@ -211,6 +212,9 @@ export class InputHandler {
         
         // Add joystick to document
         document.body.appendChild(this.joystick);
+        
+        // Initially hide the joystick with inline styles
+        this.joystick.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;';
         
         // Initialize joystick center position
         const joystickRect = this.joystick.getBoundingClientRect();
@@ -366,13 +370,32 @@ export class InputHandler {
      */
     hideControls() {
         if (!this.touchEnabled) return;
+        console.log('Hiding controls');
         
+        // Apply multiple techniques to ensure controls are hidden
         if (this.joystick) {
-            this.joystick.style.display = 'none';
+            this.joystick.classList.add('controls-hidden');
+            this.joystick.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important; z-index: -9999 !important;';
+            this.joystick.setAttribute('aria-hidden', 'true');
         }
         
         if (this.dpad) {
-            this.dpad.style.display = 'none';
+            this.dpad.classList.add('controls-hidden');
+            this.dpad.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; position: absolute !important; z-index: -9999 !important;';
+            this.dpad.setAttribute('aria-hidden', 'true');
+        }
+        
+        // Force a DOM repaint
+        if (this.joystick) this.joystick.offsetHeight;
+        if (this.dpad) this.dpad.offsetHeight;
+        
+        // Add a global style to further ensure controls are hidden
+        let hiddenStyle = document.getElementById('controls-hidden-style');
+        if (!hiddenStyle) {
+            hiddenStyle = document.createElement('style');
+            hiddenStyle.id = 'controls-hidden-style';
+            hiddenStyle.textContent = '.controls-hidden { display: none !important; visibility: hidden !important; opacity: 0 !important; }';
+            document.head.appendChild(hiddenStyle);
         }
     }
     
@@ -382,14 +405,23 @@ export class InputHandler {
      */
     showControls() {
         if (!this.touchEnabled) return;
+        console.log('Showing controls');
         
         if (this.joystick) {
-            this.joystick.style.display = 'block';
+            this.joystick.classList.remove('controls-hidden');
+            this.joystick.style.cssText = 'display: block !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: auto !important; position: fixed !important; z-index: 9999 !important;';
+            this.joystick.removeAttribute('aria-hidden');
         }
         
         if (this.dpad) {
-            this.dpad.style.display = 'block';
+            this.dpad.classList.remove('controls-hidden');
+            this.dpad.style.cssText = 'display: block !important; visibility: visible !important; opacity: 0.9 !important; pointer-events: auto !important; position: fixed !important; z-index: 9999 !important;';
+            this.dpad.removeAttribute('aria-hidden');
         }
+        
+        // Force a DOM repaint
+        if (this.joystick) this.joystick.offsetHeight;
+        if (this.dpad) this.dpad.offsetHeight;
     }
     
     _addTouchStyles() {
@@ -407,6 +439,14 @@ export class InputHandler {
                 display: block; /* Visible by default on mobile */
                 pointer-events: auto !important;
                 opacity: 0.9; /* Make slightly transparent */
+            }
+            
+            /* Hide elements with controls-hidden class */
+            .controls-hidden {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
             }
             
             .dpad-button {

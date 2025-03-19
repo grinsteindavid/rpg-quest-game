@@ -229,25 +229,6 @@ export class Game {
         this._player.render(this._ctx);
         this._ctx.restore();
     }
-    
-    /**
-     * Handles game over event when player dies
-     */
-    handleGameOver() {
-        console.log('Game Over triggered!');
-        
-        // Hide controls when showing game over screen
-        if (this._input && this._input.hideControls) {
-            this._input.hideControls();
-        }
-        
-        // Show the game over screen with a callback for restart
-        this._gameOver.show(() => {
-            // Use the restartGame method to restart
-            this.restartGame();
-            console.log('Game restarted!');
-        });
-    }
 
     /**
      * Main game loop that handles updates and rendering.
@@ -281,10 +262,11 @@ export class Game {
     }
     
     /**
-     * Shows the intro screen with menu options
+     * Shows the intro screen and hides game controls
      * @private
      */
     _showIntroScreen() {
+        console.log('Showing intro screen - hiding controls');
         // Hide controls when showing intro screen
         if (this._input && this._input.hideControls) {
             this._input.hideControls();
@@ -299,6 +281,25 @@ export class Game {
             if (this._input && this._input.showControls) {
                 this._input.showControls();
             }
+        });
+    }
+
+     /**
+     * Handles game over event when player dies
+     */
+     handleGameOver() {
+        console.log('Game Over triggered!');
+        
+        // Hide controls when showing game over screen
+        if (this._input && this._input.hideControls) {
+            this._input.hideControls();
+        }
+        
+        // Show the game over screen with a callback for restart
+        this._gameOver.show(() => {
+            // Use the restartGame method to restart
+            this.restartGame();
+            console.log('Game restarted!');
         });
     }
     
@@ -317,11 +318,6 @@ export class Game {
         this._player.targetX = startPos.x;
         this._player.targetY = startPos.y;
         this._player.setMap(this._currentMap);
-        
-        // Make sure controls are hidden (will be shown when game starts)
-        if (this._input && this._input.hideControls) {
-            this._input.hideControls();
-        }
         
         // Show the intro screen again
         this._showIntroScreen();
