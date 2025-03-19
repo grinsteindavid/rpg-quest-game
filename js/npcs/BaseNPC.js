@@ -64,6 +64,8 @@ export class BaseNPC {
         this.isInConversation = false;
         this.conversations = [["Hello!"]]; // Default conversation
         
+        // Combat properties
+        this.isDefeated = false;
         // Create and initialize combat system
         this.combatSystem = new CombatSystem(this);
         this.combatSystem.maxHealth = 100; // Default maximum health
@@ -107,7 +109,9 @@ export class BaseNPC {
     }
     
     // Optional callback for when NPC is defeated
-    onDefeat() {}
+    onDefeat() {
+        this.isDefeated = true;
+    }
     
     update(player, deltaTime, map) {
         // Update combat system

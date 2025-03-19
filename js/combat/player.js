@@ -94,13 +94,8 @@ export class PlayerCombat {
                 this.player._faceTowardsTarget(dx, dy);
                 
                 // Deal damage to the NPC
-                const isDefeated = npc.takeDamage(damage);
+                npc.takeDamage(damage);
                 attackedAny = true;
-                
-                // If the NPC is defeated, mark it for removal
-                if (isDefeated) {
-                    npc.isDefeated = true;
-                }
             }
         });
         

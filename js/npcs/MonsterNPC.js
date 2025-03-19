@@ -169,6 +169,7 @@ export class MonsterNPC extends BaseNPC {
      * Marks the monster for removal from the map
      */
     onDefeat() {
+        super.onDefeat();
         // Monster death animation or effects can be added here
         console.log(`${this.name} has been defeated!`);
         // Monster will be removed in the map's update method

@@ -202,6 +202,7 @@ export class GhostNPC extends BaseNPC {
      * Called when the ghost is defeated
      */
     onDefeat() {
+        super.onDefeat();
         console.log(`${this.name} has been banished!`);
         // Ghost will be removed in the map's update method
     }
