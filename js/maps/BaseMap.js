@@ -341,7 +341,7 @@ export class BaseMap {
      */
     update(player, deltaTime) {
         // Remove any defeated NPCs before updating
-        this.npcs = this.npcs.filter(npc => !npc.isDefeated);
+        this.removeDefeatedNPCs();
         
         // Update all remaining NPCs
         for (const npc of this.npcs) {
@@ -354,7 +354,14 @@ export class BaseMap {
         // Update all active effects
         this.updateEffects(deltaTime);
     }
-    
+
+    /**
+     * Removes all defeated NPCs from the map.
+     */
+    removeDefeatedNPCs() {
+        this.npcs = this.npcs.filter(npc => !npc.isDefeated);
+    }
+
     /**
      * Updates all active effects on the map.
      * @param {number} deltaTime - Time passed since last update in ms

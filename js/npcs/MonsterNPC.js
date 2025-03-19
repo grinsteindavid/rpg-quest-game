@@ -20,7 +20,7 @@ export class MonsterNPC extends BaseNPC {
         
         // Configure combat system for monster
         this.combatSystem.attackDamage = 10;
-        this.combatSystem.attackRange = 40;
+        this.combatSystem.attackRange = this.tileSize * 1;
         this.combatSystem.attackCooldown = 1500;
         
         // Monster conversation options
