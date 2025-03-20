@@ -327,11 +327,47 @@ export class BaseMap {
 
     /**
      * Finds the nearest NPC within interaction range of the player
+     * If multiple NPCs are at the same distance, prioritizes the one the player is facing
      * @param {Player} player - The player to check against
-     * @returns {BaseNPC|undefined} The nearby NPC or undefined if none found
+     * @returns {BaseNPC|undefined} The closest nearby NPC or undefined if none found
      */
     getNearbyNPC(player) {
-        return this.npcs.find(npc => npc.isNearby(player));
+        // Get all NPCs that are within interaction range
+        const nearbyNPCs = this.npcs.filter(npc => npc.isNearby(player));
+        
+        if (nearbyNPCs.length === 0) return undefined;
+        if (nearbyNPCs.length === 1) return nearbyNPCs[0];
+        
+        // Calculate distance and facing preference for each nearby NPC
+        const npcsWithDistance = nearbyNPCs.map(npc => {
+            const dx = npc.x - player.x;
+            const dy = npc.y - player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Determine if the player is facing this NPC
+            let isFacing = false;
+            switch (player.direction) {
+                case 'up': isFacing = dy < 0; break;
+                case 'down': isFacing = dy > 0; break;
+                case 'left': isFacing = dx < 0; break;
+                case 'right': isFacing = dx > 0; break;
+            }
+            
+            return { npc, distance, isFacing };
+        });
+        
+        // Sort by distance first, then by facing preference
+        npcsWithDistance.sort((a, b) => {
+            // If distances are nearly equal (within 1 pixel), prioritize by facing
+            if (Math.abs(a.distance - b.distance) < 1) {
+                return b.isFacing - a.isFacing; // true (1) comes before false (0)
+            }
+            // Otherwise sort by distance
+            return a.distance - b.distance;
+        });
+        
+        // Return the closest NPC (or the one the player is facing if distances are equal)
+        return npcsWithDistance[0].npc;
     }
     
     /**

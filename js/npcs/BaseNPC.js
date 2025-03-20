@@ -81,6 +81,9 @@ export class BaseNPC {
             speed: 0.1
         });
 
+        // Interaction properties
+        this.interactionRadius = 48; // 1.5 tiles (previously hardcoded)
+
         // Conversation properties
         this.conversationIndex = 0;
         this.isInConversation = false;
@@ -229,14 +232,19 @@ export class BaseNPC {
         return this.movementSystem.isValidMove(x, y, map, player);
     }
 
-    isNearby(player) {
-        // Calculate distance to player
-        const dx = this.x - player.x;
-        const dy = this.y - player.y;
+    /**
+     * Checks if a target entity is within this NPC's interaction radius
+     * @param {Object} target - The target entity with x,y properties
+     * @returns {boolean} True if the target is within interaction radius
+     */
+    isNearby(target) {
+        // Calculate distance to target
+        const dx = this.x - target.x;
+        const dy = this.y - target.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        // Consider nearby if within 48 pixels (1.5 tiles)
-        return distance < 48;
+        // Consider nearby if within interaction radius
+        return distance < this.interactionRadius;
     }
 
     // Calculate distance to player for aggro detection
@@ -373,10 +381,8 @@ export class BaseNPC {
         // Interaction radius
         ctx.strokeStyle = 'rgba(255, 0, 255, 0.3)';
         ctx.beginPath();
-        ctx.arc(screenX + 16, screenY + 16, 48, 0, Math.PI * 2);
+        ctx.arc(screenX + 16, screenY + 16, this.interactionRadius, 0, Math.PI * 2);
         ctx.stroke();
-        
-        // NPC name is already displayed elsewhere, so we don't need to show it in debug mode
         
         // Show current tile position
         const tileX = Math.floor(this.x / this.tileSize);
