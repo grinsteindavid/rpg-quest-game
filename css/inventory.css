@@ -111,6 +111,114 @@
     padding: 5px;
 }
 
+/* Player Stats Styles */
+.player-stats {
+    background-color: #1e1006;
+    padding: 10px 15px;
+    border-bottom: 1px solid #6B4226;
+    border-top: 1px solid #6B4226;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-hp-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.player-stat-label {
+    color: #BF9E7D;
+    font-weight: bold;
+    min-width: 40px;
+}
+
+.player-hp-bar {
+    background-color: #331a0e;
+    width: 120px;
+    height: 15px;
+    border: 1px solid #6B4226;
+    position: relative;
+}
+
+.player-hp-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #33cc33;
+    width: 100%;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+.player-hp-text {
+    color: #BF9E7D;
+    font-size: 14px;
+    min-width: 60px;
+    text-align: right;
+}
+
+.player-gold {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #ffcc00;
+    font-weight: bold;
+    padding: 5px 10px;
+    background-color: #331a0e;
+    border: 1px solid #6B4226;
+    border-radius: 4px;
+}
+
+.gold-icon {
+    font-size: 16px;
+}
+
+.gold-amount {
+    font-size: 16px;
+}
+
+/* Equipment Slots Styles */
+.player-equipment {
+    display: flex;
+    padding: 10px;
+    background-color: #1e1006;
+    border-bottom: 1px solid #6B4226;
+    justify-content: center;
+    gap: 20px;
+}
+
+.equipment-slot {
+    width: 60px;
+    height: 60px;
+    background-color: #331a0e;
+    border: 1px solid #6B4226;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.equipment-slot:hover {
+    border-color: #ffcc88;
+    box-shadow: 0 0 5px rgba(255, 204, 136, 0.5);
+}
+
+.equipment-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.equipment-label {
+    color: #BF9E7D;
+    font-size: 12px;
+    text-align: center;
+}
+
 /* Mobile optimization */
 @media (max-width: 768px) {
     .inventory-panel {
@@ -120,5 +228,31 @@
 
     .inventory-slots {
         grid-template-columns: repeat(6, 1fr);
+    }
+    
+    .player-hp-bar {
+        width: 80px;
+    }
+    
+    .player-hp-text {
+        min-width: 50px;
+        font-size: 12px;
+    }
+    
+    .player-equipment {
+        gap: 10px;
+    }
+    
+    .equipment-slot {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .equipment-icon {
+        font-size: 20px;
+    }
+    
+    .equipment-label {
+        font-size: 10px;
     }
 }

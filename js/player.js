@@ -48,6 +48,12 @@ export class Player {
     game = null;
     /** @type {PlayerCombat} The player's combat system */
     combat = null;
+    /** @type {number} Player's gold currency */
+    gold = 0;
+    /** @type {Object|null} Player's equipped weapon */
+    equippedWeapon = null;
+    /** @type {Object|null} Player's equipped armor */
+    equippedArmor = null;
 
     /**
      * Creates a new Player instance.
@@ -72,6 +78,9 @@ export class Player {
         // Set initial target position
         this.targetX = x;
         this.targetY = y;
+        
+        // Initialize with starting gold
+        this.gold = 100;
     }
 
     /**
@@ -155,6 +164,35 @@ export class Player {
     // _updateDirection method removed - now handled by movement.updateDirection
 
     // _faceTowardsTarget method removed - now handled by movement.faceTowardsTarget
+
+    /**
+     * Adds gold to the player's currency
+     * @param {number} amount - Amount of gold to add
+     */
+    addGold(amount) {
+        this.gold += amount;
+    }
+
+    /**
+     * Removes gold from the player's currency if the player has enough
+     * @param {number} amount - Amount of gold to remove
+     * @returns {boolean} Whether the transaction was successful
+     */
+    removeGold(amount) {
+        if (this.gold >= amount) {
+            this.gold -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Gets the current gold amount
+     * @returns {number} Current gold amount
+     */
+    getGold() {
+        return this.gold;
+    }
 
     /**
      * Checks if a move to the specified tile coordinates is valid.
