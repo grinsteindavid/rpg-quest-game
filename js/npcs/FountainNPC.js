@@ -21,7 +21,7 @@ export class FountainNPC extends BaseNPC {
         
         // Ensure width and height are properly set (standard NPC size)
         this.width = 32;
-        this.height = 50;
+        this.height = 32;
         
         // Set conversations for the fountain
         this.conversations = [
