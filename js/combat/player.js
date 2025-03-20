@@ -91,7 +91,7 @@ export class PlayerCombat {
             // Attack if in range
             if (distance <= range) {
                 // Update player's direction to face the monster
-                this.player._faceTowardsTarget(dx, dy);
+                this.player.movementSystem.faceTowardsTarget(dx, dy);
                 
                 // Deal damage to the NPC
                 npc.takeDamage(damage);
