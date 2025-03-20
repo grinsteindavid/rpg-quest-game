@@ -1,5 +1,6 @@
 import { SPRITES } from './colors.js';
 import { PlayerCombat } from './combat/player.js';
+import { Movement } from './Movement.js';
 
 /**
  * Represents a player character in the game world.
@@ -58,12 +59,19 @@ export class Player {
         this.x = x;
         /** @type {number} Current y position in pixels */
         this.y = y;
-        /** @type {number} Target x position for movement */
-        this.targetX = x;
-        /** @type {number} Target y position for movement */
-        this.targetY = y;
         // Initialize the combat system
         this.combat = new PlayerCombat(this);
+        
+        // Initialize the movement system
+        this.movement = new Movement(this, {
+            speed: this.speed,
+            tileSize: this.tileSize,
+            direction: this.direction
+        });
+        
+        // Set initial target position
+        this.targetX = x;
+        this.targetY = y;
     }
 
     /**
@@ -144,34 +152,9 @@ export class Player {
         return this.combat.attack(damage, range);
     }
 
-    /**
-     * Updates the player's facing direction based on movement input.
-     * @param {number} dx - Horizontal movement direction (-1, 0, or 1)
-     * @param {number} dy - Vertical movement direction (-1, 0, or 1)
-     * @private
-     */
-    _updateDirection(dx, dy) {
-        if (dx < 0) this.direction = 'left';
-        else if (dx > 0) this.direction = 'right';
-        else if (dy < 0) this.direction = 'up';
-        else if (dy > 0) this.direction = 'down';
-    }
+    // _updateDirection method removed - now handled by movement.updateDirection
 
-    /**
-     * Faces the player towards a target based on relative position
-     * @param {number} dx - X distance to target (target.x - player.x)
-     * @param {number} dy - Y distance to target (target.y - player.y)
-     */
-    _faceTowardsTarget(dx, dy) {
-        // Determine predominant direction (horizontal or vertical)
-        if (Math.abs(dx) > Math.abs(dy)) {
-            // Horizontal direction is predominant
-            this.direction = dx > 0 ? 'right' : 'left';
-        } else {
-            // Vertical direction is predominant
-            this.direction = dy > 0 ? 'down' : 'up';
-        }
-    }
+    // _faceTowardsTarget method removed - now handled by movement.faceTowardsTarget
 
     /**
      * Checks if a move to the specified tile coordinates is valid.
@@ -181,42 +164,8 @@ export class Player {
      * @private
      */
     _isValidMove(tileX, tileY) {
-        // First check if the tile is within map boundaries and is a walkable tile type
-        const isWalkableTile = tileX >= 0 && 
-               tileX < this.map.mapData[0].length &&
-               tileY >= 0 && 
-               tileY < this.map.mapData.length &&
-               this.map.isWalkableTile(this.map.mapData[tileY][tileX]);
-        
-        // If the tile is not walkable, return false immediately
-        if (!isWalkableTile) return false;
-        
-        // Check if any NPC with canMoveThruWalls=false is at this position
-        if (this.map.npcs) {
-            for (const npc of this.map.npcs) {
-                // Skip NPCs that can be walked through
-                if (npc.canMoveThruWalls) continue;
-                
-                // Handle both current position and target position (for moving NPCs)
-                // Check current position
-                const npcTileX = Math.floor(npc.x / this.tileSize);
-                const npcTileY = Math.floor(npc.y / this.tileSize);
-                
-                // Check target position (if NPC is moving)
-                const npcTargetTileX = npc.isMoving ? Math.floor(npc.targetX / this.tileSize) : npcTileX;
-                const npcTargetTileY = npc.isMoving ? Math.floor(npc.targetY / this.tileSize) : npcTileY;
-                
-                // Check if either current position or target position matches player's target
-                if ((npcTileX === tileX && npcTileY === tileY) || 
-                    (npcTargetTileX === tileX && npcTargetTileY === tileY)) {
-                    // NPC is blocking the way (either at current position or will be at target)
-                    return false;
-                }
-            }
-        }
-        
-        // No blocking NPCs found, position is valid
-        return true;
+        // Use the movement system to check validity
+        return this.movement.isValidTileMove(tileX, tileY, this.map, null);
     }
 
     /**
@@ -229,17 +178,19 @@ export class Player {
         if (!this.map || this.isMoving) return;
         if (dx !== 0 && dy !== 0) return;
 
-        this._updateDirection(dx, dy);
-
-        const newX = this.x + (dx * this.tileSize);
-        const newY = this.y + (dy * this.tileSize);
-        const tileX = Math.floor(newX / this.tileSize);
-        const tileY = Math.floor(newY / this.tileSize);
-
-        if (this._isValidMove(tileX, tileY)) {
-            this.targetX = tileX * this.tileSize;
-            this.targetY = tileY * this.tileSize;
+        // Calculate target tile position
+        const currentTileX = Math.floor(this.x / this.tileSize);
+        const currentTileY = Math.floor(this.y / this.tileSize);
+        const targetTileX = currentTileX + dx;
+        const targetTileY = currentTileY + dy;
+        
+        // Attempt to move using the movement system
+        const startedMoving = this.movement.attemptMove(targetTileX, targetTileY, dx, dy, this.map, null);
+        
+        if (startedMoving) {
             this.isMoving = true;
+            // Direction is automatically updated by the movement system
+            this.direction = this.movement.direction;
         }
     }
 
@@ -248,27 +199,17 @@ export class Player {
      * @private
      */
     _handleMovementAnimation() {
-        const dx = this.targetX - this.x;
-        const dy = this.targetY - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < this.speed) {
-            this._snapToTarget();
+        // Use movement system to handle animation
+        const reachedTarget = this.movement.handleMovementAnimation();
+        
+        if (reachedTarget) {
+            // Ensure player state is synchronized with movement system
+            this.isMoving = false;
             this._checkMapTransition();
-        } else {
-            this._moveTowardsTarget(dx, dy, distance);
         }
     }
 
-    /**
-     * Snaps the player to the target position when close enough.
-     * @private
-     */
-    _snapToTarget() {
-        this.x = this.targetX;
-        this.y = this.targetY;
-        this.isMoving = false;
-    }
+    // _snapToTarget method removed - now handled by movement.handleMovementAnimation
 
     /**
      * Checks if the player's current position triggers a map transition.
@@ -293,17 +234,7 @@ export class Player {
         }
     }
 
-    /**
-     * Moves the player towards their target position.
-     * @param {number} dx - Distance to target X
-     * @param {number} dy - Distance to target Y
-     * @param {number} distance - Total distance to target
-     * @private
-     */
-    _moveTowardsTarget(dx, dy, distance) {
-        this.x += (dx / distance) * this.speed;
-        this.y += (dy / distance) * this.speed;
-    }
+    // _moveTowardsTarget method removed - now handled by movement.handleMovementAnimation
 
     /**
      * Processes keyboard input for player movement.
@@ -344,6 +275,8 @@ export class Player {
 
         if (this.isMoving) {
             this._handleMovementAnimation();
+            // Make sure direction is synchronized with movement system
+            this.direction = this.movement.direction;
         } else if (!this.isTransitioning) { // Only process input if not in transition
             this._handleInput();
         }
