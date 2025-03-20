@@ -1,0 +1,104 @@
+/* Game Over Screen Styles */
+#game-over-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(51, 0, 0, 0.95); /* Deep dark red background like Diablo death screen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+}
+
+#game-over-container.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.game-over-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    padding: 40px;
+}
+
+.skull-icon {
+    font-size: 120px;
+    color: #ccaa66; /* Light gold */
+    margin-bottom: 10px;
+    animation: pulse 1.5s infinite alternate;
+    text-shadow: 0 0 10px #4d0000; /* Red glow around the skull */
+}
+
+.game-over-text {
+    font-family: 'Times New Roman', serif;
+    font-size: 48px;
+    font-weight: bold;
+    color: #8B0000; /* Dark blood red */
+    text-shadow: 0 0 10px #4d0000, 0 0 20px #330000;
+    margin: 20px 0 40px 0;
+    animation: drip 2s ease-in-out;
+    letter-spacing: 2px; /* Diablo has spaced out text */
+}
+
+.blood-splatter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: radial-gradient(circle, rgba(77, 0, 0, 0.8) 10%, rgba(51, 0, 0, 0.3) 70%);
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    z-index: -1;
+}
+
+.blood-splatter.animate {
+    opacity: 0.8;
+    animation: spread 1.5s ease-out;
+}
+
+#restart-button {
+    font-family: 'Times New Roman', serif;
+    background-color: #330000; /* Very dark red */
+    color: #ccaa66; /* Light gold */
+    border: 2px solid #8B6F4E; /* Medium brown */
+    padding: 10px 20px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulse 1.5s infinite alternate;
+    border-radius: 0; /* Sharp edges */
+}
+
+#restart-button:hover {
+    background-color: #4d0000; /* Deep blood red */
+    transform: scale(1.1);
+    box-shadow: 0 0 10px #4d0000; /* Red glow */
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); }
+}
+
+@keyframes drip {
+    0% { opacity: 0; transform: translateY(-20px); color: #4d0000; }
+    50% { opacity: 1; transform: translateY(0); color: #8B0000; }
+    60% { transform: translateY(-5px); }
+    70% { transform: translateY(0); color: #cc0000; }
+    80% { transform: translateY(-2px); }
+    100% { transform: translateY(0); color: #8B0000; }
+}
+
+@keyframes spread {
+    0% { transform: scale(0.2); opacity: 0; background-image: radial-gradient(circle, rgba(77, 0, 0, 0.9) 10%, rgba(51, 0, 0, 0.4) 70%); }
+    100% { transform: scale(1); opacity: 0.8; background-image: radial-gradient(circle, rgba(77, 0, 0, 0.8) 10%, rgba(51, 0, 0, 0.3) 70%); }
+}
