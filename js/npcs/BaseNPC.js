@@ -1,6 +1,7 @@
 import { SPRITES } from '../colors.js';
 import { CombatSystem } from '../combat/npc.js';
 import { Marker } from '../UI/Marker.js';
+import { Movement } from '../Movement.js';
 
 export class BaseNPC {
     constructor({ x, y, name, canMove = false, canMoveThruWalls = false, loot = [] }) {
@@ -31,6 +32,17 @@ export class BaseNPC {
 
         // Loot properties ( under development )
         this.loot = loot;
+        
+        // Initialize the movement system
+        this.movement = new Movement(this, {
+            speed: this.speed,
+            tileSize: this.tileSize,
+            direction: this.direction,
+            canMoveThruWalls: this.canMoveThruWalls,
+            moveRange: this.moveRange,
+            spawnTileX: this.spawnTileX,
+            spawnTileY: this.spawnTileY
+        });
         
         // Tile-by-tile movement properties
         this.isMoving = false; // Flag for when NPC is moving between tiles
@@ -187,89 +199,24 @@ export class BaseNPC {
         this.lastTargetY = null;
     }
     
-    // Updates direction property based on movement direction
-    _updateDirection() {
-        if (this.directionX > 0) {
-            this.direction = 'right';
-        } else if (this.directionX < 0) {
-            this.direction = 'left';
-        } else if (this.directionY > 0) {
-            this.direction = 'down';
-        } else if (this.directionY < 0) {
-            this.direction = 'up';
-        }
-    }
-    
     // Handles the movement animation between tiles
     _handleMovementAnimation() {
-        const dx = this.targetX - this.x;
-        const dy = this.targetY - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < this.speed) {
-            // Reached the target - snap to it
-            this.x = this.targetX;
-            this.y = this.targetY;
+        // Update internal isMoving status based on movement system result
+        const reachedTarget = this.movement.handleMovementAnimation();
+        if (reachedTarget) {
             this.isMoving = false;
-        } else {
-            // Continue moving towards target
-            this.x += (dx / distance) * this.speed;
-            this.y += (dy / distance) * this.speed;
         }
     }
     
     // Internal method to check if a tile move is valid
     _isValidTileMove(tileX, tileY, player, map) {
-        // Check map boundaries
-        if (tileX < 0 || tileY < 0 || tileX >= map.mapData[0].length || tileY >= map.mapData.length) {
-            return false;
-        }
-        
-        // Check if the tile is walkable
-        if (!this.canMoveThruWalls && !map.isWalkableTile(map.mapData[tileY][tileX])) {
-            return false;
-        }
-        
-        // Check distance from spawn (if moveRange is set and NPC isn't set to follow player)
-        if (this.moveRange > 0 && !this.followPlayer) {
-            const dx = Math.abs(tileX - this.spawnTileX);
-            const dy = Math.abs(tileY - this.spawnTileY);
-            if (dx > this.moveRange || dy > this.moveRange) {
-                return false;
-            }
-        }
-        
-        // Check for player collision if NPC can't move through walls and player is provided
-        if (!this.canMoveThruWalls && player !== null) {
-            // Get player's current tile position
-            const playerTileX = Math.floor(player.x / this.tileSize);
-            const playerTileY = Math.floor(player.y / this.tileSize);
-            
-            // Check if player is at the target tile position
-            if (playerTileX === tileX && playerTileY === tileY) {
-                return false;
-            }
-            
-            // Also check player's target position if they're moving
-            if (player.isMoving) {
-                const playerTargetTileX = Math.floor(player.targetX / this.tileSize);
-                const playerTargetTileY = Math.floor(player.targetY / this.tileSize);
-                
-                if (playerTargetTileX === tileX && playerTargetTileY === tileY) {
-                    return false;
-                }
-            }
-        }
-        
-        return true;
+        return this.movement.isValidTileMove(tileX, tileY, map, player);
     }
     
     // Check if the new position is valid (no collisions)
     // This is used during movement animation
     isValidMove(x, y, player, map) {
-        const tileX = Math.floor(x / this.tileSize);
-        const tileY = Math.floor(y / this.tileSize);
-        return this._isValidTileMove(tileX, tileY, player, map);
+        return this.movement.isValidMove(x, y, map, player);
     }
 
     isNearby(player) {
@@ -284,44 +231,16 @@ export class BaseNPC {
 
     // Calculate distance to player for aggro detection
     _getDistanceToPlayer(player) {
-        const dx = this.x - player.x;
-        const dy = this.y - player.y;
-        return Math.sqrt(dx * dx + dy * dy);
+        return this.movement.getDistanceTo(player.x, player.y);
     }
 
     // Calculate distance from spawn point
     _getDistanceFromSpawn() {
-        const dx = this.x - (this.spawnTileX * this.tileSize);
-        const dy = this.y - (this.spawnTileY * this.tileSize);
-        return Math.sqrt(dx * dx + dy * dy);
+        return this.movement.getDistanceFromSpawn();
     }
     
     // Make NPC follow a target (player)
     _followTarget(player, map) {
-        // Don't try to follow if already moving between tiles
-        if (this.isMoving) return;
-        
-        // Calculate distance to player in pixels
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-        const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
-        
-        // Only move if player is beyond the follow distance
-        if (distanceToPlayer <= this.followDistance) {
-            return;
-        }
-        
-        // Calculate direction to move towards player
-        const playerTileX = Math.floor(player.x / this.tileSize);
-        const playerTileY = Math.floor(player.y / this.tileSize);
-        const npcTileX = Math.floor(this.x / this.tileSize);
-        const npcTileY = Math.floor(this.y / this.tileSize);
-        
-        // Already at same tile as player
-        if (playerTileX === npcTileX && playerTileY === npcTileY) {
-            return;
-        }
-        
         // Update path change timer to avoid constant recalculation
         this.pathChangeTimer += 1;
         if (this.pathChangeTimer < this.pathChangeInterval / 4) {
@@ -329,110 +248,27 @@ export class BaseNPC {
         }
         this.pathChangeTimer = 0;
         
-        // Determine which direction to move (simple pathfinding)
-        let dirX = 0;
-        let dirY = 0;
+        // Attempt to follow the player using the movement system
+        const startedMoving = this.movement.followTarget(player, map, this.followDistance);
         
-        // Move horizontally or vertically based on largest distance
-        if (Math.abs(playerTileX - npcTileX) > Math.abs(playerTileY - npcTileY)) {
-            // Move horizontally
-            dirX = playerTileX > npcTileX ? 1 : -1;
-        } else {
-            // Move vertically
-            dirY = playerTileY > npcTileY ? 1 : -1;
-        }
-        
-        // Try to move in the chosen direction
-        const newTileX = npcTileX + dirX;
-        const newTileY = npcTileY + dirY;
-        
-        if (this._isValidTileMove(newTileX, newTileY, player, map)) {
-            this.targetX = newTileX * this.tileSize;
-            this.targetY = newTileY * this.tileSize;
-            this.directionX = dirX;
-            this.directionY = dirY;
+        // Update NPC state if movement started
+        if (startedMoving) {
             this.isMoving = true;
-            this._updateDirection();
-        } else {
-            // If primary direction is blocked, try the other direction
-            if (dirX !== 0) {
-                dirX = 0;
-                dirY = playerTileY > npcTileY ? 1 : -1;
-            } else {
-                dirY = 0;
-                dirX = playerTileX > npcTileX ? 1 : -1;
-            }
-            
-            const altTileX = npcTileX + dirX;
-            const altTileY = npcTileY + dirY;
-            
-            if (this._isValidTileMove(altTileX, altTileY, player, map)) {
-                this.targetX = altTileX * this.tileSize;
-                this.targetY = altTileY * this.tileSize;
-                this.directionX = dirX;
-                this.directionY = dirY;
-                this.isMoving = true;
-                this._updateDirection();
-            }
+            // Direction is automatically updated by the movement system
+            this.direction = this.movement.direction;
         }
     }
     
     // Make NPC return to spawn position
     _returnToSpawn(map) {
-        const currentTileX = Math.floor(this.x / this.tileSize);
-        const currentTileY = Math.floor(this.y / this.tileSize);
+        // Attempt to return to spawn using the movement system
+        const startedMoving = this.movement.returnToSpawn(map);
         
-        // Already at spawn position
-        if (currentTileX === this.spawnTileX && currentTileY === this.spawnTileY) {
-            return;
-        }
-        
-        // Determine direction to move towards spawn
-        let dirX = 0;
-        let dirY = 0;
-        
-        // Move horizontally or vertically based on largest distance
-        if (Math.abs(this.spawnTileX - currentTileX) > Math.abs(this.spawnTileY - currentTileY)) {
-            // Move horizontally
-            dirX = this.spawnTileX > currentTileX ? 1 : -1;
-        } else {
-            // Move vertically
-            dirY = this.spawnTileY > currentTileY ? 1 : -1;
-        }
-        
-        // Try to move in the chosen direction
-        const newTileX = currentTileX + dirX;
-        const newTileY = currentTileY + dirY;
-        
-        // Use null as player since we don't need to check player collision
-        if (this._isValidTileMove(newTileX, newTileY, null, map)) {
-            this.targetX = newTileX * this.tileSize;
-            this.targetY = newTileY * this.tileSize;
-            this.directionX = dirX;
-            this.directionY = dirY;
+        // Update NPC state if movement started
+        if (startedMoving) {
             this.isMoving = true;
-            this._updateDirection();
-        } else {
-            // If primary direction is blocked, try the other direction
-            if (dirX !== 0) {
-                dirX = 0;
-                dirY = this.spawnTileY > currentTileY ? 1 : -1;
-            } else {
-                dirY = 0;
-                dirX = this.spawnTileX > currentTileX ? 1 : -1;
-            }
-            
-            const altTileX = currentTileX + dirX;
-            const altTileY = currentTileY + dirY;
-            
-            if (this._isValidTileMove(altTileX, altTileY, null, map)) {
-                this.targetX = altTileX * this.tileSize;
-                this.targetY = altTileY * this.tileSize;
-                this.directionX = dirX;
-                this.directionY = dirY;
-                this.isMoving = true;
-                this._updateDirection();
-            }   
+            // Direction is automatically updated by the movement system
+            this.direction = this.movement.direction;
         }
     }
 
@@ -547,49 +383,33 @@ export class BaseNPC {
         // Already moving or can't move
         if (this.isMoving || !this.canMove) return;
         
-        // Get current tile position
-        const currentTileX = Math.floor(this.x / this.tileSize);
-        const currentTileY = Math.floor(this.y / this.tileSize);
+        // Use movement system to move randomly
+        const startedMoving = this.movement.moveRandomly(map, player);
         
-        // Choose a random cardinal direction (up, down, left, right)
-        const direction = Math.floor(Math.random() * 4);
-        let targetTileX = currentTileX;
-        let targetTileY = currentTileY;
-        
-        switch (direction) {
-            case 0: // Up
-                targetTileY -= 1;
-                break;
-            case 1: // Right
-                targetTileX += 1;
-                break;
-            case 2: // Down
-                targetTileY += 1;
-                break;
-            case 3: // Left
-                targetTileX -= 1;
-                break;
+        // Update NPC state if movement started
+        if (startedMoving) {
+            this.isMoving = true;
+            // Direction is automatically updated by the movement system
+            this.direction = this.movement.direction;
         }
-        
-        this._attemptMove(targetTileX, targetTileY, player, map);
     }
     
     // Helper method to attempt movement to a specific tile
     _attemptMove(tileX, tileY, player, map) {
-        if (this._isValidTileMove(tileX, tileY, player, map)) {
-            // Set target position in pixels
-            this.targetX = tileX * this.tileSize;
-            this.targetY = tileY * this.tileSize;
-            
-            // Set movement direction for animation
-            this.directionX = tileX - Math.floor(this.x / this.tileSize);
-            this.directionY = tileY - Math.floor(this.y / this.tileSize);
-            
-            // Update character direction based on movement
-            this._updateDirection();
-            
-            // Start moving
+        // Calculate direction for movement
+        const currentTileX = Math.floor(this.x / this.tileSize);
+        const currentTileY = Math.floor(this.y / this.tileSize);
+        const dirX = tileX - currentTileX;
+        const dirY = tileY - currentTileY;
+        
+        // Use movement system to attempt the move
+        const startedMoving = this.movement.attemptMove(tileX, tileY, dirX, dirY, map, player);
+        
+        // Update NPC state if movement started
+        if (startedMoving) {
             this.isMoving = true;
+            // Direction is automatically updated by the movement system
+            this.direction = this.movement.direction;
         }
     }
     
