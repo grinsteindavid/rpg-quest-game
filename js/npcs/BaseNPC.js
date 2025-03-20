@@ -55,6 +55,7 @@ export class BaseNPC {
         this.isAggressive = false; // Whether the NPC is currently aggressive (can change dynamically)
         this.canBeAggressive = false; // Whether the NPC can become aggressive when player is in range
         this.followPlayer = false; // Whether the NPC should always follow the player when in range (friendly or not)
+        this.enforceSpawnArea = false; // Whether NPC should still respect spawn area limits when following player
         this.aggroRange = this.tileSize * 3; // 3 tiles detection range (can be overridden by subclasses)
         this.followDistance = this.tileSize; // How close the NPC tries to get to target (1 tile)
         

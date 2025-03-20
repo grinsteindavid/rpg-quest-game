@@ -122,7 +122,9 @@ export class MovementSystem {
         }
         
         // Check distance from spawn (if moveRange is set)
-        if (this.moveRange > 0 && this.spawnTileX !== undefined && this.spawnTileY !== undefined) {
+        // Skip this check for NPCs that are following a player unless explictly requested via enforceSpawnArea
+        if (this.moveRange > 0 && this.spawnTileX !== undefined && this.spawnTileY !== undefined && 
+            (!this.entity.followPlayer || this.entity.enforceSpawnArea)) {
             const dx = Math.abs(tileX - this.spawnTileX);
             const dy = Math.abs(tileY - this.spawnTileY);
             if (dx > this.moveRange || dy > this.moveRange) {
