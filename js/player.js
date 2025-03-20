@@ -382,7 +382,7 @@ export class Player {
         const screenY = this.y + mapOffset.y;
 
         // Flash player when invulnerable using combat system logic
-        if (this.combat.shouldRenderPlayer()) {
+        if (this.combat.shouldRenderEntity()) {
             this._renderPlayer(ctx, screenX, screenY);
             this.combat.render(ctx, screenX, screenY);
         }

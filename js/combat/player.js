@@ -1,83 +1,56 @@
 /**
  * Represents the player combat system in the game world.
  * Handles attacks, damage, health management, and combat animations.
+ * Extends BaseCombat for shared functionality.
  */
-import { HealthBar } from '../UI/HealthBar.js';
-import { AnimationManager } from '../animations/AnimationManager.js';
-import { DamageNumberAnimation } from '../animations/DamageNumber.js';
-import { HitAnimation } from '../animations/HitAnimation.js';
-import { BuffAnimation } from '../animations/BuffAnimation.js';
+import { BaseCombat } from './BaseCombat.js';
 
-export class PlayerCombat {
-    /** @type {number} Maximum health points of the player */
-    maxHealth = 100;
-    /** @type {number} Current health points of the player */
-    currentHealth = 100;
+export class PlayerCombat extends BaseCombat {
     /** @type {boolean} Whether the player is currently invulnerable */
     isInvulnerable = false;
     /** @type {number} Duration of invulnerability in milliseconds after taking damage */
     invulnerabilityDuration = 1000;
     /** @type {number} Timestamp when invulnerability will end */
     invulnerabilityEndTime = 0;
-    /** @type {boolean} Whether to show the health bar */
-    showHealthBar = true;
-    /** @type {number} Time in milliseconds to show health bar after taking damage */
-    healthBarDisplayTime = 3000;
-    /** @type {number} Timestamp when health bar should hide */
-    healthBarHideTime = 0;
-    /** @type {number} Cooldown duration between attacks in milliseconds */
-    attackCooldown = 1000;
-    /** @type {number} Timestamp when player can attack again */
-    nextAttackTime = 0;
-
-    /** @type {Object} Reference to the player object */
-    player = null;
 
     /**
      * Creates a new PlayerCombat instance.
      * @param {Object} player - Reference to the player object
      */
     constructor(player) {
-        this.player = player;
-        this.currentHealth = this.maxHealth;
-        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
-        
-        // Initialize UI components
-        this.healthBar = new HealthBar({
-            width: 32,
-            height: 5,
-            yOffset: -10,
+        super(player, {
+            maxHealth: 100,
+            attackDamage: 20,
+            attackRange: player.tileSize * 1,
+            attackCooldown: 1000,
+            healthBarWidth: 32,
+            healthBarHeight: 5,
+            healthBarYOffset: -10
         });
-        
-        // Initialize animations
-        this.animations = new AnimationManager(this.player);
-        this.animations.registerAnimationType('hit', HitAnimation);
-        this.animations.registerAnimationType('damage', DamageNumberAnimation);
-        this.animations.registerAnimationType('buff', BuffAnimation);
     }
 
     /**
      * Attack nearby aggressive monsters.
-     * @param {number} damage - Amount of damage to deal
-     * @param {number} range - Range in pixels to detect monsters
+     * @param {number} damage - Amount of damage to deal (defaults to this.attackDamage)
+     * @param {number} range - Range in pixels to detect monsters (defaults to this.attackRange)
      * @returns {boolean} - Whether any monsters were attacked
      */
-    attack(damage = 20, range = this.player.tileSize * 1) {
+    attack(damage = this.attackDamage, range = this.attackRange) {
         // Check if attack is on cooldown
         const currentTime = Date.now();
         if (currentTime < this.nextAttackTime) {
             return false; // Still on cooldown
         }
         
-        if (!this.player.map || !this.player.map.npcs) return false;
+        if (!this.entity.map || !this.entity.map.npcs) return false;
         
         let attackedAny = false;
         
         // Get player center position
-        const playerCenterX = this.player.x + (this.player.width / 2);
-        const playerCenterY = this.player.y + (this.player.height / 2);
+        const playerCenterX = this.entity.x + (this.entity.width / 2);
+        const playerCenterY = this.entity.y + (this.entity.height / 2);
         
-        this.player.map.npcs.forEach(npc => {
+        this.entity.map.npcs.forEach(npc => {
             // Check if the NPC is a monster and can be aggressive
             if (!npc.canBeAggressive) return;
             
@@ -93,7 +66,7 @@ export class PlayerCombat {
             // Attack if in range
             if (distance <= range) {
                 // Update player's direction to face the monster
-                this.player.movementSystem.faceTowardsTarget(dx, dy);
+                this._faceTowardsTarget(dx, dy);
                 
                 // Deal damage to the NPC
                 npc.takeDamage(damage);
@@ -116,21 +89,12 @@ export class PlayerCombat {
     takeDamage(amount) {
         if (this.isInvulnerable) return;
         
-        this.currentHealth = Math.max(0, this.currentHealth - amount);
-        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
-        
-        // Show hit animation
-        this.animations.play('hit');
-        this.animations.play('damage', {value: amount});
+        // Call the base class implementation
+        super.takeDamage(amount);
         
         // Make player invulnerable for a short time
         this.isInvulnerable = true;
         this.invulnerabilityEndTime = Date.now() + this.invulnerabilityDuration;
-        
-        // Game over if health reaches zero
-        if (this.currentHealth <= 0) {
-            this._handleGameOver();
-        }
     }
 
     /**
@@ -138,32 +102,28 @@ export class PlayerCombat {
      * @param {number} amount - Amount of health to restore
      */
     heal(amount) {
-        this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
-        this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
-
-        // Show heal animation
-        this.animations.play('heal', {value: amount});
+        super.heal(amount);
     }
 
     /**
      * Resets the player's health to maximum
      */
     resetHealth() {
-        this.currentHealth = this.maxHealth;
+        super.resetHealth();
         this.isInvulnerable = false;
     }
 
     /**
      * Handles game over when player health reaches zero
-     * @private
+     * @protected
      */
-    _handleGameOver() {
+    _handleDefeat() {
         console.log('Game Over!'); 
         
         // Don't reset health immediately - let the game over handler handle it
         // Call the game's handleGameOver method if available
-        if (this.player.game && typeof this.player.game.handleGameOver === 'function') {
-            this.player.game.handleGameOver();
+        if (this.entity.game && typeof this.entity.game.handleGameOver === 'function') {
+            this.entity.game.handleGameOver();
         }
     }
 
@@ -171,15 +131,14 @@ export class PlayerCombat {
      * Updates the combat system state each frame.
      */
     update() {
+        super.update();
+        
         // Update invulnerability status
         if (this.isInvulnerable && Date.now() > this.invulnerabilityEndTime) {
             this.isInvulnerable = false;
         }
         
-        // Update animations
-        this.animations.update();
-        
-        // Update health bar visibility
+        // Update health bar visibility for player-specific logic
         this.showHealthBar = this.currentHealth < this.maxHealth || Date.now() < this.healthBarHideTime;
     }
 
@@ -187,7 +146,7 @@ export class PlayerCombat {
      * Gets whether the player should be currently displayed (handles invulnerability flashing)
      * @returns {boolean} - Whether the player should be visible
      */
-    shouldRenderPlayer() {
+    shouldRenderEntity() {
         return !this.isInvulnerable || Math.floor(Date.now() / 100) % 2 === 0;
     }
 
@@ -198,12 +157,12 @@ export class PlayerCombat {
      * @param {number} screenY - Screen Y coordinate
      */
     render(ctx, screenX, screenY) {
-        // Draw health bar if enabled and not at full health
+        // Override the parent render to use entity's properties
         if (this.showHealthBar && this.currentHealth < this.maxHealth) {
-            this.healthBar.render(ctx, screenX, screenY, this.currentHealth, this.maxHealth, this.player.width);
+            this.healthBar.render(ctx, screenX, screenY, this.currentHealth, this.maxHealth, this.entity.width);
         }
 
         // Render animations
-        this.animations.render(ctx, screenX, screenY, this.player.width, this.player.height);
+        this.animations.render(ctx, screenX, screenY, this.entity.width, this.entity.height);
     }
 }

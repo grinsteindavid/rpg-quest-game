@@ -1,37 +1,24 @@
 /**
- * CombatSystem.js
- * Handles all combat-related functionality for NPCs and potentially other game entities
+ * NpcCombat.js
+ * Handles all combat-related functionality for NPCs, extending the BaseCombat system
  */
-import { HealthBar } from '../UI/HealthBar.js';
-import { AnimationManager } from '../animations/AnimationManager.js';
-import { DamageNumberAnimation } from '../animations/DamageNumber.js';
-import { HitAnimation } from '../animations/HitAnimation.js';
+import { BaseCombat } from './BaseCombat.js';
 
-export class CombatSystem {
+export class CombatSystem extends BaseCombat {
+    /**
+     * Creates a new NPC combat system
+     * @param {Object} entity - The NPC entity
+     */
     constructor(entity) {
-        // Reference to the entity (NPC) that owns this combat system
-        this.entity = entity;
-        
-        // Health properties
-        this.maxHealth = 100; // Default maximum health
-        this.health = this.maxHealth; // Current health
-        this.showHealthBar = true; // Whether to display the health bar
-        this.isDamaged = false; // Flag for damage visual effect
-        this.damageEffectDuration = 20; // Frames to show damage effect
-        this.damageEffectTimer = 0; // Timer for damage effect
-        
-        // Attack properties
-        this.attackDamage = 10;
-        this.attackRange = 40; // Slightly larger than player's attack range
-        this.attackCooldown = 1500; // Milliseconds between attacks
-        this.nextAttackTime = 0; // Timestamp when the entity can attack again
-        
-        // Initialize UI components
-        this.healthBar = new HealthBar({
-            width: 32,
-            height: 4,
-            yOffset: -23,
-            colors: {
+        super(entity, {
+            maxHealth: 100,
+            attackDamage: 10,
+            attackRange: 40,  // Slightly larger than default player's attack range
+            attackCooldown: 1500, // Milliseconds between attacks
+            healthBarWidth: 32,
+            healthBarHeight: 4,
+            healthBarYOffset: -23,
+            healthBarColors: {
                 background: 'rgba(40, 40, 40, 0.8)',
                 border: 'rgba(0, 0, 0, 0.8)',
                 fill: 'rgba(200, 0, 0, 0.9)',
@@ -39,11 +26,6 @@ export class CombatSystem {
                 critical:'rgba(255, 50, 50, 1.0)'
             }
         });
-        
-        // Initialize animations
-        this.animations = new AnimationManager(this.entity);
-        this.animations.registerAnimationType('hit', HitAnimation);
-        this.animations.registerAnimationType('damage', DamageNumberAnimation);
     }
     
     /**
@@ -51,16 +33,8 @@ export class CombatSystem {
      * @param {Object} player - The player object
      */
     update(player) {
-        // Update damage effect timer if active
-        if (this.isDamaged) {
-            this.damageEffectTimer--;
-            if (this.damageEffectTimer <= 0) {
-                this.isDamaged = false;
-            }
-        }
-        
-        // Update animations
-        this.animations.update();
+        // Call base class update
+        super.update();
         
         // Get current time for cooldown checks
         const currentTime = Date.now();
@@ -80,13 +54,7 @@ export class CombatSystem {
      * @param {number} screenY - Screen Y coordinate
      */
     render(ctx, screenX, screenY) {
-        // Draw health bar if enabled and not at full health
-        if (this.showHealthBar && this.health < this.maxHealth) {
-            this.healthBar.render(ctx, screenX, screenY, this.health, this.maxHealth, this.entity.width);
-        }
-
-        // Render animations
-        this.animations.render(ctx, screenX, screenY, this.entity.width, this.entity.height);
+        super.render(ctx, screenX, screenY);
     }
     
     /**
@@ -95,17 +63,7 @@ export class CombatSystem {
      * @returns {boolean} - Whether player is in attack range
      */
     isPlayerInAttackRange(player) {
-        // Calculate distance between entity and player
-        const entityCenterX = this.entity.x + (this.entity.width / 2);
-        const entityCenterY = this.entity.y + (this.entity.height / 2);
-        const playerCenterX = player.x + (player.width / 2);
-        const playerCenterY = player.y + (player.height / 2);
-        
-        const dx = playerCenterX - entityCenterX;
-        const dy = playerCenterY - entityCenterY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        return distance <= this.attackRange;
+        return this.isTargetInAttackRange(player);
     }
     
     /**
@@ -116,7 +74,12 @@ export class CombatSystem {
     attackPlayer(player) {
         const currentTime = Date.now();
         
-        // Calculate distance between entity and player
+        // Check if cooldown has expired
+        if (currentTime < this.nextAttackTime) {
+            return false;
+        }
+        
+        // Calculate distance between entity and player for direction facing
         const entityCenterX = this.entity.x + (this.entity.width / 2);
         const entityCenterY = this.entity.y + (this.entity.height / 2);
         const playerCenterX = player.x + (player.width / 2);
@@ -142,22 +105,7 @@ export class CombatSystem {
         return false;
     }
     
-    /**
-     * Faces the entity towards a target based on relative position
-     * @param {number} dx - X distance to target (target.x - entity.x)
-     * @param {number} dy - Y distance to target (target.y - entity.y)
-     * @private
-     */
-    _faceTowardsTarget(dx, dy) {
-        // Determine predominant direction (horizontal or vertical)
-        if (Math.abs(dx) > Math.abs(dy)) {
-            // Horizontal direction is predominant
-            this.entity.direction = dx > 0 ? 'right' : 'left';
-        } else {
-            // Vertical direction is predominant
-            this.entity.direction = dy > 0 ? 'down' : 'up';
-        }
-    }
+    // _faceTowardsTarget is now provided by BaseCombat
     
     /**
      * Take damage from player or other sources
@@ -165,20 +113,8 @@ export class CombatSystem {
      * @returns {boolean} - Whether the entity was defeated
      */
     takeDamage(amount) {
-        this.health = Math.max(0, this.health - amount);
-        this.isDamaged = true;
-        this.damageEffectTimer = this.damageEffectDuration;
-        
-        // Always trigger the hit animation when taking damage
-        this.animations.play('hit');
-        this.animations.play('damage', {value: amount});
-        
-        // Check if entity is defeated
-        if (this.health <= 0) {
-            this.onDefeat();
-        }
-        
-        return this.health <= 0; // Return true if defeated
+        const defeated = super.takeDamage(amount);
+        return defeated;
     }
     
     /**
@@ -186,23 +122,22 @@ export class CombatSystem {
      * @param {number} amount - Amount to heal
      */
     heal(amount) {
-        this.health = Math.min(this.maxHealth, this.health + amount);
-        this.animations.play('heal', {value: amount});
+        super.heal(amount);
     }
     
     /**
      * Reset health to max
      */
     resetHealth() {
-        this.health = this.maxHealth;
-        this.isDamaged = false;
+        super.resetHealth();
     }
     
     /**
      * Called when the entity is defeated (health <= 0)
-     * Calls the entity's onDefeat method if it exists
+     * Overrides the BaseCombat._handleDefeat method
+     * @protected
      */
-    onDefeat() {
+    _handleDefeat() {
         // Call the entity's onDefeat method if it exists
         if (typeof this.entity.onDefeat === 'function') {
             this.entity.onDefeat();
