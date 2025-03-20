@@ -1,0 +1,124 @@
+/* Inventory UI Styles - Diablo 2 inspired */
+#inventory-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1800;
+    background-color: rgba(0, 0, 0, 0.7);
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#inventory-container.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.inventory-panel {
+    background-color: rgba(20, 10, 5, 0.95);
+    border: 3px solid #6B4226;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    width: 60%;
+    max-width: 600px;
+    height: 70%;
+    max-height: 500px;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+}
+
+.inventory-header {
+    background-color: #2a1a0a;
+    border-bottom: 2px solid #6B4226;
+    padding: 8px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inventory-title {
+    font-family: 'Times New Roman', serif;
+    color: #BF9E7D;
+    font-size: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.inventory-close {
+    font-family: 'Times New Roman', serif;
+    background-color: transparent;
+    color: #BF9E7D;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.inventory-close:hover {
+    color: #ffcc88;
+}
+
+.inventory-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+.inventory-grid {
+    flex: 1;
+    padding: 15px;
+    overflow: auto;
+    position: relative;
+}
+
+.inventory-slots {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-gap: 4px;
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+.inventory-slot {
+    background-color: #1e1006;
+    border: 1px solid #6B4226;
+    aspect-ratio: 1;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.inventory-slot.selected {
+    border: 1px solid #ffcc88;
+    box-shadow: 0 0 5px rgba(255, 204, 136, 0.5);
+}
+
+.inventory-nav-hint {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #BF9E7D;
+    font-family: 'Times New Roman', serif;
+    font-size: 14px;
+    padding: 5px;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    .inventory-panel {
+        width: 90%;
+        height: 80%;
+    }
+
+    .inventory-slots {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}

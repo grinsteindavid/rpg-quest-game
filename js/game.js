@@ -6,6 +6,8 @@ import { Dialog } from './UI/Dialog.js';
 import { Transition } from './UI/Transition.js';
 import { GameOver } from './UI/GameOver.js';
 import { IntroScene } from './UI/IntroScene.js';
+import { MenuUI } from './UI/MenuUI.js';
+import { InventoryUI } from './UI/InventoryUI.js';
 import { DepthsDarkForestMap } from './maps/darkForest/depths.js';
 import { DragonLairMap } from './maps/dragonLair/base.js';
 
@@ -35,6 +37,10 @@ export class Game {
     _gameOver;
     /** @private @type {IntroScene} Intro scene manager */
     _introScene;
+    /** @private @type {MenuUI} Menu UI manager */
+    _menuUI;
+    /** @private @type {InventoryUI} Inventory UI manager */
+    _inventoryUI;
 
     /**
      * Creates a new Game instance.
@@ -46,11 +52,13 @@ export class Game {
         this._initializeCanvas();
         this._initializeMaps();
         this._initializeGameComponents();
-        this._setupDebugMode();
         this._dialog = new Dialog();
         this._transition = new Transition();
         this._gameOver = new GameOver();
         this._introScene = new IntroScene();
+        this._menuUI = new MenuUI();
+        this._inventoryUI = new InventoryUI();
+        this._setupDebugMode();
         
         // Flag to track if the page is currently visible/active
         this._isPageVisible = true;
@@ -149,12 +157,18 @@ export class Game {
      * @private
      */
     _setupDebugMode() {
-        const debugButton = document.getElementById('debug-toggle');
-        debugButton.addEventListener('click', () => {
-            this._debug = !this._debug;
-            debugButton.classList.toggle('active');
+        // Setup menu UI callbacks
+        this._menuUI.setDebugToggleCallback((enabled) => {
+            this._debug = enabled;
             this._updateDebugState();
         });
+        
+        this._menuUI.setInventoryOpenCallback(() => {
+            this._inventoryUI.show();
+        });
+        
+        // Initial state
+        this._menuUI.updateDebugState(this._debug);
     }
     
     /**
@@ -192,12 +206,16 @@ export class Game {
      * @private
      */
     _update() {
-        // Don't update the game if dialog is active, transition is in progress, intro is showing, or game over is shown
+        // Don't update the game if dialog is active, transition is in progress, intro is showing, menu is open, inventory is open, or game over is shown
         if (this._dialog.isActive()) {
             if (this._input.isPressed('e') || this._input.isPressed(' ')) {
                 this._dialog.hide();
             }
             return; // Pause game updates while dialog is showing
+        }
+        
+        if (this._menuUI.isVisible() || this._inventoryUI.isVisible()) {
+            return; // Pause game updates while menu or inventory is open
         }
         
         // Pausing during transitions is handled at the individual component level

@@ -35,7 +35,8 @@
     color: #ccaa66; /* Light gold text */
 }
 
-.debug-button.active + .debug-info {
+.debug-button.active + .debug-info,
+#menu-toggle.active + .debug-info {
     display: block;
 }
 
