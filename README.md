@@ -26,6 +26,8 @@ A 2D game built with vanilla JavaScript featuring a tile-based movement system, 
 - Dialog system with NPC interactions
 - Combat system with health management
 - Monster AI with pathfinding and state management
+- Visual effects system with fog, rain, and other environmental effects
+- Animation system for entities with customizable effects
 - Debug visualization tools
 
 ### Controls
@@ -61,7 +63,7 @@ The combat system consists of several interconnected components:
 - **Attack Mechanics**: Players can attack in their facing direction
 - **Damage System**: `takeDamage(amount)` method with invulnerability frames
 - **Recovery System**: `heal(amount)` and `resetHealth()` methods
-- **Visual Feedback**: Health bar (color-coded) and hit animations
+- **Visual Feedback**: Health bars (color-coded) and hit animations
 
 #### NPC/Monster Combat
 - **AI Behavior**: Monsters actively chase players when in range
@@ -73,10 +75,12 @@ The combat system consists of several interconnected components:
 ### Map System
 
 Maps are defined as classes that extend a BaseMap class:
-- **Tile Types**: Different tile types (solid, walkable, transition)
+- **Tile System**: Manages the grid-based map with customizable tile size
+- **Collision Detection**: Handles player and NPC collision with map elements 
 - **Map Transitions**: Doorways or paths that connect different maps
 - **NPC Placement**: NPCs are defined per map with specific positions
 - **Visual Theming**: Each map has its own color palette and style
+- **Environmental Effects**: Integration with visual effects system
 
 ```javascript
 // Map transition mechanism
@@ -89,11 +93,40 @@ Maps are defined as classes that extend a BaseMap class:
 ### Dialog System
 
 Interactive dialog system for engaging with NPCs:
+- **Text Box**: Displays NPC dialogue and game messages
 - **Multi-message Support**: Conversations flow through multiple messages
-- **NPC-specific Dialogues**: Each NPC has custom conversation sets
+- **Choice System**: Allows for player response options
+- **Text Animation**: Typewriter effect for text reveal
 - **User Interaction**: Progress dialog with E/Space key
 - **Visual Indicators**: Shows when more dialog is available
 - **State Management**: NPCs remember conversation state
+
+### Animation System
+
+A flexible animation system for visual effects:
+- **AnimationManager**: Central class managing multiple animations for entities
+- **Custom Animation Types**: Support for hit effects, buffs/debuffs, and custom animations
+- **Animation Configuration**: Customizable duration, color, and appearance
+- **Multiple Concurrent Animations**: Ability to play various animations simultaneously
+
+### Visual Effects System
+
+Environmental effects to enhance the game atmosphere:
+- **Fog Effect**: Dynamic fog density and movement in dark areas
+- **Rain Effect**: Variable rain intensity and direction with splash animations
+- **Persistent Effects**: Effects can persist across map changes
+- **Performance Optimized**: Designed for minimal performance impact
+
+## NPC System
+
+A variety of interactive characters including:
+- **GuideNPC**: Tutorial characters that provide guidance
+- **MerchantNPC**: Shop owners for buying/selling items
+- **ChestNPC**: Treasure chests that contain loot and rewards
+- **MonsterNPC**: Common enemy encounters
+- **GhostNPC**: Special enemy with unique behaviors
+- **DragonNPC**: Powerful standard dragon enemies
+- **DragonBossNPC**: End-game boss with special abilities
 
 ## Technical Architecture
 
@@ -107,6 +140,13 @@ The game is built using a modular, class-based architecture:
 - **InputHandler Class**: Processes keyboard and mouse input
 - **Dialog Class**: Manages conversation UI and flow
 - **CombatSystem Class**: Handles combat mechanics for NPCs
+- **AnimationManager**: Manages visual effects and animations
+- **UI Components**: HealthBar, GameOver, IntroScene, Transition, etc.
+
+### Map Implementations
+- **HomeTownMap**: Starting town environment with buildings and NPCs
+- **DarkForest Maps**: Multiple connected forest areas with increasing difficulty
+- **DragonLair Maps**: End-game dungeon area with challenging enemies
 
 ### Rendering Pipeline
 1. Clear canvas
@@ -114,13 +154,15 @@ The game is built using a modular, class-based architecture:
 3. Render NPCs
 4. Render player
 5. Render UI elements (dialog, health bars)
-6. Debug visualization (if enabled)
+6. Render visual effects (fog, rain, etc.)
+7. Debug visualization (if enabled)
 
 ### Game Loop
 The main game loop runs at 60fps and handles:
 - Input processing
 - Entity updates (player, NPCs)
 - Collision detection
+- Animation updates
 - Rendering
 - State management
 
@@ -202,6 +244,195 @@ this._maps = {
 import { BaseNPC } from './BaseNPC.js';
 
 export class DragonNPC extends BaseNPC {
+    constructor(config) {
+        super({
+            ...config,
+            width: 48,
+            height: 48,
+            type: 'dragon'
+        });
+        
+        // Combat properties
+        this.combatSystem.attackDamage = 30;
+        this.combatSystem.attackRange = 3;
+        this.combatSystem.maxHealth = 150;
+        this.combatSystem.currentHealth = 150;
+        
+        // Movement behavior
+        this.movementSystem.speed = 1.5;
+        this.aggressive = true;
+        
+        // Custom dragon properties
+        this.fireBreathCooldown = 5000; // 5 seconds between fire breath
+        this.lastFireBreath = 0;
+    }
+    
+    update(deltaTime) {
+        super.update(deltaTime);
+        
+        // Custom fire breath attack logic
+        if (this.aggressive && 
+            Date.now() - this.lastFireBreath > this.fireBreathCooldown) {
+            // Perform fire breath attack
+            this.lastFireBreath = Date.now();
+        }
+    }
+}
+```
+
+### Adding Visual Effects
+
+1. Create a new JS file for your effect (e.g., `SnowEffect.js`)
+2. Extend the `BaseEffect` class:
+
+```javascript
+import { BaseEffect } from './BaseEffect.js';
+
+export class SnowEffect extends BaseEffect {
+    constructor(config = {}) {
+        super({
+            name: 'Snow',
+            opacity: config.opacity || 0.6,
+            enabled: config.enabled !== undefined ? config.enabled : true
+        });
+        
+        this.snowflakes = [];
+        this.density = config.density || 100;
+        this.speed = config.speed || 1;
+        
+        // Initialize snowflakes
+        this._initializeSnowflakes();
+    }
+    
+    _initializeSnowflakes() {
+        // Create initial snowflakes with random positions
+        for (let i = 0; i < this.density; i++) {
+            this.snowflakes.push({
+                x: Math.random() * 800,
+                y: Math.random() * 600,
+                size: Math.random() * 3 + 1,
+                speedMultiplier: Math.random() * 0.5 + 0.5
+            });
+        }
+    }
+    
+    update(deltaTime) {
+        // Update snowflake positions
+        for (const snowflake of this.snowflakes) {
+            snowflake.y += this.speed * snowflake.speedMultiplier * deltaTime / 16;
+            snowflake.x += Math.sin(Date.now() / 1000 + snowflake.y) * 0.5;
+            
+            // Wrap snowflakes that go off-screen
+            if (snowflake.y > 600) {
+                snowflake.y = -5;
+                snowflake.x = Math.random() * 800;
+            }
+        }
+    }
+    
+    render(ctx) {
+        if (!this.enabled) return;
+        
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = '#ffffff';
+        
+        // Draw each snowflake
+        for (const snowflake of this.snowflakes) {
+            ctx.beginPath();
+            ctx.arc(snowflake.x, snowflake.y, snowflake.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.restore();
+    }
+}
+```
+
+### Creating Custom Animations
+
+1. Create a new animation class (e.g., `LevelUpAnimation.js`)
+2. Extend the base `Animation` class:
+
+```javascript
+import { Animation } from './Animation.js';
+
+export class LevelUpAnimation extends Animation {
+    constructor(config = {}) {
+        super({
+            ...config,
+            type: 'levelup',
+            duration: config.duration || 3000
+        });
+        
+        this.text = config.text || 'LEVEL UP!';
+        this.color = config.color || '#ffcc00';
+        this.maxScale = config.maxScale || 2;
+        this.currentScale = 0;
+    }
+    
+    update(deltaTime) {
+        super.update(deltaTime);
+        
+        // Animation scaling logic
+        const progress = this.getProgress();
+        
+        if (progress < 0.5) {
+            // Scale up during first half
+            this.currentScale = this.maxScale * (progress * 2);
+        } else {
+            // Scale down during second half
+            this.currentScale = this.maxScale * (1 - (progress - 0.5) * 2);
+        }
+    }
+    
+    render(ctx, screenX, screenY) {
+        ctx.save();
+        
+        // Set text styling
+        ctx.font = `${Math.floor(16 * this.currentScale)}px Arial`;
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Position text above entity
+        const textY = screenY - 30;
+        
+        // Apply transparency near the end of animation
+        if (this.getProgress() > 0.8) {
+            ctx.globalAlpha = 1 - (this.getProgress() - 0.8) * 5;
+        }
+        
+        // Draw text with outline
+        ctx.strokeText(this.text, screenX, textY);
+        ctx.fillText(this.text, screenX, textY);
+        
+        ctx.restore();
+    }
+}
+```
+
+## Future Development
+
+- Implement additional game mechanics (inventory, quests, etc.)
+- Improve combat mechanics and balancing
+- Enhance visual effects and animations
+- Optimize performance for mobile devices
+- Add sound effects and background music
+- Implement save/load game functionality
+- Create more maps, enemies, and NPCs
+
+### Creating New NPCs
+
+1. Create a new JS file for your NPC (e.g., `DragonNPC.js`)
+2. Extend the appropriate base class:
+
+```javascript
+import { BaseNPC } from './BaseNPC.js';
+
+export class DragonNPC extends BaseNPC {
     constructor({ x, y, name = "Dragon" }) {
         // Initialize with movement capabilities
         super({ x, y, name, canMove: true, canMoveThruWalls: false });
@@ -230,10 +461,10 @@ export class DragonNPC extends BaseNPC {
         ];
     }
     
-    // Override draw method for custom appearance
-    draw(ctx, debug = false) {
-        // Custom drawing code here...
-        super.draw(ctx, debug);
+    // Override render method for custom appearance
+    render(ctx, debug = false) {
+        // Custom render code here...
+        super.render(ctx, debug);
     }
     
     // Add unique dragon behaviors
