@@ -6,6 +6,7 @@ import { HealthBar } from '../UI/HealthBar.js';
 import { AnimationManager } from '../animations/AnimationManager.js';
 import { DamageNumberAnimation } from '../animations/DamageNumber.js';
 import { HitAnimation } from '../animations/HitAnimation.js';
+import { BuffAnimation } from '../animations/BuffAnimation.js';
 
 export class PlayerCombat {
     /** @type {number} Maximum health points of the player */
@@ -52,6 +53,7 @@ export class PlayerCombat {
         this.animations = new AnimationManager(this.player);
         this.animations.registerAnimationType('hit', HitAnimation);
         this.animations.registerAnimationType('damage', DamageNumberAnimation);
+        this.animations.registerAnimationType('buff', BuffAnimation);
     }
 
     /**

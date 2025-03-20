@@ -257,7 +257,11 @@ export class MovementSystem {
         const newTileX = entityTileX + dirX;
         const newTileY = entityTileY + dirY;
         
-        if (this.isValidTileMove(newTileX, newTileY, map, target)) {
+        // Check for collisions with all NPCs on the map, not just the player
+        // When following the player, we need to check all NPCs to prevent walking through them
+        const otherEntities = map.npcs ? [...map.npcs, target] : target;
+        
+        if (this.isValidTileMove(newTileX, newTileY, map, otherEntities)) {
             this.targetX = newTileX * this.tileSize;
             this.targetY = newTileY * this.tileSize;
             this.directionX = dirX;
@@ -278,7 +282,7 @@ export class MovementSystem {
             const altTileX = entityTileX + dirX;
             const altTileY = entityTileY + dirY;
             
-            if (this.isValidTileMove(altTileX, altTileY, map, target)) {
+            if (this.isValidTileMove(altTileX, altTileY, map, otherEntities)) {
                 this.targetX = altTileX * this.tileSize;
                 this.targetY = altTileY * this.tileSize;
                 this.directionX = dirX;

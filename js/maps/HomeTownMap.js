@@ -1,6 +1,7 @@
 import { BaseMap } from './BaseMap.js';
 import { GuideNPC } from '../npcs/GuideNPC.js';
 import { MerchantNPC } from '../npcs/MerchantNPC.js';
+import { FountainNPC } from '../npcs/FountainNPC.js';
 import { COLORS } from '../colors.js';
 import { RainEffect } from '../effects/RainEffect.js';
 
@@ -45,6 +46,7 @@ export class HomeTownMap extends BaseMap {
         this.npcs = [
             new GuideNPC({ x: 2, y: 4, name: "Town Guide" }),
             new MerchantNPC({ x: 8, y: 5, name: "Town Merchant" }),
+            new FountainNPC({ x: 5, y: 2, name: "Water Fountain" }),
         ];
 
         // Add a rain effect to the hometown map
