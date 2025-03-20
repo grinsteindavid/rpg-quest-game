@@ -107,10 +107,10 @@ export class Movement {
      * @param {number} tileX - Target tile X coordinate
      * @param {number} tileY - Target tile Y coordinate
      * @param {Object} map - The current map instance
-     * @param {Object|null} otherEntity - Another entity to check collision with (optional)
+     * @param {Object|Array|null} otherEntities - Another entity or array of entities to check collision with (optional)
      * @returns {boolean} Whether the move is valid
      */
-    isValidTileMove(tileX, tileY, map, otherEntity = null) {
+    isValidTileMove(tileX, tileY, map, otherEntities = null) {
         // Check map boundaries
         if (tileX < 0 || tileY < 0 || tileX >= map.mapData[0].length || tileY >= map.mapData.length) {
             return false;
@@ -130,24 +130,37 @@ export class Movement {
             }
         }
         
-        // Check for collision with other entity if provided
-        if (!this.canMoveThruWalls && otherEntity) {
-            // Get other entity's current tile position
-            const otherTileX = Math.floor(otherEntity.x / this.tileSize);
-            const otherTileY = Math.floor(otherEntity.y / this.tileSize);
+        // Check for collision with other entities if provided
+        if (!this.canMoveThruWalls && otherEntities) {
+            // Handle both single entity and array of entities
+            const entities = Array.isArray(otherEntities) ? otherEntities : [otherEntities];
             
-            // Check if entity is at the target tile position
-            if (otherTileX === tileX && otherTileY === tileY) {
-                return false;
-            }
-            
-            // Also check other entity's target position if they're moving
-            if (otherEntity.isMoving) {
-                const otherTargetTileX = Math.floor(otherEntity.targetX / this.tileSize);
-                const otherTargetTileY = Math.floor(otherEntity.targetY / this.tileSize);
+            for (const otherEntity of entities) {
+                // Skip if it's the same entity as the one moving
+                if (otherEntity === this.entity) continue;
                 
-                if (otherTargetTileX === tileX && otherTargetTileY === tileY) {
+                // If either entity can move through walls (e.g., a ghost NPC), allow movement
+                if (this.canMoveThruWalls || (otherEntity.movement && otherEntity.movement.canMoveThruWalls)) {
+                    continue;
+                }
+                
+                // Get other entity's current tile position
+                const otherTileX = Math.floor(otherEntity.x / this.tileSize);
+                const otherTileY = Math.floor(otherEntity.y / this.tileSize);
+                
+                // Check if entity is at the target tile position
+                if (otherTileX === tileX && otherTileY === tileY) {
                     return false;
+                }
+                
+                // Also check other entity's target position if they're moving
+                if (otherEntity.isMoving) {
+                    const otherTargetTileX = Math.floor(otherEntity.targetX / this.tileSize);
+                    const otherTargetTileY = Math.floor(otherEntity.targetY / this.tileSize);
+                    
+                    if (otherTargetTileX === tileX && otherTargetTileY === tileY) {
+                        return false;
+                    }
                 }
             }
         }
@@ -160,13 +173,13 @@ export class Movement {
      * @param {number} x - Target X position in pixels
      * @param {number} y - Target Y position in pixels
      * @param {Object} map - The current map instance
-     * @param {Object|null} otherEntity - Another entity to check collision with (optional)
+     * @param {Object|Array|null} otherEntities - Another entity or array of entities to check collision with (optional)
      * @returns {boolean} Whether the move is valid
      */
-    isValidMove(x, y, map, otherEntity = null) {
+    isValidMove(x, y, map, otherEntities = null) {
         const tileX = Math.floor(x / this.tileSize);
         const tileY = Math.floor(y / this.tileSize);
-        return this.isValidTileMove(tileX, tileY, map, otherEntity);
+        return this.isValidTileMove(tileX, tileY, map, otherEntities);
     }
 
     /**
@@ -310,6 +323,9 @@ export class Movement {
             dirY = this.spawnTileY > currentTileY ? 1 : -1;
         }
         
+        // Always update direction even if we can't move
+        this.updateDirection(dirX, dirY);
+        
         // Try to move in the chosen direction
         const newTileX = currentTileX + dirX;
         const newTileY = currentTileY + dirY;
@@ -320,7 +336,6 @@ export class Movement {
             this.directionX = dirX;
             this.directionY = dirY;
             this.isMoving = true;
-            this.updateDirection(dirX, dirY);
             return true;
         } else {
             // If primary direction is blocked, try the other direction
@@ -332,6 +347,9 @@ export class Movement {
                 dirX = this.spawnTileX > currentTileX ? 1 : -1;
             }
             
+            // Update direction for the alternate move attempt
+            this.updateDirection(dirX, dirY);
+            
             const altTileX = currentTileX + dirX;
             const altTileY = currentTileY + dirY;
             
@@ -341,7 +359,6 @@ export class Movement {
                 this.directionX = dirX;
                 this.directionY = dirY;
                 this.isMoving = true;
-                this.updateDirection(dirX, dirY);
                 return true;
             }   
         }
@@ -352,10 +369,10 @@ export class Movement {
     /**
      * Attempt a random movement in cardinal directions (up, down, left, right)
      * @param {Object} map - The current map instance
-     * @param {Object|null} otherEntity - Another entity to check collision with (optional)
+     * @param {Object|Array|null} otherEntities - Another entity or array of entities to check collision with (optional)
      * @returns {boolean} Whether the entity started moving
      */
-    moveRandomly(map, otherEntity = null) {
+    moveRandomly(map, otherEntities = null) {
         // Already moving
         if (this.isMoving) return false;
         
@@ -389,7 +406,7 @@ export class Movement {
                 break;
         }
         
-        return this.attemptMove(targetTileX, targetTileY, dirX, dirY, map, otherEntity);
+        return this.attemptMove(targetTileX, targetTileY, dirX, dirY, map, otherEntities);
     }
     
     /**
@@ -399,11 +416,14 @@ export class Movement {
      * @param {number} dirX - X direction of movement (-1, 0, 1)
      * @param {number} dirY - Y direction of movement (-1, 0, 1)
      * @param {Object} map - The current map instance
-     * @param {Object|null} otherEntity - Another entity to check collision with (optional)
+     * @param {Object|Array|null} otherEntities - Another entity or array of entities to check collision with (optional)
      * @returns {boolean} Whether the entity started moving
      */
-    attemptMove(tileX, tileY, dirX, dirY, map, otherEntity = null) {
-        if (this.isValidTileMove(tileX, tileY, map, otherEntity)) {
+    attemptMove(tileX, tileY, dirX, dirY, map, otherEntities = null) {
+        // Always update character direction, even if they can't move
+        this.updateDirection(dirX, dirY);
+        
+        if (this.isValidTileMove(tileX, tileY, map, otherEntities)) {
             // Set target position in pixels
             this.targetX = tileX * this.tileSize;
             this.targetY = tileY * this.tileSize;
@@ -411,9 +431,6 @@ export class Movement {
             // Set movement direction for animation
             this.directionX = dirX;
             this.directionY = dirY;
-            
-            // Update character direction based on movement
-            this.updateDirection(dirX, dirY);
             
             // Start moving
             this.isMoving = true;

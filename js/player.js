@@ -184,8 +184,12 @@ export class Player {
         const targetTileX = currentTileX + dx;
         const targetTileY = currentTileY + dy;
         
+        // Check for NPC collisions
+        const npcs = this.map?.npcs || [];
+        
         // Attempt to move using the movement system
-        const startedMoving = this.movement.attemptMove(targetTileX, targetTileY, dx, dy, this.map, null);
+        // Pass all NPCs to check for collisions
+        const startedMoving = this.movement.attemptMove(targetTileX, targetTileY, dx, dy, this.map, npcs);
         
         if (startedMoving) {
             this.isMoving = true;
