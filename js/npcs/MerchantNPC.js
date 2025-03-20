@@ -4,6 +4,13 @@ import { SPRITES } from '../colors.js';
 export class MerchantNPC extends BaseNPC {
     constructor({ x, y, name = "Merchant" }) {
         super({ x, y, name });
+        
+        // Custom merchant nameTag styling
+        this.nameTag = {
+            color: '#f1c40f', // Gold color for merchant
+            font: '12px Arial',
+            shadow: true
+        };
         this.conversations = [
             [
                 "Welcome to my shop, traveler!",
@@ -42,10 +49,7 @@ export class MerchantNPC extends BaseNPC {
         ctx.fillStyle = '#7f8c8d';  // Grey beard
         ctx.fillRect(screenX + 8, screenY + 14, 16, 6);
 
-        // Draw name above NPC
-        ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.name, screenX + 16, screenY - 5);
+        // Use centralized name rendering method
+        this._renderName(ctx, screenX, screenY);
     }
 }

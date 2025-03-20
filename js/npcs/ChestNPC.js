@@ -18,6 +18,13 @@ export class ChestNPC extends BaseNPC {
         this.glowIntensity = 0;
         this.glowDirection = 1;
         
+        // Custom nameTag styling
+        this.nameTag = {
+            color: 'rgba(245, 223, 77, 0.9)', // Gold/yellow color for treasure
+            font: '12px Arial',
+            shadow: true
+        };
+        
         // Custom conversations based on chest state
         this.conversations = [
             [
@@ -109,13 +116,15 @@ export class ChestNPC extends BaseNPC {
             this._renderClosedChest(ctx, screenX, screenY);
         }
         
-        // Draw name above chest only if not opened yet
-        if (!this.isOpen || this.debug) {
-            ctx.fillStyle = 'rgba(245, 223, 77, 0.9)';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(this.name, screenX + 16, screenY - 5);
-        }
+        // Show or hide name tag based on chest open state
+        const previousShowNameTag = this.showNameTag;
+        this.showNameTag = !this.isOpen || this.debug;
+        
+        // Use centralized name rendering method
+        this._renderName(ctx, screenX, screenY);
+        
+        // Restore previous state
+        this.showNameTag = previousShowNameTag;
         
         // Add glow effect for unopened chests
         if (!this.isOpen) {

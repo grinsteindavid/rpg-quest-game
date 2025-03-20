@@ -117,11 +117,8 @@ export class MonsterNPC extends BaseNPC {
         ctx.lineTo(screenX + 23, screenY + 8);
         ctx.fill();
         
-        // Draw name above NPC
-        ctx.fillStyle = this.isAggressive ? 'rgba(255, 100, 100, 0.9)' : 'rgba(200, 200, 200, 0.9)';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.name, screenX + 16, screenY - 5);
+        // Name rendering with centralized method
+        this._renderName(ctx, screenX, screenY);
         
         // Draw glow effect when aggressive
         if (this.isAggressive) {

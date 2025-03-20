@@ -31,6 +31,14 @@ export class GhostNPC extends BaseNPC {
             critical: 'rgba(150, 230, 255, 1.0)' // Bright blue when critical
         };
         
+        // Customize ghost name tag with ethereal appearance
+        this.nameTag = {
+            color: 'rgba(180, 230, 255, 0.8)', // Ethereal blue color
+            font: '12px Arial',
+            shadow: true,
+            offsetY: -10 // Higher position above the ghost
+        };
+        
         // Ghost conversation options
         this.conversations = [
             [
@@ -146,11 +154,8 @@ export class GhostNPC extends BaseNPC {
             this._renderTrails(ctx, screenX, adjustedY);
         }
         
-        // Draw name above NPC
-        ctx.fillStyle = this.isAggressive ? 'rgba(255, 100, 100, 0.9)' : 'rgba(200, 200, 200, 0.9)';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.name, screenX + 16, adjustedY - 8);
+        // Name rendering with centralized method
+        this._renderName(ctx, screenX, adjustedY - 3);
     }
     
     _renderTrails(ctx, x, y) {

@@ -288,15 +288,58 @@ export class BaseNPC {
             ctx.fillRect(screenX + 8, screenY + 4, 16, 16);
         }
         
-        // Draw name above NPC
-        ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.name, screenX + 16, screenY - 5);
+        // Draw name above NPC using dedicated method
+        this._renderName(ctx, screenX, screenY);
     }
 
     _renderMarker(ctx, screenX, screenY) {
         this.marker.render(ctx, screenX, screenY, this.width);
+    }
+
+    /**
+     * Renders the NPC's name tag
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {number} screenX - Screen X coordinate
+     * @param {number} screenY - Screen Y coordinate
+     */
+    _renderName(ctx, screenX, screenY) {
+        // Only render if showNameTag is true (undefined = true by default)
+        if (this.showNameTag !== false) {
+            // Allow each NPC to customize their name tag appearance
+            // by setting nameTag properties in their constructor
+            const nameTag = this.nameTag || {};
+            
+            // Use customizable properties with defaults
+            const textColor = nameTag.color || (this.isAggressive ? 'rgba(255, 100, 100, 0.9)' : 'white');
+            const font = nameTag.font || '12px Arial';
+            const offsetY = nameTag.offsetY || -5;
+            const offsetX = nameTag.offsetX || 16;
+            const shadow = nameTag.shadow || false;
+            
+            // Apply text settings
+            ctx.fillStyle = textColor;
+            ctx.font = font;
+            ctx.textAlign = 'center';
+            
+            // Apply shadow effect if specified
+            if (shadow) {
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                ctx.shadowBlur = 3;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+            }
+            
+            // Draw the name text
+            ctx.fillText(this.name, screenX + offsetX, screenY + offsetY);
+            
+            // Reset shadow effect
+            if (shadow) {
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            }
+        }
     }
 
     _renderDebug(ctx, screenX, screenY) {

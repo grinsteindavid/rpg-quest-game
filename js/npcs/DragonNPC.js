@@ -27,6 +27,14 @@ export class DragonNPC extends MonsterNPC {
         this.maxHealth = 50 * this.size;
         this.health = this.maxHealth;
         
+        // Customize dragon name tag with dramatic appearance
+        this.nameTag = {
+            color: this.color, // Match dragon's color
+            font: `${11 + this.size}px Arial`, // Bigger font for larger dragons
+            shadow: true,
+            offsetY: -10 * this.size // Higher offset for larger dragons
+        };
+        
         // Dragon conversation options
         this.conversations = [
             [
@@ -230,11 +238,9 @@ export class DragonNPC extends MonsterNPC {
             this._drawFireBreath(ctx, cx + 22*s, cy - 3*s, s);
         }
         
-        // Draw name above NPC
-        ctx.fillStyle = this.isAggressive ? 'rgba(255, 100, 100, 0.9)' : 'rgba(200, 200, 200, 0.9)';
-        ctx.font = `${12 + 2*s}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.fillText(this.name, cx, screenY - 15*s);
+        // Name is rendered by the centralized method with proper scaling
+        // Pass the centered x coordinate with different offset for proper scaling
+        this._renderName(ctx, cx - 16, screenY - 10*s);
         
         // Draw glow effect when aggressive
         if (this.isAggressive) {
