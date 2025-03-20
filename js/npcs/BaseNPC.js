@@ -32,6 +32,15 @@ export class BaseNPC {
 
         // Loot properties ( under development )
         this.loot = loot;
+
+        this.nameTag = {
+            color: 'white',
+            aggressiveColor: '#ff3333',
+            font: '12px Arial',
+            shadow: true,
+            offsetY: -10,
+            respectAggressive: true
+        };
         
         // Initialize the movement system
         this.movementSystem = new MovementSystem(this, {
@@ -303,14 +312,26 @@ export class BaseNPC {
      * @param {number} screenY - Screen Y coordinate
      */
     _renderName(ctx, screenX, screenY) {
-        // Only render if showNameTag is true (undefined = true by default)
+        // Only render if showNameTag is true 
         if (this.showNameTag !== false) {
             // Allow each NPC to customize their name tag appearance
             // by setting nameTag properties in their constructor
             const nameTag = this.nameTag || {};
             
             // Use customizable properties with defaults
-            const textColor = nameTag.color || (this.isAggressive ? 'rgba(255, 100, 100, 0.9)' : 'white');
+            // Allow NPCs to override aggressive state with their nameTag.color
+            // or set nameTag.respectAggressive to false
+            let textColor;
+            if (nameTag.color && !nameTag.respectAggressive) {
+                // Use the exact color specified without considering aggressive state
+                textColor = nameTag.color;
+            } else if (this.isAggressive && (nameTag.respectAggressive !== false)) {
+                // Use aggressive color (red) when NPC is in aggressive state
+                textColor = nameTag.aggressiveColor || 'rgba(255, 100, 100, 0.9)';
+            } else {
+                // Use normal color when not aggressive
+                textColor = nameTag.color || 'white';
+            }
             const font = nameTag.font || '12px Arial';
             const offsetY = nameTag.offsetY || -5;
             const offsetX = nameTag.offsetX || 16;

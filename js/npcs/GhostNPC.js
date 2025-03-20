@@ -32,12 +32,8 @@ export class GhostNPC extends BaseNPC {
         };
         
         // Customize ghost name tag with ethereal appearance
-        this.nameTag = {
-            color: 'rgba(180, 230, 255, 0.8)', // Ethereal blue color
-            font: '12px Arial',
-            shadow: true,
-            offsetY: -10 // Higher position above the ghost
-        };
+        this.nameTag.color = 'rgba(180, 230, 255, 0.8)'; // Ethereal blue color
+        this.nameTag.offsetY = -10; // Higher position above the ghost
         
         // Ghost conversation options
         this.conversations = [

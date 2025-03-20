@@ -19,11 +19,7 @@ export class ChestNPC extends BaseNPC {
         this.glowDirection = 1;
         
         // Custom nameTag styling
-        this.nameTag = {
-            color: 'rgba(245, 223, 77, 0.9)', // Gold/yellow color for treasure
-            font: '12px Arial',
-            shadow: true
-        };
+        this.nameTag.color = 'rgba(245, 223, 77, 0.9)';
         
         // Custom conversations based on chest state
         this.conversations = [

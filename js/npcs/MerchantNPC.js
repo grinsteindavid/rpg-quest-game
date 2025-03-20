@@ -5,12 +5,7 @@ export class MerchantNPC extends BaseNPC {
     constructor({ x, y, name = "Merchant" }) {
         super({ x, y, name });
         
-        // Custom merchant nameTag styling
-        this.nameTag = {
-            color: '#f1c40f', // Gold color for merchant
-            font: '12px Arial',
-            shadow: true
-        };
+
         this.conversations = [
             [
                 "Welcome to my shop, traveler!",

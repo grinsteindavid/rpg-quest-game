@@ -20,12 +20,8 @@ export class FountainNPC extends BaseNPC {
         this.showMarker = true;
         
         // Customize name tag appearance
-        this.nameTag = {
-            color: '#44ccff', // Light blue color for fountain
-            font: '11px Arial',
-            shadow: true, // Add shadow effect
-            offsetY: -8 // Slightly higher position
-        };
+        this.nameTag.color = '#44ccff'; // Light blue color for fountain
+        this.nameTag.offsetY = -8; // Slightly higher position
         
         // Ensure width and height are properly set (standard NPC size)
         this.width = 32;

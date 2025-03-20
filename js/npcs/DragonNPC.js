@@ -28,12 +28,8 @@ export class DragonNPC extends MonsterNPC {
         this.health = this.maxHealth;
         
         // Customize dragon name tag with dramatic appearance
-        this.nameTag = {
-            color: this.color, // Match dragon's color
-            font: `${11 + this.size}px Arial`, // Bigger font for larger dragons
-            shadow: true,
-            offsetY: -10 * this.size // Higher offset for larger dragons
-        };
+        this.nameTag.font = `${11 + this.size}px Arial`;
+        this.nameTag.offsetY = -10 * this.size;
         
         // Dragon conversation options
         this.conversations = [
