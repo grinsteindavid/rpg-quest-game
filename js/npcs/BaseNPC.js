@@ -1,7 +1,7 @@
 import { SPRITES } from '../colors.js';
 import { CombatSystem } from '../combat/npc.js';
 import { Marker } from '../UI/Marker.js';
-import { Movement } from '../Movement.js';
+import { MovementSystem } from '../MovementSystem.js';
 
 export class BaseNPC {
     constructor({ x, y, name, canMove = false, canMoveThruWalls = false, loot = [] }) {
@@ -34,7 +34,7 @@ export class BaseNPC {
         this.loot = loot;
         
         // Initialize the movement system
-        this.movement = new Movement(this, {
+        this.movementSystem = new MovementSystem(this, {
             speed: this.speed,
             tileSize: this.tileSize,
             direction: this.direction,
@@ -202,7 +202,7 @@ export class BaseNPC {
     // Handles the movement animation between tiles
     _handleMovementAnimation() {
         // Update internal isMoving status based on movement system result
-        const reachedTarget = this.movement.handleMovementAnimation();
+        const reachedTarget = this.movementSystem.handleMovementAnimation();
         if (reachedTarget) {
             this.isMoving = false;
         }
@@ -210,13 +210,13 @@ export class BaseNPC {
     
     // Internal method to check if a tile move is valid
     _isValidTileMove(tileX, tileY, player, map) {
-        return this.movement.isValidTileMove(tileX, tileY, map, player);
+        return this.movementSystem.isValidTileMove(tileX, tileY, map, player);
     }
     
     // Check if the new position is valid (no collisions)
     // This is used during movement animation
     isValidMove(x, y, player, map) {
-        return this.movement.isValidMove(x, y, map, player);
+        return this.movementSystem.isValidMove(x, y, map, player);
     }
 
     isNearby(player) {
@@ -231,12 +231,12 @@ export class BaseNPC {
 
     // Calculate distance to player for aggro detection
     _getDistanceToPlayer(player) {
-        return this.movement.getDistanceTo(player.x, player.y);
+        return this.movementSystem.getDistanceTo(player.x, player.y);
     }
 
     // Calculate distance from spawn point
     _getDistanceFromSpawn() {
-        return this.movement.getDistanceFromSpawn();
+        return this.movementSystem.getDistanceFromSpawn();
     }
     
     // Make NPC follow a target (player)
@@ -249,26 +249,26 @@ export class BaseNPC {
         this.pathChangeTimer = 0;
         
         // Attempt to follow the player using the movement system
-        const startedMoving = this.movement.followTarget(player, map, this.followDistance);
+        const startedMoving = this.movementSystem.followTarget(player, map, this.followDistance);
         
         // Update NPC state if movement started
         if (startedMoving) {
             this.isMoving = true;
             // Direction is automatically updated by the movement system
-            this.direction = this.movement.direction;
+            this.direction = this.movementSystem.direction;
         }
     }
     
     // Make NPC return to spawn position
     _returnToSpawn(map) {
         // Attempt to return to spawn using the movement system
-        const startedMoving = this.movement.returnToSpawn(map);
+        const startedMoving = this.movementSystem.returnToSpawn(map);
         
         // Update NPC state if movement started
         if (startedMoving) {
             this.isMoving = true;
             // Direction is automatically updated by the movement system
-            this.direction = this.movement.direction;
+            this.direction = this.movementSystem.direction;
         }
     }
 
@@ -384,13 +384,13 @@ export class BaseNPC {
         if (this.isMoving || !this.canMove) return;
         
         // Use movement system to move randomly
-        const startedMoving = this.movement.moveRandomly(map, player);
+        const startedMoving = this.movementSystem.moveRandomly(map, player);
         
         // Update NPC state if movement started
         if (startedMoving) {
             this.isMoving = true;
             // Direction is automatically updated by the movement system
-            this.direction = this.movement.direction;
+            this.direction = this.movementSystem.direction;
         }
     }
     
@@ -403,13 +403,13 @@ export class BaseNPC {
         const dirY = tileY - currentTileY;
         
         // Use movement system to attempt the move
-        const startedMoving = this.movement.attemptMove(tileX, tileY, dirX, dirY, map, player);
+        const startedMoving = this.movementSystem.attemptMove(tileX, tileY, dirX, dirY, map, player);
         
         // Update NPC state if movement started
         if (startedMoving) {
             this.isMoving = true;
             // Direction is automatically updated by the movement system
-            this.direction = this.movement.direction;
+            this.direction = this.movementSystem.direction;
         }
     }
     

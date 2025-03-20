@@ -1,6 +1,6 @@
 import { SPRITES } from './colors.js';
 import { PlayerCombat } from './combat/player.js';
-import { Movement } from './Movement.js';
+import { MovementSystem } from './MovementSystem.js';
 
 /**
  * Represents a player character in the game world.
@@ -63,7 +63,7 @@ export class Player {
         this.combat = new PlayerCombat(this);
         
         // Initialize the movement system
-        this.movement = new Movement(this, {
+        this.movementSystem = new MovementSystem(this, {
             speed: this.speed,
             tileSize: this.tileSize,
             direction: this.direction
@@ -165,7 +165,7 @@ export class Player {
      */
     _isValidMove(tileX, tileY) {
         // Use the movement system to check validity
-        return this.movement.isValidTileMove(tileX, tileY, this.map, null);
+        return this.movementSystem.isValidTileMove(tileX, tileY, this.map, null);
     }
 
     /**
@@ -189,12 +189,12 @@ export class Player {
         
         // Attempt to move using the movement system
         // Pass all NPCs to check for collisions
-        const startedMoving = this.movement.attemptMove(targetTileX, targetTileY, dx, dy, this.map, npcs);
+        const startedMoving = this.movementSystem.attemptMove(targetTileX, targetTileY, dx, dy, this.map, npcs);
         
         if (startedMoving) {
             this.isMoving = true;
             // Direction is automatically updated by the movement system
-            this.direction = this.movement.direction;
+            this.direction = this.movementSystem.direction;
         }
     }
 
@@ -204,7 +204,7 @@ export class Player {
      */
     _handleMovementAnimation() {
         // Use movement system to handle animation
-        const reachedTarget = this.movement.handleMovementAnimation();
+        const reachedTarget = this.movementSystem.handleMovementAnimation();
         
         if (reachedTarget) {
             // Ensure player state is synchronized with movement system
@@ -213,7 +213,7 @@ export class Player {
         }
     }
 
-    // _snapToTarget method removed - now handled by movement.handleMovementAnimation
+    // _snapToTarget method removed - now handled by movementSystem.handleMovementAnimation
 
     /**
      * Checks if the player's current position triggers a map transition.
@@ -238,7 +238,7 @@ export class Player {
         }
     }
 
-    // _moveTowardsTarget method removed - now handled by movement.handleMovementAnimation
+    // _moveTowardsTarget method removed - now handled by movementSystem.handleMovementAnimation
 
     /**
      * Processes keyboard input for player movement.
@@ -280,7 +280,7 @@ export class Player {
         if (this.isMoving) {
             this._handleMovementAnimation();
             // Make sure direction is synchronized with movement system
-            this.direction = this.movement.direction;
+            this.direction = this.movementSystem.direction;
         } else if (!this.isTransitioning) { // Only process input if not in transition
             this._handleInput();
         }

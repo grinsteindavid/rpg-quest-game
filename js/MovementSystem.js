@@ -1,12 +1,12 @@
 /**
- * A reusable Movement class for handling movement-related functionality in game entities.
+ * A reusable MovementSystem class for handling movement-related functionality in game entities.
  * Can be used by both Player and NPCs to ensure consistent movement behavior.
  */
-export class Movement {
+export class MovementSystem {
     /**
-     * Creates a new Movement instance
+     * Creates a new MovementSystem instance
      * @param {Object} entity - The entity (player or NPC) using this movement system
-     * @param {Object} options - Movement configuration options
+     * @param {Object} options - MovementSystem configuration options
      */
     constructor(entity, options = {}) {
         // Store reference to the entity using this movement system
@@ -140,7 +140,7 @@ export class Movement {
                 if (otherEntity === this.entity) continue;
                 
                 // If either entity can move through walls (e.g., a ghost NPC), allow movement
-                if (this.canMoveThruWalls || (otherEntity.movement && otherEntity.movement.canMoveThruWalls)) {
+                if (this.canMoveThruWalls || (otherEntity.movementSystem && otherEntity.movementSystem.canMoveThruWalls)) {
                     continue;
                 }
                 
