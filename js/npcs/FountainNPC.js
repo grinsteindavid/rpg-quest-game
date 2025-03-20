@@ -178,7 +178,7 @@ export class FountainNPC extends BaseNPC {
         this.currentPlayer.combat.animations.play('buff', {
             duration: 2000,
             name: 'Health Restored!',
-            color: 'rgba(0, 255, 128, 0.5)'
+            color: '#44ccff'
         });
     }
 }

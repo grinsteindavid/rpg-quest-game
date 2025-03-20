@@ -28,7 +28,7 @@ export class GuideNPC extends BaseNPC {
                 "Come back if you need more help!"
             ]
         ];
-        this.movementSystem.speed = 0.6;
+        this.movementSystem.speed = 0.4;
         // Set combat system health
     }
 }

@@ -47,9 +47,23 @@ export class BuffAnimation extends Animation {
         if (this.showText) {
             ctx.textAlign = 'center';
             ctx.font = '10px Arial';
-            ctx.fillStyle = this.isDebuff ? 'rgba(255, 100, 255, ' + (1-progress) + ')' : 
-                                          'rgba(100, 255, 100, ' + (1-progress) + ')';
+            // Using more intense colors for better visibility
+            ctx.fillStyle = this.isDebuff ? 'rgba(255, 80, 0, ' + (1-progress) + ')' : 
+                                          'rgba(255, 255, 50, ' + (1-progress) + ')';
+            
+            // Add shadow effect
+            ctx.shadowColor = 'rgba(0, 0, 0, ' + (0.7 * (1-progress)) + ')';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            
             ctx.fillText(this.buffName, centerX, screenY - 5);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
         
         ctx.restore();
