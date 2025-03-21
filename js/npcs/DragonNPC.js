@@ -16,11 +16,6 @@ export class DragonNPC extends MonsterNPC {
         // Update combat system for dragon
         this.combatSystem.stats.setStat('strength', 12);  // Dragons are stronger than regular monsters
         this.combatSystem.stats.setStat('vitality', 12);  // But have more health
-
-        
-        // Set higher health for dragons
-        this.maxHealth = 50 * this.size;
-        this.health = this.maxHealth;
         
         // Customize dragon name tag with dramatic appearance
         this.nameTag.font = `${11 + this.size}px Arial`;

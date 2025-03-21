@@ -93,7 +93,7 @@ export class BaseNPC {
         this.isDefeated = false;
         // Create and initialize combat system
         this.combatSystem = new CombatSystem(this);
-        this.combatSystem.maxHealth = 100; // Default maximum health
+        // Health will be calculated from vitality stats
     }
 
     setDebug(debug) {

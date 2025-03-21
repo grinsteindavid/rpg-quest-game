@@ -23,7 +23,7 @@ export class GhostNPC extends BaseNPC {
         this.combatSystem.stats.setStat('strength', 10);  // Ghosts are stronger than regular monsters
         this.combatSystem.stats.setStat('vitality', 2);  // But have less health
         this.combatSystem.attackRange = this.tileSize * 1;
-        this.combatSystem.attackCooldown = 2000;
+        this.combatSystem.attackCooldown = 2200;
         this.combatSystem.healthBar.colors = {
             background: 'rgba(40, 40, 40, 0.6)',
             border: 'rgba(0, 0, 0, 0.6)',
