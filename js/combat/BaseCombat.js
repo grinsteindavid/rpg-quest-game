@@ -61,13 +61,6 @@ export class BaseCombat {
             width: options.healthBarWidth || 32,
             height: options.healthBarHeight || 5,
             yOffset: options.healthBarYOffset || -10,
-            colors: options.healthBarColors || {
-                background: 'rgba(40, 40, 40, 0.8)',
-                border: 'rgba(0, 0, 0, 0.8)',
-                fill: 'rgba(200, 0, 0, 0.9)',
-                low: 'rgba(200, 200, 0, 0.8)',
-                critical:'rgba(255, 50, 50, 1.0)'
-            }
         });
         
         // Initialize animations
