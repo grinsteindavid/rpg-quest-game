@@ -7,21 +7,20 @@ export class MonsterNPC extends BaseNPC {
         
         // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
         this.canBeAggressive = true; // Start aggressive by default
-        
-        // Attack properties
-        this.attackDamage = 10;
-        this.attackRange = 40; // Slightly larger than player's attack range
-        this.attackCooldown = 1500; // Milliseconds between attacks
-        this.nextAttackTime = 0; // Timestamp when the monster can attack again
+
         
         // Visual effect properties
         this.glowIntensity = 0;
         this.glowDirection = 1;
         
         // Configure combat system for monster
-        this.combatSystem.attackDamage = 10;
+        this.combatSystem.stats.setStat('strength', 2); 
+        this.combatSystem.stats.setStat('vitality', 2); 
         this.combatSystem.attackRange = this.tileSize * 1;
         this.combatSystem.attackCooldown = 1500;
+        
+        // Reset health to recalculate max health based on new stats
+        this.combatSystem.resetHealth();
         
         
         // Monster conversation options
@@ -139,10 +138,7 @@ export class MonsterNPC extends BaseNPC {
     }
     
     interact(player) {
-        // When aggressive is off, show dialog
-        if (this.isAggressive === false) {
-            super.interact(player);
-        }
+        super.interact(player);
     }
     
     onConversationComplete() {

@@ -93,7 +93,7 @@ export class BaseNPC {
         this.isDefeated = false;
         // Create and initialize combat system
         this.combatSystem = new CombatSystem(this);
-        this.combatSystem.maxHealth = 100; // Default maximum health
+        // Health will be calculated from vitality stats
     }
 
     setDebug(debug) {
@@ -101,7 +101,7 @@ export class BaseNPC {
     }
 
     interact(player) {
-        if (!this.isInConversation) {
+        if (!this.isInConversation && !this.isAggressive) {
             this.isInConversation = true;
             const currentConversation = this.conversations[this.conversationIndex];
             player.game.showDialog(currentConversation, () => {

@@ -2,12 +2,14 @@
  * BaseCombat.js
  * Base class for combat systems that handles shared functionality between player and NPC combat.
  * Provides common methods and properties for health management, animations, and combat mechanics.
+ * Uses Stats class for managing attributes and calculations.
  */
 import { HealthBar } from '../UI/HealthBar.js';
 import { AnimationManager } from '../animations/AnimationManager.js';
 import { DamageNumberAnimation } from '../animations/DamageNumber.js';
 import { HitAnimation } from '../animations/HitAnimation.js';
 import { BuffAnimation } from '../animations/BuffAnimation.js';
+import { Stats } from './stats.js';
 
 export class BaseCombat {
     /** @type {number} Maximum health points */
@@ -27,7 +29,7 @@ export class BaseCombat {
     /** @type {number} Amount of damage dealt per attack */
     attackDamage = 10;
     /** @type {number} Range in pixels of attack */
-    attackRange = 40;
+    attackRange = 32;
     /** @type {boolean} Whether entity is showing damage effect */
     isDamaged = false;
     /** @type {number} Duration of damage visual effect in frames */
@@ -47,13 +49,25 @@ export class BaseCombat {
         this.entity = entity;
         
         // Apply options if provided
-        if (options.maxHealth) this.maxHealth = options.maxHealth;
+        if (options.maxHealth) {
+            this.maxHealth = options.maxHealth;
+            this.currentHealth = options.maxHealth;
+        }
         if (options.attackDamage) this.attackDamage = options.attackDamage;
         if (options.attackRange) this.attackRange = options.attackRange;
         if (options.attackCooldown) this.attackCooldown = options.attackCooldown;
         
-        // Initialize current health
+        // Initialize stats system
+        this.stats = new Stats({
+            strength: options.strength,
+            vitality: options.vitality,
+            damage: this.attackDamage,
+            health: this.maxHealth,
+        });
+
+        this.maxHealth = this.stats.calculateMaxHealth();
         this.currentHealth = this.maxHealth;
+
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
         // Initialize UI components
@@ -105,6 +119,9 @@ export class BaseCombat {
      * @param {number} amount - Amount of health to restore
      */
     heal(amount) {
+        // Update health values based on current stats
+        this._updateHealthFromStats();
+        // Add healing amount (ensures currentHealth doesn't exceed maxHealth)
         this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
@@ -120,7 +137,8 @@ export class BaseCombat {
      * Resets the entity's health to maximum
      */
     resetHealth() {
-        this.currentHealth = this.maxHealth;
+        this._updateHealthFromStats();
+        this.currentHealth = this.maxHealth; // Full health on reset
         this.isDamaged = false;
     }
     
@@ -180,8 +198,55 @@ export class BaseCombat {
             }
         }
         
+        // Update stats (handles buffs/debuffs)
+        this.stats.update();
+        
+        this.attackDamage = this.stats.calculateDamage();
+        
+        // Update health values from stats
+        this._updateHealthFromStats();
+        
         // Update animations
         this.animations.update();
+    }
+    
+    /**
+     * Apply a buff to the entity's stats
+     * @param {Object} effects - Object mapping stat names to buff values
+     * @param {number} duration - Duration in milliseconds
+     * @param {string} name - Name of the buff
+     * @returns {string} - Buff ID for tracking
+     */
+    applyBuff(effects, duration, name = 'Combat Buff') {
+        return this.stats.applyBuff(effects, duration, name);
+    }
+    
+    /**
+     * Apply a stat-specific buff
+     * @param {string} statName - Name of the stat to buff
+     * @param {number} value - Buff amount
+     * @param {number} duration - Duration in milliseconds
+     * @param {string} name - Name of the buff
+     * @returns {string} - Buff ID for tracking
+     */
+    applyStatBuff(statName, value, duration, name = 'Stat Buff') {
+        return this.stats.applySingleStatBuff(statName, value, duration, name);
+    }
+    
+    /**
+     * Updates health values based on current stats
+     * Ensures current health maintains the same proportion to max health when max health changes
+     * @protected
+     */
+    _updateHealthFromStats() {
+        // Update max health from stats and ensure current health doesn't exceed it
+        const newMaxHealth = this.stats.calculateMaxHealth();
+        if (newMaxHealth !== this.maxHealth) {
+            // If max health changed, keep the same health percentage
+            const healthPercentage = this.maxHealth > 0 ? this.currentHealth / this.maxHealth : 1;
+            this.maxHealth = newMaxHealth;
+            this.currentHealth = Math.min(this.maxHealth, Math.round(this.maxHealth * healthPercentage));
+        }
     }
     
     /**

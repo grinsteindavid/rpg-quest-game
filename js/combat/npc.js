@@ -11,9 +11,8 @@ export class CombatSystem extends BaseCombat {
      */
     constructor(entity) {
         super(entity, {
-            maxHealth: 100,
             attackDamage: 10,
-            attackRange: 40,  // Slightly larger than default player's attack range
+            attackRange: entity.tileSize * 1,  // Slightly larger than default player's attack range
             attackCooldown: 1500, // Milliseconds between attacks
             healthBarWidth: 32,
             healthBarHeight: 4,
@@ -24,7 +23,10 @@ export class CombatSystem extends BaseCombat {
                 fill: 'rgba(200, 0, 0, 0.9)',
                 low: 'rgba(200, 200, 0, 0.8)',
                 critical:'rgba(255, 50, 50, 1.0)'
-            }
+            },
+            // Stats configuration
+            strength: { value: 5, modifier: 2 },
+            vitality: { value: 5, modifier: 10 },
         });
     }
     
@@ -93,8 +95,8 @@ export class CombatSystem extends BaseCombat {
             // Face towards the player before attacking
             this._faceTowardsTarget(dx, dy);
             
-            // Deal damage to the player
-            player.takeDamage(this.attackDamage);
+            // Deal damage to the player using calculated damage from stats
+            player.takeDamage(this.stats.calculateDamage());
             
             // Set cooldown for next attack
             this.nextAttackTime = currentTime + this.attackCooldown;

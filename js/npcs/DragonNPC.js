@@ -13,19 +13,9 @@ export class DragonNPC extends MonsterNPC {
         this.color = color;
         this.size = size; // Size multiplier (1 for mini dragon, 2 for boss)
         
-        // Override monster properties for dragons
-        this.attackDamage = 15 * this.size;
-        this.attackRange = 50 * this.size;
-        this.attackCooldown = 2000 - (this.size * 300); // Bigger dragons attack faster
-        
         // Update combat system for dragon
-        this.combatSystem.attackDamage = this.attackDamage;
-        this.combatSystem.attackRange = this.attackRange;
-        this.combatSystem.attackCooldown = this.attackCooldown;
-        
-        // Set higher health for dragons
-        this.maxHealth = 50 * this.size;
-        this.health = this.maxHealth;
+        this.combatSystem.stats.setStat('strength', 12);  // Dragons are stronger than regular monsters
+        this.combatSystem.stats.setStat('vitality', 12);  // But have more health
         
         // Customize dragon name tag with dramatic appearance
         this.nameTag.font = `${11 + this.size}px Arial`;
