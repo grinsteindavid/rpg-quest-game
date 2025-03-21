@@ -14,8 +14,8 @@ export class MonsterNPC extends BaseNPC {
         this.glowDirection = 1;
         
         // Configure combat system for monster
-        // this.combatSystem.stats.setStat('strength', 2); 
-        // this.combatSystem.stats.setStat('vitality', 2); 
+        this.combatSystem.stats.setStat('strength', 2); 
+        this.combatSystem.stats.setStat('vitality', 2); 
         this.combatSystem.attackRange = this.tileSize * 1;
         this.combatSystem.attackCooldown = 1500;
         

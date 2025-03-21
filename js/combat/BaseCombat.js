@@ -198,11 +198,11 @@ export class BaseCombat {
         }
         
         // Update stats (handles buffs/debuffs)
-        // this.stats.update();
+        this.stats.update();
         
-        // this.attackDamage = this.stats.calculateDamage();
+        this.attackDamage = this.stats.calculateDamage();
         // // Update max health from stats
-        // this.maxHealth = this.stats.calculateMaxHealth();
+        this.maxHealth = this.stats.calculateMaxHealth();
         
         // Update animations
         this.animations.update();
