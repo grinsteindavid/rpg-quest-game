@@ -111,8 +111,8 @@ export class FountainNPC extends BaseNPC {
         this.width = originalWidth;
         this.height = originalHeight;
         
-        // Render any combat-related UI (health bar, etc.)
-        this.combatSystem.render(ctx, screenX, screenY);
+        // Render any combat-related UI (health bar, etc.) its disabled because its a fountain
+        //this.combatSystem.render(ctx, screenX, screenY);
     }
     
     /**
