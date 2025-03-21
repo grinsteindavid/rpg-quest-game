@@ -14,8 +14,8 @@ export class MonsterNPC extends BaseNPC {
         this.glowDirection = 1;
         
         // Configure combat system for monster
-        this.combatSystem.stats.setStat('strength', 4);  // Set strength for damage calculation
-        this.combatSystem.stats.setStat('vitality', 4);  // Lower vitality than player
+        this.combatSystem.stats.setStat('strength', 2); 
+        this.combatSystem.stats.setStat('vitality', 2); 
         this.combatSystem.attackRange = this.tileSize * 1;
         this.combatSystem.attackCooldown = 1500;
         
@@ -135,10 +135,7 @@ export class MonsterNPC extends BaseNPC {
     }
     
     interact(player) {
-        // When aggressive is off, show dialog
-        if (this.isAggressive === false) {
-            super.interact(player);
-        }
+        super.interact(player);
     }
     
     onConversationComplete() {
