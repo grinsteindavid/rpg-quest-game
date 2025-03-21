@@ -56,9 +56,8 @@ export class Game {
         this._transition = new Transition();
         this._gameOver = new GameOver();
         this._introScene = new IntroScene();
-        this._menuUI = new MenuUI();
+        this._menuUI = new MenuUI(this);
         this._inventoryUI = new InventoryUI();
-        this._setupDebugMode();
         
         // Flag to track if the page is currently visible/active
         this._isPageVisible = true;
@@ -152,24 +151,7 @@ export class Game {
         });
     }
 
-    /**
-     * Sets up debug mode toggle functionality.
-     * @private
-     */
-    _setupDebugMode() {
-        // Setup menu UI callbacks
-        this._menuUI.setDebugToggleCallback((enabled) => {
-            this._debug = enabled;
-            this._updateDebugState();
-        });
-        
-        this._menuUI.setInventoryOpenCallback(() => {
-            this._inventoryUI.show();
-        });
-        
-        // Initial state
-        this._menuUI.updateDebugState(this._debug);
-    }
+    // NOTE: _setupDebugMode method removed - MenuUI now directly accesses game instance
     
     /**
      * Sets up visibility change detection for tab switching.

@@ -8,18 +8,16 @@ export class MenuUI {
     _menuButton;
     /** @private @type {boolean} Whether the menu is visible */
     _visible = false;
-    /** @private @type {Function|null} Callback for debug toggle */
-    _onDebugToggle = null;
-    /** @private @type {Function|null} Callback for inventory open */
-    _onInventoryOpen = null;
-    /** @private @type {boolean} Current debug state */
-    _debugEnabled = false;
+    /** @private @type {import('../game.js').Game} Reference to the main game instance */
+    _game = null;
 
     /**
      * Creates a new MenuUI instance.
+     * @param {import('../game.js').Game} game - Reference to the main game instance
      */
-    constructor() {
-        // Initialize menu UI
+    constructor(game) {
+        // Store game reference
+        this._game = game;
         
         // Create menu button
         const menuButton = document.createElement('button');
@@ -164,11 +162,22 @@ export class MenuUI {
         // Debug toggle
         const debugToggle = document.getElementById('debug-toggle-option');
         if (debugToggle) {
-            debugToggle.addEventListener('change', () => {
-                this._debugEnabled = debugToggle.checked;
-                if (this._onDebugToggle) {
-                    this._onDebugToggle(this._debugEnabled);
+            // Set initial state directly from game's debug property
+            debugToggle.checked = this._game._debug;
+            
+            // Update menu button active class for debug indicator
+            if (this._menuButton) {
+                if (this._game._debug) {
+                    this._menuButton.classList.add('active');
+                } else {
+                    this._menuButton.classList.remove('active');
                 }
+            }
+            
+            debugToggle.addEventListener('change', () => {
+                // Directly update game's debug state
+                this._game._debug = debugToggle.checked;
+                this._game._updateDebugState();
             });
         }
 
@@ -216,9 +225,8 @@ export class MenuUI {
             inventoryButton.addEventListener('click', () => {
                 console.log('Inventory button clicked');
                 this.hide();
-                if (this._onInventoryOpen) {
-                    this._onInventoryOpen();
-                }
+                // Directly show the game's inventory UI
+                this._game._inventoryUI.show();
             });
         }
 
@@ -239,42 +247,9 @@ export class MenuUI {
         });
     }
 
-    /**
-     * Sets the debug toggle callback function
-     * @param {Function} callback - Function to call when debug toggle changes
-     */
-    setDebugToggleCallback(callback) {
-        this._onDebugToggle = callback;
-    }
+    // Removed deprecated callback methods since we now have direct game access
 
-    /**
-     * Sets the inventory open callback function
-     * @param {Function} callback - Function to call when inventory button is clicked
-     */
-    setInventoryOpenCallback(callback) {
-        this._onInventoryOpen = callback;
-    }
-
-    /**
-     * Updates the debug toggle state without triggering the callback
-     * @param {boolean} enabled - Whether debug mode is enabled
-     */
-    updateDebugState(enabled) {
-        this._debugEnabled = enabled;
-        const debugToggle = document.getElementById('debug-toggle-option');
-        if (debugToggle) {
-            debugToggle.checked = enabled;
-        }
-
-        // Update menu button active class for debug info panel
-        if (this._menuButton) {
-            if (enabled) {
-                this._menuButton.classList.add('active');
-            } else {
-                this._menuButton.classList.remove('active');
-            }
-        }
-    }
+    // Removed updateDebugState method - now handled directly in constructor and _setupEventListeners
 
     /**
      * Shows the menu UI
