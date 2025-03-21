@@ -25,17 +25,20 @@ export class PlayerCombat extends BaseCombat {
             attackCooldown: 1000,
             healthBarWidth: 32,
             healthBarHeight: 5,
-            healthBarYOffset: -10
+            healthBarYOffset: -10,
+            // Stats configuration for player
+            strength: { value: 7, modifier: 3 }, // Player starts with more strength than NPCs
+            vitality: { value: 7, modifier: 10 }, // Player starts with more vitality than NPCs
         });
     }
 
     /**
      * Attack nearby aggressive monsters.
-     * @param {number} damage - Amount of damage to deal (defaults to this.attackDamage)
+     * @param {number} damage - Amount of damage to deal (defaults to calculated damage from stats)
      * @param {number} range - Range in pixels to detect monsters (defaults to this.attackRange)
      * @returns {boolean} - Whether any monsters were attacked
      */
-    attack(damage = this.attackDamage, range = this.attackRange) {
+    attack(damage = this.getDamage(), range = this.attackRange) {
         // Check if attack is on cooldown
         const currentTime = Date.now();
         if (currentTime < this.nextAttackTime) {

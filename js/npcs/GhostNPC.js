@@ -20,9 +20,13 @@ export class GhostNPC extends BaseNPC {
         this.aggroRange = this.tileSize * 5;
         
         // Configure combat system for ghost
-        this.combatSystem.attackDamage = 25;
-        this.combatSystem.attackRange = this.tileSize * 1; // Slightly longer range than monsters
-        this.combatSystem.attackCooldown = 2000;
+        this.combatSystem.stats.setStat('strength', 10);  // Ghosts are stronger than regular monsters
+        this.combatSystem.stats.setStat('vitality', 2);  // But have less health
+        this.combatSystem.attackRange = this.tileSize * 1;
+        this.combatSystem.attackCooldown = 2200;
+        
+        // Reset health to recalculate max health based on new stats
+        this.combatSystem.resetHealth();
         this.combatSystem.healthBar.colors = {
             background: 'rgba(40, 40, 40, 0.6)',
             border: 'rgba(0, 0, 0, 0.6)',
@@ -170,10 +174,7 @@ export class GhostNPC extends BaseNPC {
     }
     
     interact(player) {
-        // When aggressive is off, show dialog
-        if (!this.isAggressive) {
-            super.interact(player);
-        }
+        super.interact(player);
     }
     
     onConversationComplete() {

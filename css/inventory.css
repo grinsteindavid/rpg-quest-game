@@ -122,6 +122,88 @@
     align-items: center;
 }
 
+/* Compact Player Stats Panel */
+.player-stats-panel {
+    background-color: #1e1006;
+    padding: 4px 15px;
+    border-bottom: 1px solid #6B4226;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+}
+
+.stats-header:hover {
+    background-color: rgba(255, 204, 136, 0.1);
+}
+
+.stats-title {
+    color: #BF9E7D;
+    font-weight: bold;
+    font-size: 14px;
+    padding-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.stats-toggle {
+    background: none;
+    border: none;
+    color: #BF9E7D;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.stats-toggle:hover {
+    color: #ffcc88;
+}
+
+.stats-grid {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    padding: 5px 10px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out, opacity 0.2s ease-in-out;
+    max-height: 100px;
+    opacity: 1;
+}
+
+.stats-grid.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+}
+
+.stat-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 0;
+}
+
+.stat-label {
+    color: #BF9E7D;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.stat-value {
+    color: #ffcc88;
+    font-weight: bold;
+    font-size: 14px;
+}
+
 .player-hp-container {
     display: flex;
     align-items: center;
@@ -219,6 +301,8 @@
     text-align: center;
 }
 
+/* Buff/Debuff section removed */
+
 /* Mobile optimization */
 @media (max-width: 768px) {
     .inventory-panel {
@@ -237,6 +321,10 @@
     .player-hp-text {
         min-width: 50px;
         font-size: 12px;
+    }
+    
+    .stat-row {
+        gap: 3px;
     }
     
     .player-equipment {

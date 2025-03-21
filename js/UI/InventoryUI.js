@@ -47,6 +47,26 @@ export class InventoryUI {
                             <span class="gold-amount">0</span>
                         </div>
                     </div>
+                    <div class="player-stats-panel">
+                        <div class="stats-header">
+                            <div class="stats-title">Character Stats</div>
+                            <button class="stats-toggle" title="Toggle Stats">▼</button>
+                        </div>
+                        <div class="stats-grid collapsed">
+                            <div class="stat-row">
+                                <div class="stat-label">Strength:</div>
+                                <div class="stat-value" id="stat-strength">0</div>
+                            </div>
+                            <div class="stat-row">
+                                <div class="stat-label">Vitality:</div>
+                                <div class="stat-value" id="stat-vitality">0</div>
+                            </div>
+                            <div class="stat-row">
+                                <div class="stat-label">Damage:</div>
+                                <div class="stat-value" id="stat-damage">0</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="player-equipment">
                         <div class="equipment-slot weapon-slot" title="Weapon Slot">
                             <div class="equipment-icon">⚔️</div>
@@ -98,6 +118,34 @@ export class InventoryUI {
         if (closeButton) {
             closeButton.addEventListener('click', () => {
                 this.hide();
+            });
+        }
+        
+        // Make entire stats header clickable
+        const statsHeader = this._container.querySelector('.stats-header');
+        const statsToggle = this._container.querySelector('.stats-toggle');
+        
+        if (statsHeader && statsToggle) {
+            // Function to toggle stats visibility
+            const toggleStats = () => {
+                const statsGrid = this._container.querySelector('.stats-grid');
+                statsGrid.classList.toggle('collapsed');
+                
+                // Update button text based on state
+                if (statsGrid.classList.contains('collapsed')) {
+                    statsToggle.textContent = '▼';  // Down arrow (collapsed)
+                } else {
+                    statsToggle.textContent = '▲';  // Up arrow (expanded)
+                }
+            };
+            
+            // Add click event to the entire header
+            statsHeader.addEventListener('click', toggleStats);
+            
+            // Prevent duplicate toggling when clicking the button directly
+            statsToggle.addEventListener('click', (e) => {
+                e.stopPropagation();  // Prevent event from bubbling to header
+                toggleStats();
             });
         }
 
@@ -265,6 +313,34 @@ export class InventoryUI {
             } else {
                 hpFill.style.backgroundColor = '#33cc33';  // Green for good health
             }
+        }
+        
+        // Update character stats display
+        if (this._player.combat?.stats) {
+            const stats = this._player.combat.stats;
+            
+            // Update strength stat
+            const strengthEl = this._container.querySelector('#stat-strength');
+            if (strengthEl) {
+                const strengthValue = stats.getStat('strength');
+                strengthEl.textContent = strengthValue;
+            }
+            
+            // Update vitality stat
+            const vitalityEl = this._container.querySelector('#stat-vitality');
+            if (vitalityEl) {
+                const vitalityValue = stats.getStat('vitality');
+                vitalityEl.textContent = vitalityValue;
+            }
+            
+            // Update damage calculation
+            const damageEl = this._container.querySelector('#stat-damage');
+            if (damageEl) {
+                const calculatedDamage = stats.calculateDamage();
+                damageEl.textContent = calculatedDamage;
+            }
+            
+            // Buffs/effects section removed as requested
         }
         
         // Update equipment slots (placeholders for now)

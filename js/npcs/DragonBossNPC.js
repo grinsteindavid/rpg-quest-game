@@ -13,14 +13,12 @@ export class DragonBossNPC extends DragonNPC {
         this.isMoving = false;
         this.moveCooldown = 5000; // Time between movements
         this.nextMoveTime = 0;
-        
-        // Boss has even more health and damage
-        this.maxHealth = 150;
-        this.health = this.maxHealth;
-        this.attackDamage = 25;
+
         
         // Update combat system for boss
-        this.combatSystem.attackDamage = this.attackDamage;
+        this.combatSystem.stats.setStat('strength', 25);  // Bosses are stronger than regular monsters
+        this.combatSystem.stats.setStat('vitality', 40);  // But have more health
+
         
         // Special boss conversations
         this.conversations = [
