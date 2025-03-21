@@ -119,8 +119,9 @@ export class BaseCombat {
      * @param {number} amount - Amount of health to restore
      */
     heal(amount) {
-        // Get the current max health from stats
-        this.maxHealth = this.stats.calculateMaxHealth();
+        // Update health values based on current stats
+        this._updateHealthFromStats();
+        // Add healing amount (ensures currentHealth doesn't exceed maxHealth)
         this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
@@ -136,8 +137,8 @@ export class BaseCombat {
      * Resets the entity's health to maximum
      */
     resetHealth() {
-        this.maxHealth = this.stats.calculateMaxHealth();
-        this.currentHealth = this.maxHealth;
+        this._updateHealthFromStats();
+        this.currentHealth = this.maxHealth; // Full health on reset
         this.isDamaged = false;
     }
     
@@ -201,8 +202,9 @@ export class BaseCombat {
         this.stats.update();
         
         this.attackDamage = this.stats.calculateDamage();
-        // // Update max health from stats
-        this.maxHealth = this.stats.calculateMaxHealth();
+        
+        // Update health values from stats
+        this._updateHealthFromStats();
         
         // Update animations
         this.animations.update();
@@ -229,6 +231,22 @@ export class BaseCombat {
      */
     applyStatBuff(statName, value, duration, name = 'Stat Buff') {
         return this.stats.applySingleStatBuff(statName, value, duration, name);
+    }
+    
+    /**
+     * Updates health values based on current stats
+     * Ensures current health maintains the same proportion to max health when max health changes
+     * @protected
+     */
+    _updateHealthFromStats() {
+        // Update max health from stats and ensure current health doesn't exceed it
+        const newMaxHealth = this.stats.calculateMaxHealth();
+        if (newMaxHealth !== this.maxHealth) {
+            // If max health changed, keep the same health percentage
+            const healthPercentage = this.maxHealth > 0 ? this.currentHealth / this.maxHealth : 1;
+            this.maxHealth = newMaxHealth;
+            this.currentHealth = Math.min(this.maxHealth, Math.round(this.maxHealth * healthPercentage));
+        }
     }
     
     /**

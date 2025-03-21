@@ -19,6 +19,9 @@ export class MonsterNPC extends BaseNPC {
         this.combatSystem.attackRange = this.tileSize * 1;
         this.combatSystem.attackCooldown = 1500;
         
+        // Reset health to recalculate max health based on new stats
+        this.combatSystem.resetHealth();
+        
         
         // Monster conversation options
         this.conversations = [
