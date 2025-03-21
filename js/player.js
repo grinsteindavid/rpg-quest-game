@@ -161,10 +161,6 @@ export class Player {
         return this.combat.attack(damage, range);
     }
 
-    // _updateDirection method removed - now handled by movement.updateDirection
-
-    // _faceTowardsTarget method removed - now handled by movement.faceTowardsTarget
-
     /**
      * Adds gold to the player's currency
      * @param {number} amount - Amount of gold to add
@@ -192,18 +188,6 @@ export class Player {
      */
     getGold() {
         return this.gold;
-    }
-
-    /**
-     * Checks if a move to the specified tile coordinates is valid.
-     * @param {number} tileX - Target tile X coordinate
-     * @param {number} tileY - Target tile Y coordinate
-     * @returns {boolean} Whether the move is valid
-     * @private
-     */
-    _isValidMove(tileX, tileY) {
-        // Use the movement system to check validity
-        return this.movementSystem.isValidTileMove(tileX, tileY, this.map, null);
     }
 
     /**
