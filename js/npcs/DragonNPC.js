@@ -14,8 +14,8 @@ export class DragonNPC extends MonsterNPC {
         this.size = size; // Size multiplier (1 for mini dragon, 2 for boss)
         
         // Update combat system for dragon
-        this.combatSystem.stats.setStat('strength', 12);  // Dragons are stronger than regular monsters
-        this.combatSystem.stats.setStat('vitality', 12);  // But have more health
+        // this.combatSystem.stats.setStat('strength', 12);  // Dragons are stronger than regular monsters
+        // this.combatSystem.stats.setStat('vitality', 12);  // But have more health
         
         // Customize dragon name tag with dramatic appearance
         this.nameTag.font = `${11 + this.size}px Arial`;

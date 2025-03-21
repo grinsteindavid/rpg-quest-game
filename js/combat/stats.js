@@ -15,37 +15,27 @@ export class Stats {
      * @param {Object} options.vitality - Vitality stat configuration
      * @param {number} options.vitality.value - Base vitality value (default: 5)
      * @param {number} options.vitality.modifier - Permanent modifier (default: 0)
-     * @param {Object} options.damage - Damage configuration
-     * @param {number} options.damage.base - Base damage before stats (default: 10)
-     * @param {number} options.damage.strengthMultiplier - How much strength affects damage (default: 2)
-     * @param {Object} options.health - Health configuration
-     * @param {number} options.health.base - Base health before stats (default: 100)
-     * @param {number} options.health.vitalityMultiplier - How much vitality affects health (default: 10)
+     * @param {number} options.damage - Damage configuration
+     * @param {number} options.health - Health configuration
      */
     constructor(options = {}) {
         // Initialize stat objects with defaults
         this.stats = {
             strength: {
                 value: options.strength?.value || 5,
-                modifier: options.strength?.modifier || 0
+                modifier: options.strength?.modifier || 1
             },
             vitality: {
                 value: options.vitality?.value || 5,
-                modifier: options.vitality?.modifier || 0
+                modifier: options.vitality?.modifier || 1
             }
         };
         
         // Configure damage calculation
-        this.damage = {
-            base: options.damage?.base || 10,
-            strengthMultiplier: options.damage?.strengthMultiplier || 2
-        };
+        this.damage = options.damage || 10;
         
         // Configure health calculation
-        this.health = {
-            base: options.health?.base || 100,
-            vitalityMultiplier: options.health?.vitalityMultiplier || 10
-        };
+        this.health = options.health || 100;
         
         // Global buffs collection - each buff can affect multiple stats
         this.buffs = [];
@@ -53,7 +43,7 @@ export class Stats {
         // Last update timestamp for buff duration tracking
         this.lastUpdateTime = Date.now();
     }
-    
+
     /**
      * Gets the total value of a stat including all applicable buffs.
      * @param {string} statName - Name of the stat ('strength', 'vitality')
@@ -63,7 +53,7 @@ export class Stats {
         if (!this.stats[statName]) return 0;
         
         // Start with base value + permanent modifier
-        let total = this.stats[statName].value + this.stats[statName].modifier;
+        let total = this.stats[statName].value;
         
         // Add all buff effects that apply to this stat
         this.buffs.forEach(buff => {
@@ -95,6 +85,16 @@ export class Stats {
         if (this.stats[statName]) {
             this.stats[statName].value = value;
         }
+    }
+
+    /**
+     * Gets the current modifier value for a stat.
+     * @param {string} statName - Name of the stat ('strength', 'vitality')
+     * @returns {number} - Current modifier value
+     */
+    getModifier(statName) {
+        if (!this.stats[statName]) return 0;
+        return this.stats[statName].modifier;
     }
     
     /**
@@ -186,7 +186,7 @@ export class Stats {
      */
     calculateDamage() {
         const strengthValue = this.getStat('strength');
-        return this.damage.base + (strengthValue * this.damage.strengthMultiplier);
+        return this.damage + (strengthValue * this.getModifier('strength'));
     }
     
     /**
@@ -195,7 +195,7 @@ export class Stats {
      */
     calculateMaxHealth() {
         const vitalityValue = this.getStat('vitality');
-        return this.health.base + (vitalityValue * this.health.vitalityMultiplier);
+        return this.health + (vitalityValue * this.getModifier('vitality'));
     }
     
     /**

@@ -25,10 +25,8 @@ export class CombatSystem extends BaseCombat {
                 critical:'rgba(255, 50, 50, 1.0)'
             },
             // Stats configuration
-            strength: { value: 5 },
-            vitality: { value: 5 },
-            strengthMultiplier: 2,
-            vitalityMultiplier: 10
+            strength: { value: 5, modifier: 2 },
+            vitality: { value: 5, modifier: 10 },
         });
     }
     
@@ -98,7 +96,7 @@ export class CombatSystem extends BaseCombat {
             this._faceTowardsTarget(dx, dy);
             
             // Deal damage to the player using calculated damage from stats
-            player.takeDamage(this.getDamage());
+            player.takeDamage(this.stats.calculateDamage());
             
             // Set cooldown for next attack
             this.nextAttackTime = currentTime + this.attackCooldown;

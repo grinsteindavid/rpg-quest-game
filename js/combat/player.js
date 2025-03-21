@@ -27,10 +27,8 @@ export class PlayerCombat extends BaseCombat {
             healthBarHeight: 5,
             healthBarYOffset: -10,
             // Stats configuration for player
-            strength: { value: 7 }, // Player starts with more strength than NPCs
-            vitality: { value: 7 }, // Player starts with more vitality than NPCs
-            strengthMultiplier: 3, // Player gets more damage per strength point
-            vitalityMultiplier: 10
+            strength: { value: 7, modifier: 3 }, // Player starts with more strength than NPCs
+            vitality: { value: 7, modifier: 10 }, // Player starts with more vitality than NPCs
         });
     }
 

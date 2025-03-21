@@ -9,7 +9,7 @@ import { AnimationManager } from '../animations/AnimationManager.js';
 import { DamageNumberAnimation } from '../animations/DamageNumber.js';
 import { HitAnimation } from '../animations/HitAnimation.js';
 import { BuffAnimation } from '../animations/BuffAnimation.js';
-import { Stats } from '../Stats.js';
+import { Stats } from './stats.js';
 
 export class BaseCombat {
     /** @type {number} Maximum health points */
@@ -49,28 +49,25 @@ export class BaseCombat {
         this.entity = entity;
         
         // Apply options if provided
-        if (options.maxHealth) this.maxHealth = options.maxHealth;
+        if (options.maxHealth) {
+            this.maxHealth = options.maxHealth;
+            this.currentHealth = options.maxHealth;
+        }
         if (options.attackDamage) this.attackDamage = options.attackDamage;
         if (options.attackRange) this.attackRange = options.attackRange;
         if (options.attackCooldown) this.attackCooldown = options.attackCooldown;
         
         // Initialize stats system
         this.stats = new Stats({
-            strength: { value: options.strength?.value || 5 },
-            vitality: { value: options.vitality?.value || 5 },
-            damage: { 
-                base: options.attackDamage || this.attackDamage,
-                strengthMultiplier: options.strengthMultiplier || 2
-            },
-            health: {
-                base: options.maxHealth || this.maxHealth,
-                vitalityMultiplier: options.vitalityMultiplier || 10
-            }
+            strength: options.strength,
+            vitality: options.vitality,
+            damage: this.attackDamage,
+            health: this.maxHealth,
         });
-        
-        // Initialize current health using stats
+
         this.maxHealth = this.stats.calculateMaxHealth();
         this.currentHealth = this.maxHealth;
+
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
         // Initialize UI components
@@ -201,29 +198,14 @@ export class BaseCombat {
         }
         
         // Update stats (handles buffs/debuffs)
-        this.stats.update();
+        // this.stats.update();
         
-        // Update max health from stats
-        this.maxHealth = this.stats.calculateMaxHealth();
+        // this.attackDamage = this.stats.calculateDamage();
+        // // Update max health from stats
+        // this.maxHealth = this.stats.calculateMaxHealth();
         
         // Update animations
         this.animations.update();
-    }
-    
-    /**
-     * Get the calculated attack damage using stats
-     * @returns {number} - The calculated damage value
-     */
-    getDamage() {
-        return this.stats.calculateDamage();
-    }
-    
-    /**
-     * Get the calculated max health using stats
-     * @returns {number} - The calculated max health value
-     */
-    getMaxHealth() {
-        return this.stats.calculateMaxHealth();
     }
     
     /**

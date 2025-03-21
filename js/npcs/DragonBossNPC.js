@@ -16,8 +16,8 @@ export class DragonBossNPC extends DragonNPC {
 
         
         // Update combat system for boss
-        this.combatSystem.stats.setStat('strength', 25);  // Bosses are stronger than regular monsters
-        this.combatSystem.stats.setStat('vitality', 40);  // But have more health
+        // this.combatSystem.stats.setStat('strength', 25);  // Bosses are stronger than regular monsters
+        // this.combatSystem.stats.setStat('vitality', 40);  // But have more health
 
         
         // Special boss conversations
