@@ -223,11 +223,21 @@ export class InventoryUI {
     }
     
     /**
+     * Updates the inventory UI
+     * Called from the player's update method
+     */
+    update() {
+        if (this._visible) {
+            this._updatePlayerStats();
+        }
+    }
+    
+    /**
      * Updates the player statistics display in the inventory UI
      * @private
      */
     _updatePlayerStats() {
-        if (!this._player) return;
+        if (!this._player || !this._container) return;
         
         // Update gold display
         const goldAmount = this._container.querySelector('.gold-amount');

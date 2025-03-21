@@ -225,8 +225,8 @@ export class MenuUI {
             inventoryButton.addEventListener('click', () => {
                 console.log('Inventory button clicked');
                 this.hide();
-                // Directly show the game's inventory UI
-                this._game._inventoryUI.show();
+                // Show the player's inventory UI
+                this._game._player.inventoryUI.show();
             });
         }
 

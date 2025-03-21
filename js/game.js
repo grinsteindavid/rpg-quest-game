@@ -7,7 +7,7 @@ import { Transition } from './UI/Transition.js';
 import { GameOver } from './UI/GameOver.js';
 import { IntroScene } from './UI/IntroScene.js';
 import { MenuUI } from './UI/MenuUI.js';
-import { InventoryUI } from './UI/InventoryUI.js';
+// InventoryUI is now imported in Player class
 import { DepthsDarkForestMap } from './maps/darkForest/depths.js';
 import { DragonLairMap } from './maps/dragonLair/base.js';
 
@@ -39,8 +39,7 @@ export class Game {
     _introScene;
     /** @private @type {MenuUI} Menu UI manager */
     _menuUI;
-    /** @private @type {InventoryUI} Inventory UI manager */
-    _inventoryUI;
+    // Inventory UI manager is now part of the Player class
 
     /**
      * Creates a new Game instance.
@@ -57,7 +56,7 @@ export class Game {
         this._gameOver = new GameOver();
         this._introScene = new IntroScene();
         this._menuUI = new MenuUI(this);
-        this._inventoryUI = new InventoryUI();
+        // InventoryUI is now initialized in the Player class
         
         // Flag to track if the page is currently visible/active
         this._isPageVisible = true;
@@ -196,7 +195,7 @@ export class Game {
             return; // Pause game updates while dialog is showing
         }
         
-        if (this._menuUI.isVisible() || this._inventoryUI.isVisible()) {
+        if (this._menuUI.isVisible() || this._player.inventoryUI.isVisible()) {
             return; // Pause game updates while menu or inventory is open
         }
         

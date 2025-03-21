@@ -1,6 +1,7 @@
 import { SPRITES } from './colors.js';
 import { PlayerCombat } from './combat/player.js';
 import { MovementSystem } from './MovementSystem.js';
+import { InventoryUI } from './UI/InventoryUI.js';
 
 /**
  * Represents a player character in the game world.
@@ -54,6 +55,8 @@ export class Player {
     equippedWeapon = null;
     /** @type {Object|null} Player's equipped armor */
     equippedArmor = null;
+    /** @type {import('./UI/InventoryUI.js').InventoryUI} Player's inventory UI */
+    inventoryUI = null;
 
     /**
      * Creates a new Player instance.
@@ -81,6 +84,9 @@ export class Player {
         
         // Initialize with starting gold
         this.gold = 1;
+        
+        // Initialize inventory UI
+        this.inventoryUI = new InventoryUI(this);
     }
 
     /**
@@ -319,6 +325,11 @@ export class Player {
         
         // Update combat system
         this.combat.update();
+        
+        // Update inventory UI
+        if (this.inventoryUI) {
+            this.inventoryUI.update();
+        }
     }
 
     /**
