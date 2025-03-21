@@ -13,7 +13,7 @@ export class CombatSystem extends BaseCombat {
         super(entity, {
             maxHealth: 100,
             attackDamage: 10,
-            attackRange: 40,  // Slightly larger than default player's attack range
+            attackRange: entity.tileSize * 1,  // Slightly larger than default player's attack range
             attackCooldown: 1500, // Milliseconds between attacks
             healthBarWidth: 32,
             healthBarHeight: 4,

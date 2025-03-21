@@ -29,7 +29,7 @@ export class BaseCombat {
     /** @type {number} Amount of damage dealt per attack */
     attackDamage = 10;
     /** @type {number} Range in pixels of attack */
-    attackRange = 40;
+    attackRange = 32;
     /** @type {boolean} Whether entity is showing damage effect */
     isDamaged = false;
     /** @type {number} Duration of damage visual effect in frames */
