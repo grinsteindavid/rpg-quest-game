@@ -393,7 +393,7 @@ export class BaseNPC {
         // Show health info in debug mode
         ctx.fillStyle = 'white';
         ctx.font = '10px Arial';
-        ctx.fillText(`HP: ${this.combatSystem.health}/${this.combatSystem.maxHealth}`, screenX + this.width / 2, screenY - 30);
+        ctx.fillText(`HP: ${this.combatSystem.currentHealth}/${this.combatSystem.maxHealth}`, screenX + this.width / 2, screenY - 30);
         
         // Show aggro state if aggressive
         if (this.isAggressive) {

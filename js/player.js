@@ -80,7 +80,7 @@ export class Player {
         this.targetY = y;
         
         // Initialize with starting gold
-        this.gold = 100;
+        this.gold = 1;
     }
 
     /**
