@@ -16,15 +16,6 @@ export class Player {
     tileSize = 32;
     /** @type {number} Movement speed in pixels per frame */
     speed = 2;
-    /** 
-     * @type {Object} Collision box dimensions
-     * @property {number} width Width of the collision box
-     * @property {number} height Height of the collision box
-     */
-    collision = {
-        width: 28,
-        height: 28
-    };
     /** @type {boolean} Whether debug visualization is enabled */
     debug = false;
     /** @type {boolean} Whether this is the first spawn of the player */
