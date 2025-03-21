@@ -2,12 +2,14 @@
  * BaseCombat.js
  * Base class for combat systems that handles shared functionality between player and NPC combat.
  * Provides common methods and properties for health management, animations, and combat mechanics.
+ * Uses Stats class for managing attributes and calculations.
  */
 import { HealthBar } from '../UI/HealthBar.js';
 import { AnimationManager } from '../animations/AnimationManager.js';
 import { DamageNumberAnimation } from '../animations/DamageNumber.js';
 import { HitAnimation } from '../animations/HitAnimation.js';
 import { BuffAnimation } from '../animations/BuffAnimation.js';
+import { Stats } from '../Stats.js';
 
 export class BaseCombat {
     /** @type {number} Maximum health points */
@@ -52,7 +54,22 @@ export class BaseCombat {
         if (options.attackRange) this.attackRange = options.attackRange;
         if (options.attackCooldown) this.attackCooldown = options.attackCooldown;
         
-        // Initialize current health
+        // Initialize stats system
+        this.stats = new Stats({
+            strength: { value: options.strength?.value || 5 },
+            vitality: { value: options.vitality?.value || 5 },
+            damage: { 
+                base: options.attackDamage || this.attackDamage,
+                strengthMultiplier: options.strengthMultiplier || 2
+            },
+            health: {
+                base: options.maxHealth || this.maxHealth,
+                vitalityMultiplier: options.vitalityMultiplier || 10
+            }
+        });
+        
+        // Initialize current health using stats
+        this.maxHealth = this.stats.calculateMaxHealth();
         this.currentHealth = this.maxHealth;
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
@@ -105,6 +122,8 @@ export class BaseCombat {
      * @param {number} amount - Amount of health to restore
      */
     heal(amount) {
+        // Get the current max health from stats
+        this.maxHealth = this.stats.calculateMaxHealth();
         this.currentHealth = Math.min(this.maxHealth, this.currentHealth + amount);
         this.healthBarHideTime = Date.now() + this.healthBarDisplayTime;
         
@@ -120,6 +139,7 @@ export class BaseCombat {
      * Resets the entity's health to maximum
      */
     resetHealth() {
+        this.maxHealth = this.stats.calculateMaxHealth();
         this.currentHealth = this.maxHealth;
         this.isDamaged = false;
     }
@@ -180,8 +200,53 @@ export class BaseCombat {
             }
         }
         
+        // Update stats (handles buffs/debuffs)
+        this.stats.update();
+        
+        // Update max health from stats
+        this.maxHealth = this.stats.calculateMaxHealth();
+        
         // Update animations
         this.animations.update();
+    }
+    
+    /**
+     * Get the calculated attack damage using stats
+     * @returns {number} - The calculated damage value
+     */
+    getDamage() {
+        return this.stats.calculateDamage();
+    }
+    
+    /**
+     * Get the calculated max health using stats
+     * @returns {number} - The calculated max health value
+     */
+    getMaxHealth() {
+        return this.stats.calculateMaxHealth();
+    }
+    
+    /**
+     * Apply a buff to the entity's stats
+     * @param {Object} effects - Object mapping stat names to buff values
+     * @param {number} duration - Duration in milliseconds
+     * @param {string} name - Name of the buff
+     * @returns {string} - Buff ID for tracking
+     */
+    applyBuff(effects, duration, name = 'Combat Buff') {
+        return this.stats.applyBuff(effects, duration, name);
+    }
+    
+    /**
+     * Apply a stat-specific buff
+     * @param {string} statName - Name of the stat to buff
+     * @param {number} value - Buff amount
+     * @param {number} duration - Duration in milliseconds
+     * @param {string} name - Name of the buff
+     * @returns {string} - Buff ID for tracking
+     */
+    applyStatBuff(statName, value, duration, name = 'Stat Buff') {
+        return this.stats.applySingleStatBuff(statName, value, duration, name);
     }
     
     /**

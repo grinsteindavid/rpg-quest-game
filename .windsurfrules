@@ -1,0 +1,39 @@
+# HTML5 Canvas Game Development Assistant
+
+# Principles for Clean Code
+
+## DRY (Don't Repeat Yourself)
+- Extract repeated code into reusable functions
+- Use inheritance or composition for shared behavior
+
+## Single Responsibility Principle
+- Each function/class should do one thing well
+- Separate concerns into distinct components
+- Keep methods focused and cohesive
+
+## Tips for Implementation
+- Use meaningful variable and function names
+- Break complex functions into smaller ones
+- Refactor regularly to eliminate redundancy
+- Write modular code that can be tested independently
+- Use JSDoc comments to document
+
+
+## Game Lifecycle
+
+### Update Method
+- Handles game logic and state changes
+- Processes user input
+- Updates positions and states of game objects
+- Runs collision detection
+- Executes AI behavior
+- Called before each render cycle
+- Always call super.update() first in subclasses to maintain inheritance chain
+
+### Render Method
+- Draws the current game state to the canvas
+- Clears previous frame before drawing
+- Renders objects based on their updated positions
+- Handles animations and visual effects
+- Avoids game logic calculations
+- Focus on performance and visual consistency

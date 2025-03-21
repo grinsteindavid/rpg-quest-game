@@ -7,19 +7,15 @@ export class MonsterNPC extends BaseNPC {
         
         // Monster-specific properties - don't override speed as we're using tile-by-tile movement now
         this.canBeAggressive = true; // Start aggressive by default
-        
-        // Attack properties
-        this.attackDamage = 10;
-        this.attackRange = 40; // Slightly larger than player's attack range
-        this.attackCooldown = 1500; // Milliseconds between attacks
-        this.nextAttackTime = 0; // Timestamp when the monster can attack again
+
         
         // Visual effect properties
         this.glowIntensity = 0;
         this.glowDirection = 1;
         
         // Configure combat system for monster
-        this.combatSystem.attackDamage = 10;
+        this.combatSystem.stats.setStat('strength', 5);  // Set strength for damage calculation
+        this.combatSystem.stats.setStat('vitality', 4);  // Lower vitality than player
         this.combatSystem.attackRange = this.tileSize * 1;
         this.combatSystem.attackCooldown = 1500;
         
